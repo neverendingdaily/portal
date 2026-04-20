@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNS Marketing Portal</title>
+    <style>
+        :root {
+            /* 目に優しいライトテーマ（アイボリー系） */
+            --bg-color: #fcfaf2; 
+            --card-bg: #ffffff;
+            --card-hover: #fdfdf8;
+            --text-main: #2c2925;
+            --text-sub: #787168;
+            --accent: #3b82f6;
+            --border-color: #ede8d9;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin: 0;
+            letter-spacing: 0.05em;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+        .card:hover {
+            background-color: var(--card-hover);
+            transform: translateY(-3px);
+            border-color: #cbd5e1;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+        }
+        .icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .desc {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            line-height: 1.4;
+        }
+        
+        /* バッジ配色 */
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            width: fit-content;
+        }
+        .bg-blue { background-color: #e0f2fe; color: #0369a1; }
+        .bg-green { background-color: #dcfce7; color: #15803d; }
+        .bg-purple { background-color: #f3e8ff; color: #7e22ce; }
+        .bg-orange { background-color: #ffedd5; color: #c2410c; }
+        .bg-gray { background-color: #f3f4f6; color: #4b5563; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🚀 Marketing System Portal</h1>
+    </div>
+    <div class="grid" id="linkGrid">
+        </div>
+</div>
+
+<script>
+    // ==========================================
+    // 💡 サイトのリスト（ここを書き換えると全端末に反映されます）
+    // ==========================================
+    const portalLinks = [
+        { 
+            title: "Gem Hub", 
+            url: "https://neverendingdaily.github.io/reset/", 
+            desc: "172のAIエージェント・SOP群。全ての作業の司令塔。", 
+            icon: "💎", 
+            badgeClass: "bg-purple", 
+            badgeText: "Core AI" 
+        },
+        { 
+            title: "Search Hub", 
+            url: "https://neverendingdaily.github.io/searchhub/", 
+            desc: "Google/X/Bluesky/Reddit横断のリサーチツール。", 
+            icon: "🔍", 
+            badgeClass: "bg-gray", 
+            badgeText: "Research" 
+        },
+        { 
+            title: "SNS 看板プランナー", 
+            url: "https://neverendingdaily.github.io/sns-profile-planner/", 
+            desc: "全媒体のプロフィール・固定ポスト・導線の一括設計。", 
+            icon: "📢", 
+            badgeClass: "bg-blue", 
+            badgeText: "Setup" 
+        },
+        { 
+            title: "SNS Content Planner", 
+            url: "https://neverendingdaily.github.io/sns-content-planner/", 
+            desc: "SNS投稿の全体計画とカレンダー管理（詳細版）。", 
+            icon: "📅", 
+            badgeClass: "bg-green", 
+            badgeText: "Planning" 
+        },
+        { 
+            title: "Content Planner Light", 
+            url: "https://neverendingdaily.github.io/contentplanner/", 
+            desc: "軽量版のコンテンツ・スケジュールプランナー。", 
+            icon: "📝", 
+            badgeClass: "bg-green", 
+            badgeText: "Planning" 
+        },
+        { 
+            title: "Canva SNS Auto-Chef", 
+            url: "https://neverendingdaily.github.io/canva_auto/", 
+            desc: "画像・動画構成とSOP・プロンプトをGeminiで全自動生成。", 
+            icon: "🧑‍🍳", 
+            badgeClass: "bg-orange", 
+            badgeText: "Creative" 
+        },
+        { 
+            title: "Filmora AI Workflow Studio", 
+            url: "https://neverendingdaily.github.io/fimora-ai-workflow-studio/", 
+            desc: "アイデア → 台本 → プロンプト → SOP を一気通貫生成。", 
+            icon: "🎬", 
+            badgeClass: "bg-orange", 
+            badgeText: "Creative" 
+        },
+        { 
+            title: "PostMesh Planner", 
+            url: "https://neverendingdaily.github.io/postmesh-planner/", 
+            desc: "予約ツールへのデータストックと流し込み成形。", 
+            icon: "⚙️", 
+            badgeClass: "bg-blue", 
+            badgeText: "Automation" 
+        }
+    ];
+
+    // HTMLを描画する処理
+    const grid = document.getElementById('linkGrid');
+    portalLinks.forEach(link => {
+        const card = document.createElement('a');
+        card.href = link.url;
+        card.className = 'card';
+        card.target = '_blank';
+        card.innerHTML = `
+            <div class="badge ${link.badgeClass}">${link.badgeText}</div>
+            <div class="icon">${link.icon}</div>
+            <div class="title">${link.title}</div>
+            <div class="desc">${link.desc}</div>
+        `;
+        grid.appendChild(card);
+    });
+</script>
+
+</body>
+</html>
