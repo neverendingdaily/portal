@@ -150,15 +150,29 @@ const L=[
         "desc": ""
     }
 ];
-function fav(u){try{return'https://www.google.com/s2/favicons?sz=64&domain='+encodeURIComponent(new URL(u).hostname)}catch(e){return''}}
-L.forEach(l=>{
-    const a=document.createElement('a');
-    a.href=l.url;a.className='card';a.target='_blank';
-    const hasEmoji=l.icon&&l.icon.trim()!=='';
-    const ico=hasEmoji
-        ?'<div class="icon-wrap">'+l.icon+'</div>'
-        :'<div class="icon-wrap"><img class="favicon-img" src="'+fav(l.url)+'" alt="" onerror="this.style.display='none'"></div>';
-    a.innerHTML='<span class="badge '+l.badgeClass+'">'+l.badgeText+'</span>'+ico+'<div class="title">'+l.title+'</div><div class="desc">'+l.desc+'</div>';
+
+function fav(u){
+    try{
+        return 'https://www.google.com/s2/favicons?sz=64&domain=' + encodeURIComponent(new URL(u).hostname);
+    }catch(e){
+        return '';
+    }
+}
+
+L.forEach(l => {
+    const a = document.createElement('a');
+    a.href = l.url;
+    a.className = 'card';
+    a.target = '_blank';
+    
+    const hasEmoji = l.icon && l.icon.trim() !== '';
+    
+    // テンプレートリテラル（バッククォート）を使ってクォーテーションの衝突を回避
+    const ico = hasEmoji
+        ? `<div class="icon-wrap">${l.icon}</div>`
+        : `<div class="icon-wrap"><img class="favicon-img" src="${fav(l.url)}" alt="" onerror="this.style.display='none'"></div>`;
+        
+    a.innerHTML = `<span class="badge ${l.badgeClass}">${l.badgeText}</span>${ico}<div class="title">${l.title}</div><div class="desc">${l.desc}</div>`;
     document.getElementById('g').appendChild(a);
 });
 </script>
