@@ -7,15 +7,17 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%%22 y=%2250%%22 style=%22dominant-baseline:central;text-anchor:middle;font-size:90px;%22>🚀</text></svg>">
     <style>
         :root {
-            /* 目に優しいライトテーマ（アイボリー系） */
-            --bg-color: #fcfaf2; 
+            --bg-color: #fcfaf2;
             --card-bg: #ffffff;
             --card-hover: #fdfdf8;
             --text-main: #2c2925;
             --text-sub: #787168;
-            --accent: #3b82f6;
             --border-color: #ede8d9;
+            --danger: #ef4444;
         }
+
+        * { box-sizing: border-box; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
@@ -25,60 +27,109 @@
             display: flex;
             justify-content: center;
         }
-        .container {
-            max-width: 900px;
-            width: 100%;
-        }
+
+        .container { max-width: 960px; width: 100%; }
+
+        /* ── Header ── */
         .header {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.8rem;
+            flex-wrap: wrap;
+            gap: 0.8rem;
         }
-        h1 {
-            font-size: 1.8rem;
-            margin: 0;
-            letter-spacing: 0.05em;
+        h1 { font-size: 1.8rem; margin: 0; letter-spacing: 0.05em; }
+
+        /* ── Toolbar ── */
+        .toolbar { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.42rem 0.85rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid var(--border-color);
+            background: #fff;
+            color: var(--text-main);
+            transition: all 0.15s ease;
+            white-space: nowrap;
         }
+        .btn:hover { border-color: #94a3b8; background: #f8f9fb; }
+        .btn-primary { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+        .btn-primary:hover { background: #2563eb; border-color: #2563eb; }
+
+        /* ── Grid ── */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 1.5rem;
         }
+
+        /* ── 通常カード ── */
         .card {
-            background-color: var(--card-bg);
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 1.5rem;
-            text-decoration: none;
             color: var(--text-main);
             transition: all 0.2s ease;
             border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            position: relative;
         }
         .card:hover {
-            background-color: var(--card-hover);
             transform: translateY(-3px);
             border-color: #cbd5e1;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.06);
         }
-        .icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
+        .card a.card-link {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
         }
-        .title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
+
+        /* ── カード操作ボタン ── */
+        .card-controls {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            display: none;
+            gap: 0.3rem;
+            z-index: 1;
         }
-        .desc {
-            font-size: 0.85rem;
-            color: var(--text-sub);
-            line-height: 1.4;
+        .card:hover .card-controls { display: flex; }
+        .card-controls button {
+            border: none;
+            border-radius: 6px;
+            width: 28px;
+            height: 28px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
         }
-        
-        /* バッジ配色 */
+        .btn-edit-card { background: #eff6ff; color: #3b82f6; }
+        .btn-edit-card:hover { background: #dbeafe; }
+        .btn-del-card  { background: #fef2f2; color: var(--danger); }
+        .btn-del-card:hover { background: #fee2e2; }
+
+        /* ── アイコン ── */
+        .icon-wrap { font-size: 2rem; margin-bottom: 1rem; line-height: 1; }
+        .favicon-img { width: 40px; height: 40px; object-fit: contain; border-radius: 6px; }
+
+        .title { font-size: 1.05rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .desc  { font-size: 0.83rem; color: var(--text-sub); line-height: 1.45; }
+
+        /* ── Badge ── */
         .badge {
             display: inline-block;
             padding: 0.2rem 0.5rem;
@@ -88,11 +139,165 @@
             margin-bottom: 1rem;
             width: fit-content;
         }
-        .bg-blue { background-color: #e0f2fe; color: #0369a1; }
-        .bg-green { background-color: #dcfce7; color: #15803d; }
-        .bg-purple { background-color: #f3e8ff; color: #7e22ce; }
-        .bg-orange { background-color: #ffedd5; color: #c2410c; }
-        .bg-gray { background-color: #f3f4f6; color: #4b5563; }
+        .bg-blue   { background: #e0f2fe; color: #0369a1; }
+        .bg-green  { background: #dcfce7; color: #15803d; }
+        .bg-purple { background: #f3e8ff; color: #7e22ce; }
+        .bg-orange { background: #ffedd5; color: #c2410c; }
+        .bg-gray   { background: #f3f4f6; color: #4b5563; }
+        .bg-red    { background: #fee2e2; color: #b91c1c; }
+        .bg-yellow { background: #fef9c3; color: #854d0e; }
+        .bg-teal   { background: #ccfbf1; color: #0f766e; }
+
+        /* ── ＋ 追加カード ── */
+        .card-add {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 2px dashed #d1c9b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 120px;
+            color: #b8ad9e;
+            box-shadow: none;
+        }
+        .card-add:hover {
+            border-color: #94a3b8;
+            background: #f8f9fb;
+            color: #6b7280;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        .card-add-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            pointer-events: none;
+        }
+        .card-add-plus { font-size: 2.2rem; line-height: 1; font-weight: 300; }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.15);
+            animation: slideUp 0.2s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .modal-header h2 { margin: 0; font-size: 1.2rem; }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: var(--text-sub);
+            line-height: 1;
+            padding: 0;
+        }
+        .modal-close:hover { color: var(--text-main); }
+
+        /* ── Form ── */
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+            color: var(--text-sub);
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.55rem 0.75rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s;
+            background: #fff;
+            color: var(--text-main);
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus { border-color: #93c5fd; }
+        .form-group textarea { resize: vertical; min-height: 72px; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1.5rem; }
+
+        /* ── アイコンプレビュー ── */
+        .icon-preview-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #f8f9fb;
+            border-radius: 8px;
+            padding: 0.6rem 0.9rem;
+            margin-bottom: 1rem;
+            font-size: 0.82rem;
+            color: var(--text-sub);
+        }
+        .icon-preview-box {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .icon-preview-box img { width: 32px; height: 32px; object-fit: contain; border-radius: 4px; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: #1e293b;
+            color: #fff;
+            padding: 0.75rem 1.2rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.25s ease;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body>
@@ -100,122 +305,400 @@
 <div class="container">
     <div class="header">
         <h1>🚀 Marketing System Portal</h1>
-    </div>
-    <div class="grid" id="linkGrid">
+        <div class="toolbar">
+            <button class="btn" onclick="exportJSON()">⬇ JSON書き出し</button>
+            <button class="btn" onclick="exportHTML()">⬇ HTML書き出し</button>
+            <label class="btn" style="margin:0; cursor:pointer;">
+                ⬆ JSON読み込み
+                <input type="file" accept=".json" onchange="importJSON(event)" style="display:none">
+            </label>
         </div>
+    </div>
+
+    <div class="grid" id="linkGrid"></div>
 </div>
 
-<script>
-    // ==========================================
-    // 💡 サイトのリスト（ここを書き換えると全端末に反映されます）
-    // ==========================================
-    const portalLinks = [
-        { 
-            title: "Gem Hub", 
-            url: "https://neverendingdaily.github.io/home/", 
-            desc: "173のAIエージェント・SOP群。全ての作業の司令塔。", 
-            icon: "💎", 
-            badgeClass: "bg-purple", 
-            badgeText: "Core AI" 
-        },
-        { 
-            title: "Search Hub", 
-            url: "https://neverendingdaily.github.io/searchhub/", 
-            desc: "Google/X/Bluesky/Reddit横断のリサーチツール。", 
-            icon: "🔍", 
-            badgeClass: "bg-gray", 
-            badgeText: "Research" 
-        },
-        { 
-            title: "SNS 看板プランナー", 
-            url: "https://neverendingdaily.github.io/sns-profile-planner/", 
-            desc: "全媒体のプロフィール・固定ポスト・導線の一括設計。", 
-            icon: "📢", 
-            badgeClass: "bg-blue", 
-            badgeText: "Setup" 
-        },
-        { 
-            title: "SNS Content Planner", 
-            url: "https://neverendingdaily.github.io/sns-content-planner/", 
-            desc: "SNS投稿の全体計画とカレンダー管理（詳細版）。", 
-            icon: "📅", 
-            badgeClass: "bg-green", 
-            badgeText: "Planning" 
-        },
-        { 
-            title: "Content Planner Light", 
-            url: "https://neverendingdaily.github.io/contentplanner/", 
-            desc: "軽量版のコンテンツ・スケジュールプランナー。", 
-            icon: "📝", 
-            badgeClass: "bg-green", 
-            badgeText: "Planning" 
-        },
-        { 
-            title: "Canva SNS Auto-Chef", 
-            url: "https://neverendingdaily.github.io/canva/", 
-            desc: "画像・動画構成とSOP・プロンプトをGeminiで全自動生成。", 
-            icon: "🧑‍🍳", 
-            badgeClass: "bg-orange", 
-            badgeText: "Creative" 
-        },
-        { 
-            title: "Filmora AI Workflow Studio", 
-            url: "https://neverendingdaily.github.io/fimora-ai-workflow-studio/", 
-            desc: "アイデア → 台本 → プロンプト → SOP を一気通貫生成。", 
-            icon: "🎬", 
-            badgeClass: "bg-orange", 
-            badgeText: "Creative" 
-        },
-        { 
-            title: "PostMesh Planner", 
-            url: "https://neverendingdaily.github.io/postmesh-planner/", 
-            desc: "予約ツールへのデータストックと流し込み成形。", 
-            icon: "⚙️", 
-            badgeClass: "bg-blue", 
-            badgeText: "Automation" 
-        },
-        { 
-            title: "Gem Hub コンシェルジュ", 
-            url: "https://neverendingdaily.github.io/aiconcierge/", 
-            desc: "達成したい目的を入力すると、最適な使用順序とワークフローをAIが提案します。", 
-            icon: "💁", 
-            badgeClass: "bg-purple", 
-            badgeText: "Assistant" 
-        },
-        { 
-            title: "Gem Hub コンシェルジュ アイデア錬成アプリ", 
-            url: "https://neverendingdaily.github.io/aiconcierge-idea/", 
-            desc: "キーワード（例：恋愛系スピリチュアル、SaaS営業、ダイエット等）を入力して「アイデアを30個生成」ボタンを押してください。Gem Hubの強力な機能（リサーチ、量産、多媒体展開、監査など）を想定した具体的なワークフローのアイデアを一気にリストアップします。", 
-            icon: "💡", 
-            badgeClass: "bg-purple", 
-            badgeText: "Ideation" 
-        },
-        { 
-            title: "dマガジン 直リンクポータル", 
-            url: "https://neverendingdaily.github.io/dmagazine/", 
-            desc: "dマガジンの各種ページへ直接アクセスできるポータルサイトです。", 
-            icon: "📚", 
-            badgeClass: "bg-gray", 
-            badgeText: "Portal" 
-        }
-    ];
+<!-- Add / Edit Modal -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="modalTitleText">サイトを追加</h2>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
 
-    // HTMLを描画する処理
-    const grid = document.getElementById('linkGrid');
-    portalLinks.forEach(link => {
-        const card = document.createElement('a');
-        card.href = link.url;
+        <div class="icon-preview-row">
+            <div class="icon-preview-box" id="iconPreview">🌐</div>
+            <span id="iconPreviewLabel">URLを入力するとFaviconが自動で使われます</span>
+        </div>
+
+        <div class="form-group">
+            <label>タイトル <span style="color:red">*</span></label>
+            <input type="text" id="fieldTitle" placeholder="サイト名">
+        </div>
+        <div class="form-group">
+            <label>URL <span style="color:red">*</span></label>
+            <input type="url" id="fieldUrl" placeholder="https://example.com" oninput="onUrlInput()">
+        </div>
+        <div class="form-group">
+            <label>アイコン（絵文字）<span style="color:#9ca3af; font-weight:400"> — 空欄でFavicon自動取得</span></label>
+            <input type="text" id="fieldIcon" placeholder="例: 💎（空欄 = Favicon自動取得）" maxlength="4" oninput="onIconInput()">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>バッジテキスト</label>
+                <input type="text" id="fieldBadgeText" placeholder="例: Tool" maxlength="16">
+            </div>
+            <div class="form-group">
+                <label>バッジカラー</label>
+                <select id="fieldBadgeClass">
+                    <option value="bg-blue">🔵 Blue</option>
+                    <option value="bg-green">🟢 Green</option>
+                    <option value="bg-purple">🟣 Purple</option>
+                    <option value="bg-orange">🟠 Orange</option>
+                    <option value="bg-gray">⚪ Gray</option>
+                    <option value="bg-red">🔴 Red</option>
+                    <option value="bg-yellow">🟡 Yellow</option>
+                    <option value="bg-teal">🩵 Teal</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>説明</label>
+            <textarea id="fieldDesc" placeholder="サイトの説明を入力"></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" onclick="closeModal()">キャンセル</button>
+            <button class="btn btn-primary" onclick="saveCard()">保存する</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==========================================
+// 初期データ
+// ==========================================
+const DEFAULT_LINKS = [
+    { title: "Gem Hub",                              url: "https://neverendingdaily.github.io/home/",                     desc: "173のAIエージェント・SOP群。全ての作業の司令塔。",                                                                                                icon: "💎", badgeClass: "bg-purple", badgeText: "Core AI"    },
+    { title: "Search Hub",                           url: "https://neverendingdaily.github.io/searchhub/",                desc: "Google/X/Bluesky/Reddit横断のリサーチツール。",                                                                                               icon: "🔍", badgeClass: "bg-gray",   badgeText: "Research"   },
+    { title: "SNS 看板プランナー",                   url: "https://neverendingdaily.github.io/sns-profile-planner/",      desc: "全媒体のプロフィール・固定ポスト・導線の一括設計。",                                                                                           icon: "📢", badgeClass: "bg-blue",   badgeText: "Setup"      },
+    { title: "SNS Content Planner",                  url: "https://neverendingdaily.github.io/sns-content-planner/",      desc: "SNS投稿の全体計画とカレンダー管理（詳細版）。",                                                                                               icon: "📅", badgeClass: "bg-green",  badgeText: "Planning"   },
+    { title: "Content Planner Light",                url: "https://neverendingdaily.github.io/contentplanner/",           desc: "軽量版のコンテンツ・スケジュールプランナー。",                                                                                                 icon: "📝", badgeClass: "bg-green",  badgeText: "Planning"   },
+    { title: "Canva SNS Auto-Chef",                  url: "https://neverendingdaily.github.io/canva/",                    desc: "画像・動画構成とSOP・プロンプトをGeminiで全自動生成。",                                                                                       icon: "🧑‍🍳", badgeClass: "bg-orange", badgeText: "Creative"   },
+    { title: "Filmora AI Workflow Studio",           url: "https://neverendingdaily.github.io/fimora-ai-workflow-studio/", desc: "アイデア → 台本 → プロンプト → SOP を一気通貫生成。",                                                                                      icon: "🎬", badgeClass: "bg-orange", badgeText: "Creative"   },
+    { title: "PostMesh Planner",                     url: "https://neverendingdaily.github.io/postmesh-planner/",         desc: "予約ツールへのデータストックと流し込み成形。",                                                                                                 icon: "⚙️", badgeClass: "bg-blue",   badgeText: "Automation" },
+    { title: "Gem Hub コンシェルジュ",               url: "https://neverendingdaily.github.io/aiconcierge/",              desc: "達成したい目的を入力すると、最適な使用順序とワークフローをAIが提案します。",                                                                    icon: "💁", badgeClass: "bg-purple", badgeText: "Assistant"  },
+    { title: "Gem Hub コンシェルジュ アイデア錬成",  url: "https://neverendingdaily.github.io/aiconcierge-idea/",         desc: "キーワードを入力して「アイデアを30個生成」ボタンを押してください。Gem Hubの機能を想定した具体的なワークフローのアイデアを一気にリストアップします。",  icon: "💡", badgeClass: "bg-purple", badgeText: "Ideation"   },
+    { title: "dマガジン 直リンクポータル",           url: "https://neverendingdaily.github.io/dmagazine/",                desc: "dマガジンの各種ページへ直接アクセスできるポータルサイトです。",                                                                                 icon: "📚", badgeClass: "bg-gray",   badgeText: "Portal"     }
+];
+
+const STORAGE_KEY = 'portal_links_v1';
+let editingIndex = -1;
+
+// ==========================================
+// データ管理
+// ==========================================
+function loadLinks() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return DEFAULT_LINKS.map(l => ({ ...l }));
+}
+
+function saveLinks(links) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
+}
+
+// ==========================================
+// アイコンヘルパー
+// icon が空文字/未定義 → favicon
+// icon が絵文字        → そのまま
+// ==========================================
+function faviconUrl(url) {
+    try {
+        const domain = new URL(url).hostname;
+        return `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(domain)}`;
+    } catch(e) { return ''; }
+}
+
+function renderIconHTML(link) {
+    const hasEmoji = link.icon && link.icon.trim() !== '';
+    if (hasEmoji) return `<div class="icon-wrap">${escHtml(link.icon)}</div>`;
+    const src = faviconUrl(link.url);
+    return src
+        ? `<div class="icon-wrap"><img class="favicon-img" src="${escHtml(src)}" alt="" onerror="this.style.display='none'"></div>`
+        : `<div class="icon-wrap">🌐</div>`;
+}
+
+// ==========================================
+// 描画
+// ==========================================
+function renderGrid() {
+    const links = loadLinks();
+    const grid  = document.getElementById('linkGrid');
+    grid.innerHTML = '';
+
+    links.forEach((link, i) => {
+        const card = document.createElement('div');
         card.className = 'card';
-        card.target = '_blank';
         card.innerHTML = `
-            <div class="badge ${link.badgeClass}">${link.badgeText}</div>
-            <div class="icon">${link.icon}</div>
-            <div class="title">${link.title}</div>
-            <div class="desc">${link.desc}</div>
-        `;
+            <div class="card-controls">
+                <button class="btn-edit-card" onclick="openEditModal(${i})" title="編集">✏️</button>
+                <button class="btn-del-card"  onclick="deleteCard(${i})"    title="削除">🗑️</button>
+            </div>
+            <a class="card-link" href="${escHtml(link.url || '#')}" target="_blank" rel="noopener">
+                <span class="badge ${escHtml(link.badgeClass || 'bg-gray')}">${escHtml(link.badgeText || '')}</span>
+                ${renderIconHTML(link)}
+                <div class="title">${escHtml(link.title || '')}</div>
+                <div class="desc">${escHtml(link.desc || '')}</div>
+            </a>`;
         grid.appendChild(card);
     });
-</script>
 
+    // ＋ 追加カード（末尾）
+    const addCard = document.createElement('div');
+    addCard.className = 'card card-add';
+    addCard.onclick = openAddModal;
+    addCard.innerHTML = `
+        <div class="card-add-inner">
+            <span class="card-add-plus">＋</span>
+            <span>サイトを追加</span>
+        </div>`;
+    grid.appendChild(addCard);
+}
+
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+}
+
+// ==========================================
+// モーダル
+// ==========================================
+function openAddModal() {
+    editingIndex = -1;
+    document.getElementById('modalTitleText').textContent = 'サイトを追加';
+    clearForm();
+    updateIconPreview();
+    document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openEditModal(i) {
+    editingIndex = i;
+    document.getElementById('modalTitleText').textContent = 'サイトを編集';
+    const link = loadLinks()[i];
+    document.getElementById('fieldTitle').value      = link.title      || '';
+    document.getElementById('fieldUrl').value        = link.url        || '';
+    document.getElementById('fieldIcon').value       = link.icon       || '';
+    document.getElementById('fieldBadgeText').value  = link.badgeText  || '';
+    document.getElementById('fieldBadgeClass').value = link.badgeClass || 'bg-blue';
+    document.getElementById('fieldDesc').value       = link.desc       || '';
+    updateIconPreview();
+    document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function clearForm() {
+    ['fieldTitle','fieldUrl','fieldIcon','fieldBadgeText','fieldDesc']
+        .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fieldBadgeClass').value = 'bg-blue';
+}
+
+function updateIconPreview() {
+    const emoji = document.getElementById('fieldIcon').value.trim();
+    const url   = document.getElementById('fieldUrl').value.trim();
+    const box   = document.getElementById('iconPreview');
+    const label = document.getElementById('iconPreviewLabel');
+
+    if (emoji) {
+        box.innerHTML = emoji;
+        label.textContent = '絵文字アイコンを使用します';
+    } else if (url) {
+        const src = faviconUrl(url);
+        if (src) {
+            box.innerHTML = `<img src="${src}" alt="" style="width:32px;height:32px;object-fit:contain;border-radius:4px;" onerror="this.innerHTML='🌐'">`;
+        } else {
+            box.innerHTML = '🌐';
+        }
+        label.textContent = 'URLのFaviconを使用します';
+    } else {
+        box.innerHTML = '🌐';
+        label.textContent = 'URLを入力するとFaviconが自動で使われます';
+    }
+}
+
+function onUrlInput()  { updateIconPreview(); }
+function onIconInput() { updateIconPreview(); }
+
+// ==========================================
+// 保存
+// ==========================================
+function saveCard() {
+    const title = document.getElementById('fieldTitle').value.trim();
+    const url   = document.getElementById('fieldUrl').value.trim();
+    if (!title) { showToast('⚠️ タイトルを入力してください'); return; }
+    if (!url)   { showToast('⚠️ URLを入力してください'); return; }
+
+    const entry = {
+        icon:       document.getElementById('fieldIcon').value.trim(),       // 空文字 = favicon
+        badgeText:  document.getElementById('fieldBadgeText').value.trim() || 'Link',
+        badgeClass: document.getElementById('fieldBadgeClass').value        || 'bg-gray',
+        title,
+        url,
+        desc:       document.getElementById('fieldDesc').value.trim()
+    };
+
+    const links = loadLinks();
+    if (editingIndex >= 0) {
+        links[editingIndex] = entry;
+        showToast('✅ 保存しました');
+    } else {
+        links.push(entry);
+        showToast('✅ 追加しました');
+    }
+    saveLinks(links);
+    renderGrid();
+    closeModal();
+}
+
+// ==========================================
+// 削除
+// ==========================================
+function deleteCard(i) {
+    const links = loadLinks();
+    if (!confirm(`「${links[i].title}」を削除しますか？`)) return;
+    links.splice(i, 1);
+    saveLinks(links);
+    renderGrid();
+    showToast('🗑️ 削除しました');
+}
+
+// ==========================================
+// エクスポート JSON
+// ==========================================
+function exportJSON() {
+    const blob = new Blob([JSON.stringify(loadLinks(), null, 2)], { type: 'application/json' });
+    downloadBlob(blob, 'portal_links.json');
+    showToast('⬇ JSONをエクスポートしました');
+}
+
+// ==========================================
+// エクスポート HTML（静的・管理UIなし）
+// ==========================================
+function exportHTML() {
+    const links    = loadLinks();
+    const cardsJS  = JSON.stringify(links, null, 4);
+    const html = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNS Marketing Portal</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%%22 y=%2250%%22 style=%22dominant-baseline:central;text-anchor:middle;font-size:90px;%22>🚀</text></svg>">
+    <style>
+        :root{--bg-color:#fcfaf2;--card-bg:#fff;--card-hover:#fdfdf8;--text-main:#2c2925;--text-sub:#787168;--border-color:#ede8d9}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg-color);color:var(--text-main);margin:0;padding:2rem;display:flex;justify-content:center}
+        .container{max-width:900px;width:100%}
+        .header{display:flex;justify-content:center;align-items:center;margin-bottom:2rem}
+        h1{font-size:1.8rem;margin:0;letter-spacing:.05em}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem}
+        .card{background:var(--card-bg);border-radius:12px;padding:1.5rem;text-decoration:none;color:var(--text-main);transition:all .2s ease;border:1px solid var(--border-color);display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(0,0,0,.02)}
+        .card:hover{transform:translateY(-3px);border-color:#cbd5e1;box-shadow:0 10px 20px rgba(0,0,0,.06)}
+        .icon-wrap{font-size:2rem;margin-bottom:1rem;line-height:1}
+        .favicon-img{width:40px;height:40px;object-fit:contain;border-radius:6px}
+        .title{font-size:1.1rem;font-weight:bold;margin-bottom:.5rem}
+        .desc{font-size:.85rem;color:var(--text-sub);line-height:1.4}
+        .badge{display:inline-block;padding:.2rem .5rem;border-radius:4px;font-size:.7rem;font-weight:bold;margin-bottom:1rem;width:fit-content}
+        .bg-blue{background:#e0f2fe;color:#0369a1}.bg-green{background:#dcfce7;color:#15803d}.bg-purple{background:#f3e8ff;color:#7e22ce}.bg-orange{background:#ffedd5;color:#c2410c}.bg-gray{background:#f3f4f6;color:#4b5563}.bg-red{background:#fee2e2;color:#b91c1c}.bg-yellow{background:#fef9c3;color:#854d0e}.bg-teal{background:#ccfbf1;color:#0f766e}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header"><h1>🚀 Marketing System Portal</h1></div>
+    <div class="grid" id="g"></div>
+</div>
+<script>
+const L=${cardsJS};
+function fav(u){try{return'https://www.google.com/s2/favicons?sz=64&domain='+encodeURIComponent(new URL(u).hostname)}catch(e){return''}}
+L.forEach(l=>{
+    const a=document.createElement('a');
+    a.href=l.url;a.className='card';a.target='_blank';
+    const hasEmoji=l.icon&&l.icon.trim()!=='';
+    const ico=hasEmoji
+        ?'<div class="icon-wrap">'+l.icon+'</div>'
+        :'<div class="icon-wrap"><img class="favicon-img" src="'+fav(l.url)+'" alt="" onerror="this.style.display=\'none\'"></div>';
+    a.innerHTML='<span class="badge '+l.badgeClass+'">'+l.badgeText+'</span>'+ico+'<div class="title">'+l.title+'</div><div class="desc">'+l.desc+'</div>';
+    document.getElementById('g').appendChild(a);
+});
+<\/script>
+</body>
+</html>`;
+    downloadBlob(new Blob([html],{type:'text/html'}), 'portal_export.html');
+    showToast('⬇ HTMLをエクスポートしました');
+}
+
+// ==========================================
+// インポート JSON
+// ==========================================
+function importJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!Array.isArray(data)) throw new Error('配列ではありません');
+            if (!data.every(d => typeof d === 'object' && d.title && d.url))
+                throw new Error('形式が不正です（title・url が必要）');
+            const replace = confirm(
+                `${data.length} 件のデータが見つかりました。\n\n` +
+                '【OK】現在のデータを置き換える\n' +
+                '【キャンセル】現在のデータに追記する'
+            );
+            saveLinks([...(replace ? [] : loadLinks()), ...data]);
+            renderGrid();
+            showToast(`✅ ${data.length} 件を${replace?'置き換え':'追記'}ました`);
+        } catch(err) {
+            showToast('❌ 読み込み失敗: ' + err.message);
+        }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+// ==========================================
+// ユーティリティ
+// ==========================================
+function downloadBlob(blob, filename) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+let toastTimer;
+function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+renderGrid();
+</script>
 </body>
 </html>
