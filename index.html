@@ -6,175 +6,290 @@
     <title>SNS Marketing Portal</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%%22 y=%2250%%22 style=%22dominant-baseline:central;text-anchor:middle;font-size:90px;%22>🚀</text></svg>">
     <style>
-        :root{--bg-color:#fcfaf2;--card-bg:#fff;--card-hover:#fdfdf8;--text-main:#2c2925;--text-sub:#787168;--border-color:#ede8d9}
+        :root{--bg-color:#fcfaf2;--card-bg:#fff;--card-hover:#fdfdf8;--text-main:#2c2925;--text-sub:#787168;--border-color:#ede8d9;--primary:#0369a1}
         body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg-color);color:var(--text-main);margin:0;padding:2rem;display:flex;justify-content:center}
-        .container{max-width:900px;width:100%}
-        .header{display:flex;justify-content:center;align-items:center;margin-bottom:2rem}
+        
+        /* コンテナの最大幅を広げ、PCで多列表示（最大6列程度）を可能にする */
+        .container{max-width:1400px;width:100%}
+        
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem; flex-wrap:wrap; gap:1rem;}
         h1{font-size:1.8rem;margin:0;letter-spacing:.05em}
-        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem}
-        .card{background:var(--card-bg);border-radius:12px;padding:1.5rem;text-decoration:none;color:var(--text-main);transition:all .2s ease;border:1px solid var(--border-color);display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(0,0,0,.02)}
+        
+        /* コントロールパネルのスタイル */
+        .controls-top{display:flex;gap:0.5rem;}
+        button{cursor:pointer;padding:0.5rem 1rem;border:none;border-radius:6px;font-weight:bold;font-size:0.9rem;transition:all 0.2s;}
+        .btn-edit{background:#e2e8f0;color:#334155;}
+        .btn-edit.active{background:#ef4444;color:white;}
+        .btn-export{background:var(--primary);color:white;}
+        
+        /* フォームのスタイル */
+        .add-form{background:#fff;padding:1.5rem;border-radius:12px;border:1px solid var(--border-color);margin-bottom:2rem;display:none;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;}
+        .add-form.active{display:grid;}
+        .form-group{display:flex;flex-direction:column;gap:0.3rem;}
+        .form-group input, .form-group select{padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;}
+        .form-full{grid-column:1 / -1;}
+        .btn-add{background:#10b981;color:white;padding:0.8rem;grid-column:1 / -1;}
+
+        /* 可変グリッド: ブラウザ幅に合わせて自動で列数が変わる（minmaxで最小幅を200pxに設定） */
+        .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.5rem}
+        
+        .card{background:var(--card-bg);border-radius:12px;padding:1.5rem;text-decoration:none;color:var(--text-main);transition:all .2s ease;border:1px solid var(--border-color);display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(0,0,0,.02);position:relative;}
         .card:hover{transform:translateY(-3px);border-color:#cbd5e1;box-shadow:0 10px 20px rgba(0,0,0,.06)}
+        
         .icon-wrap{font-size:2rem;margin-bottom:1rem;line-height:1}
         .favicon-img{width:40px;height:40px;object-fit:contain;border-radius:6px}
         .title{font-size:1.1rem;font-weight:bold;margin-bottom:.5rem}
-        .desc{font-size:.85rem;color:var(--text-sub);line-height:1.4}
+        .desc{font-size:.85rem;color:var(--text-sub);line-height:1.4;flex-grow:1;}
         .badge{display:inline-block;padding:.2rem .5rem;border-radius:4px;font-size:.7rem;font-weight:bold;margin-bottom:1rem;width:fit-content}
+        
+        /* 編集モード時のカードのオーバーレイとボタン */
+        .card-edit-overlay{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.9);border-radius:12px;flex-direction:column;justify-content:center;align-items:center;gap:0.5rem;z-index:10;}
+        .edit-mode .card-edit-overlay{display:flex;}
+        .edit-mode.card:hover{transform:none;}
+        .action-btn{padding:0.4rem 1rem;font-size:1.2rem;background:#f1f5f9;border:1px solid #cbd5e1;}
+        .action-btn:hover{background:#e2e8f0;}
+        .delete-btn{background:#fee2e2;color:#ef4444;border-color:#fca5a5;}
+        
         .bg-blue{background:#e0f2fe;color:#0369a1}.bg-green{background:#dcfce7;color:#15803d}.bg-purple{background:#f3e8ff;color:#7e22ce}.bg-orange{background:#ffedd5;color:#c2410c}.bg-gray{background:#f3f4f6;color:#4b5563}.bg-red{background:#fee2e2;color:#b91c1c}.bg-yellow{background:#fef9c3;color:#854d0e}.bg-teal{background:#ccfbf1;color:#0f766e}
+        
+        @media (max-width: 600px) {
+            .header { flex-direction: column; text-align: center; }
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="header"><h1>🚀 Marketing System Portal</h1></div>
+    <div class="header">
+        <h1>🚀 Marketing System Portal</h1>
+        <div class="controls-top">
+            <button class="btn-edit" id="toggle-edit" onclick="toggleEditMode()">編集モード ON</button>
+            <button class="btn-export" onclick="exportHTML()">💾 HTMLエクスポート</button>
+        </div>
+    </div>
+
+    <!-- サイト追加フォーム -->
+    <div class="add-form" id="add-form">
+        <div class="form-group">
+            <label>タイトル</label>
+            <input type="text" id="f-title" placeholder="例: 新しいツール">
+        </div>
+        <div class="form-group">
+            <label>URL</label>
+            <input type="text" id="f-url" placeholder="https://...">
+        </div>
+        <div class="form-group">
+            <label>アイコン (絵文字)</label>
+            <input type="text" id="f-icon" placeholder="例: 🎯 (空欄ならファビコン)">
+        </div>
+        <div class="form-group">
+            <label>バッジ表示名</label>
+            <input type="text" id="f-badge-text" placeholder="例: Tool">
+        </div>
+        <div class="form-group">
+            <label>バッジの色</label>
+            <select id="f-badge-class">
+                <option value="bg-purple">紫 (Core/AI)</option>
+                <option value="bg-gray">グレー (Research)</option>
+                <option value="bg-red">赤 (Analysis)</option>
+                <option value="bg-yellow">黄 (Ideation)</option>
+                <option value="bg-green">緑 (Planning)</option>
+                <option value="bg-orange">オレンジ (Creative)</option>
+                <option value="bg-blue" selected>青 (Tool/Studio)</option>
+                <option value="bg-teal">ティール (Design)</option>
+            </select>
+        </div>
+        <div class="form-group form-full">
+            <label>説明文</label>
+            <input type="text" id="f-desc" placeholder="ツールの概要や用途を入力">
+        </div>
+        <button class="btn-add" onclick="addSite()">+ リストに追加</button>
+    </div>
+
     <div class="grid" id="g"></div>
 </div>
-<script>
-const L=[
-    {
-        "title": "Gem Hub",
-        "url": "https://neverendingdaily.github.io/home/",
-        "desc": "173のAIエージェント・SOP群。全ての作業の司令塔。",
-        "icon": "💎",
-        "badgeClass": "bg-purple",
-        "badgeText": "Core AI"
-    },
-    {
-        "title": "Search Hub",
-        "url": "https://neverendingdaily.github.io/searchhub/",
-        "desc": "Google/X/Bluesky/Reddit横断のリサーチツール。",
-        "icon": "🔍",
-        "badgeClass": "bg-gray",
-        "badgeText": "Research"
-    },
-    {
-        "title": "SNS 看板プランナー",
-        "url": "https://neverendingdaily.github.io/sns-profile-planner/",
-        "desc": "全媒体のプロフィール・固定ポスト・導線の一括設計。",
-        "icon": "📢",
-        "badgeClass": "bg-blue",
-        "badgeText": "Setup"
-    },
-    {
-        "title": "SNS Content Planner",
-        "url": "https://neverendingdaily.github.io/sns-content-planner/",
-        "desc": "SNS投稿の全体計画とカレンダー管理（詳細版）。",
-        "icon": "📅",
-        "badgeClass": "bg-green",
-        "badgeText": "Planning"
-    },
-    {
-        "title": "Content Planner Light",
-        "url": "https://neverendingdaily.github.io/contentplanner/",
-        "desc": "軽量版のコンテンツ・スケジュールプランナー。",
-        "icon": "📝",
-        "badgeClass": "bg-green",
-        "badgeText": "Planning"
-    },
-    {
-        "title": "Canva SNS Auto-Chef",
-        "url": "https://neverendingdaily.github.io/canva/",
-        "desc": "画像・動画構成とSOP・プロンプトをGeminiで全自動生成。",
-        "icon": "🧑‍🍳",
-        "badgeClass": "bg-orange",
-        "badgeText": "Creative"
-    },
-    {
-        "title": "Filmora AI Workflow Studio",
-        "url": "https://neverendingdaily.github.io/fimora-ai-workflow-studio/",
-        "desc": "アイデア → 台本 → プロンプト → SOP を一気通貫生成。",
-        "icon": "🎬",
-        "badgeClass": "bg-orange",
-        "badgeText": "Creative"
-    },
-    {
-        "title": "PostMesh Planner",
-        "url": "https://neverendingdaily.github.io/postmesh-planner/",
-        "desc": "予約ツールへのデータストックと流し込み成形。",
-        "icon": "⚙️",
-        "badgeClass": "bg-blue",
-        "badgeText": "Automation"
-    },
-    {
-        "title": "Gem Hub コンシェルジュ",
-        "url": "https://neverendingdaily.github.io/aiconcierge/",
-        "desc": "達成したい目的を入力すると、最適な使用順序とワークフローをAIが提案します。",
-        "icon": "💁",
-        "badgeClass": "bg-purple",
-        "badgeText": "Assistant"
-    },
-    {
-        "title": "Gem Hub コンシェルジュ アイデア錬成",
-        "url": "https://neverendingdaily.github.io/aiconcierge-idea/",
-        "desc": "キーワードを入力して「アイデアを30個生成」ボタンを押してください。Gem Hubの機能を想定した具体的なワークフローのアイデアを一気にリストアップします。",
-        "icon": "💡",
-        "badgeClass": "bg-purple",
-        "badgeText": "Ideation"
-    },
-    {
-        "title": "dマガジン 直リンクポータル",
-        "url": "https://neverendingdaily.github.io/dmagazine/",
-        "desc": "dマガジンの各種ページへ直接アクセスできるポータルサイトです。",
-        "icon": "📚",
-        "badgeClass": "bg-gray",
-        "badgeText": "Portal"
-    },
-    {
-        "icon": "🍻",
-        "badgeText": "Studio",
-        "badgeClass": "bg-blue",
-        "title": "ペルソナ憑依スタジオ",
-        "url": "https://neverendingdaily.github.io/person/",
-        "desc": "クリエイターの思考・口調・哲学を完全憑依させた高度なゴーストライティングツール"
-    },
-    {
-        "icon": "🎭",
-        "badgeText": "Studio",
-        "badgeClass": "bg-blue",
-        "title": "メディア憑依スタジオ",
-        "url": "https://neverendingdaily.github.io/media-possession-studio/",
-        "desc": "10軸トンマナ分析 × 完全憑依生成。メディアの「声」を深層から解析し、完璧に再現する究極のゴーストライティングツール"
-    },
-    {
-        "icon": "🎭",
-        "badgeText": "OCR",
-        "badgeClass": "bg-green",
-        "title": "OCRテキスト抽出",
-        "url": "https://neverendingdaily.github.io/ocr-tool/",
-        "desc": ""
-    },
-    {
-        "icon": "🎭",
-        "badgeText": "Tool",
-        "badgeClass": "bg-blue",
-        "title": "トンマナ深層アナリスト",
-        "url": "https://neverendingdaily.github.io/tonmana-tool/",
-        "desc": ""
-    }
-];
 
-function fav(u){
-    try{
-        return 'https://www.google.com/s2/favicons?sz=64&domain=' + encodeURIComponent(new URL(u).hostname);
-    }catch(e){
-        return '';
+<!-- ↓↓↓ サイトのデータはここにJSONとして格納し、エクスポート時に丸ごと書き換えます ↓↓↓ -->
+<script id="site-data" type="application/json">
+[
+  { "title": "Gem Hub", "url": "https://neverendingdaily.github.io/home/", "desc": "173のAIエージェント・SOP群。全ての作業の司令塔。", "icon": "💎", "badgeClass": "bg-purple", "badgeText": "Core AI" },
+  { "title": "Gem Hub コンシェルジュ", "url": "https://neverendingdaily.github.io/aiconcierge/", "desc": "達成したい目的を入力すると、最適な使用順序とワークフローをAIが提案します。", "icon": "💁", "badgeClass": "bg-purple", "badgeText": "Assistant" },
+  { "title": "Search Hub", "url": "https://neverendingdaily.github.io/searchhub/", "desc": "Google/X/Bluesky/Reddit横断のリサーチツール。", "icon": "🔍", "badgeClass": "bg-gray", "badgeText": "Research" },
+  { "title": "Trend Seed Finder", "url": "https://neverendingdaily.github.io/trend-seed-finder/", "desc": "最新トレンドの種を発見し、バズるコンテンツの切り口を見つけるツール。", "icon": "📈", "badgeClass": "bg-gray", "badgeText": "Research" },
+  { "title": "Persona Analyzer", "url": "https://neverendingdaily.github.io/persona-analyzer/", "desc": "ターゲット層のペルソナを深掘りし、解像度を極限まで上げる分析ツール。", "icon": "🕵️", "badgeClass": "bg-red", "badgeText": "Analysis" },
+  { "title": "トンマナ深層アナリスト", "url": "https://neverendingdaily.github.io/tonmana-tool/", "desc": "文章のトーン＆マナーを分析し、ブランドに合った声質を解析します。", "icon": "⚖️", "badgeClass": "bg-red", "badgeText": "Analysis" },
+  { "title": "総合アナライザー", "url": "https://neverendingdaily.github.io/analyze/", "desc": "コンテンツやテキストデータの多角的な分析・スコアリングツール。", "icon": "📊", "badgeClass": "bg-red", "badgeText": "Analysis" },
+  { "title": "言の葉（Kotodane）", "url": "https://neverendingdaily.github.io/kotodane/", "desc": "思考の種やキーワードから、連想的にコンテンツアイデアを生成・拡張。", "icon": "🌱", "badgeClass": "bg-yellow", "badgeText": "Ideation" },
+  { "title": "Gem Hub アイデア錬成", "url": "https://neverendingdaily.github.io/aiconcierge-idea/", "desc": "キーワードからGem Hubの機能を想定したワークフロー案を一気に30個リストアップ。", "icon": "💡", "badgeClass": "bg-yellow", "badgeText": "Ideation" },
+  { "title": "SNS 看板プランナー", "url": "https://neverendingdaily.github.io/sns-profile-planner/", "desc": "全媒体のプロフィール・固定ポスト・導線の一括設計。", "icon": "📢", "badgeClass": "bg-blue", "badgeText": "Setup" },
+  { "title": "SNS Content Studio", "url": "https://neverendingdaily.github.io/sns-content-studio/", "desc": "【統合版】SNS投稿の全体計画、カレンダー管理、コンテンツ制作を一元管理。", "icon": "📅", "badgeClass": "bg-green", "badgeText": "Planning" },
+  { "title": "X Schedule Generator", "url": "https://neverendingdaily.github.io/x-schedule-generator/", "desc": "X（旧Twitter）のアルゴリズムに最適化された投稿スケジュールを自動生成。", "icon": "🐦", "badgeClass": "bg-green", "badgeText": "Planning" },
+  { "title": "Strategic Content Generator", "url": "https://neverendingdaily.github.io/strategic-content-generator/", "desc": "戦略的意図に基づいた高品質なコンテンツ構成と原稿を自動生成。", "icon": "🎯", "badgeClass": "bg-orange", "badgeText": "Creative" },
+  { "title": "Product Review Creator", "url": "https://neverendingdaily.github.io/product-review-creation/", "desc": "ユーザー心理に刺さる自然な商品レビュー・口コミ風コンテンツを生成。", "icon": "⭐", "badgeClass": "bg-orange", "badgeText": "Creative" },
+  { "title": "ペルソナ憑依スタジオ", "url": "https://neverendingdaily.github.io/person/", "desc": "クリエイターの思考・口調・哲学を完全憑依させた高度なゴーストライティングツール。", "icon": "🍻", "badgeClass": "bg-blue", "badgeText": "Studio" },
+  { "title": "メディア憑依スタジオ", "url": "https://neverendingdaily.github.io/media-possession-studio/", "desc": "10軸トンマナ分析 × 完全憑依生成。メディアの「声」を完璧に再現。", "icon": "🎭", "badgeClass": "bg-blue", "badgeText": "Studio" },
+  { "title": "Canva SNS Auto-Chef", "url": "https://neverendingdaily.github.io/canva/", "desc": "画像・動画構成とSOP・プロンプトをGeminiで全自動生成。", "icon": "🧑‍🍳", "badgeClass": "bg-orange", "badgeText": "Creative" },
+  { "title": "Filmora AI Workflow", "url": "https://neverendingdaily.github.io/fimora-ai-workflow-studio/", "desc": "アイデア → 台本 → プロンプト → SOP を一気通貫生成。", "icon": "🎬", "badgeClass": "bg-orange", "badgeText": "Creative" },
+  { "title": "LP Wireframe Generator", "url": "https://neverendingdaily.github.io/lp-wireframe-generater/", "desc": "コンバージョン率を最大化するランディングページのワイヤーフレームを自動設計。", "icon": "📐", "badgeClass": "bg-teal", "badgeText": "Design" },
+  { "title": "PostMesh Planner", "url": "https://neverendingdaily.github.io/postmesh-planner/", "desc": "予約ツールへのデータストックと流し込み成形。", "icon": "⚙️", "badgeClass": "bg-blue", "badgeText": "Automation" },
+  { "title": "Data Merger", "url": "https://neverendingdaily.github.io/merger/", "desc": "複数のテキストデータやプロンプト結果を整理・統合・結合するユーティリティ。", "icon": "🔗", "badgeClass": "bg-blue", "badgeText": "Tool" },
+  { "title": "OCRテキスト抽出", "url": "https://neverendingdaily.github.io/ocr-tool/", "desc": "画像やPDFから文字情報を素早くテキストデータとして抽出します。", "icon": "📄", "badgeClass": "bg-blue", "badgeText": "Tool" },
+  { "title": "dマガジン 直リンクポータル", "url": "https://neverendingdaily.github.io/dmagazine/", "desc": "dマガジンの各種ページへ直接アクセスできるポータルサイトです。", "icon": "📚", "badgeClass": "bg-gray", "badgeText": "Portal" }
+]
+</script>
+
+<script>
+// JSONブロックから初期データを読み込み、ローカルストレージがあれば上書きする
+const dataScript = document.getElementById('site-data');
+let originalData = JSON.parse(dataScript.textContent);
+let L = JSON.parse(localStorage.getItem('my_portal_data')) || originalData;
+
+let isEditMode = false;
+
+// 描画関数
+function renderCards() {
+    const g = document.getElementById('g');
+    g.innerHTML = '';
+    
+    L.forEach((l, index) => {
+        // 編集モード時はリンクを無効化するためにdivを使う
+        const wrapper = document.createElement(isEditMode ? 'div' : 'a');
+        if(!isEditMode) {
+            wrapper.href = l.url;
+            wrapper.target = '_blank';
+        }
+        wrapper.className = 'card' + (isEditMode ? ' edit-mode' : '');
+        
+        const hasEmoji = l.icon && l.icon.trim() !== '';
+        const fav = (u) => { try{ return 'https://www.google.com/s2/favicons?sz=64&domain=' + encodeURIComponent(new URL(u).hostname); }catch(e){ return ''; } }
+        
+        const ico = hasEmoji
+            ? `<div class="icon-wrap">${l.icon}</div>`
+            : `<div class="icon-wrap"><img class="favicon-img" src="${fav(l.url)}" alt="" onerror="this.style.display='none'"></div>`;
+            
+        let inner = `<span class="badge ${l.badgeClass}">${l.badgeText}</span>${ico}<div class="title">${l.title}</div><div class="desc">${l.desc}</div>`;
+        
+        // 編集モード用オーバーレイ
+        if(isEditMode) {
+            inner += `
+            <div class="card-edit-overlay">
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+                    <button class="action-btn" onclick="moveUp(${index}, event)">◀ 前へ</button>
+                    <button class="action-btn" onclick="moveDown(${index}, event)">次へ ▶</button>
+                </div>
+                <button class="action-btn delete-btn" onclick="deleteSite(${index}, event)">🗑️ 削除</button>
+            </div>`;
+        }
+        
+        wrapper.innerHTML = inner;
+        g.appendChild(wrapper);
+    });
+}
+
+// 編集モード切替
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    const btn = document.getElementById('toggle-edit');
+    const form = document.getElementById('add-form');
+    
+    if(isEditMode) {
+        btn.textContent = "編集モード OFF";
+        btn.classList.add('active');
+        form.classList.add('active');
+    } else {
+        btn.textContent = "編集モード ON";
+        btn.classList.remove('active');
+        form.classList.remove('active');
+    }
+    renderCards();
+}
+
+// データの操作
+function saveData() {
+    localStorage.setItem('my_portal_data', JSON.stringify(L));
+    renderCards();
+}
+
+function moveUp(index, event) {
+    event.stopPropagation();
+    if(index > 0) {
+        [L[index - 1], L[index]] = [L[index], L[index - 1]];
+        saveData();
     }
 }
 
-L.forEach(l => {
+function moveDown(index, event) {
+    event.stopPropagation();
+    if(index < L.length - 1) {
+        [L[index + 1], L[index]] = [L[index], L[index + 1]];
+        saveData();
+    }
+}
+
+function deleteSite(index, event) {
+    event.stopPropagation();
+    if(confirm("このサイトをリストから削除しますか？")) {
+        L.splice(index, 1);
+        saveData();
+    }
+}
+
+function addSite() {
+    const title = document.getElementById('f-title').value;
+    const url = document.getElementById('f-url').value;
+    if(!title || !url) return alert("タイトルとURLは必須です");
+    
+    const newSite = {
+        title: title,
+        url: url,
+        icon: document.getElementById('f-icon').value,
+        badgeText: document.getElementById('f-badge-text').value || "New",
+        badgeClass: document.getElementById('f-badge-class').value,
+        desc: document.getElementById('f-desc').value
+    };
+    
+    L.push(newSite);
+    saveData();
+    
+    // 入力リセット
+    document.getElementById('f-title').value = '';
+    document.getElementById('f-url').value = '';
+    document.getElementById('f-desc').value = '';
+    alert("追加しました！一番下に追加されています。");
+}
+
+// HTMLエクスポート（このマジックでサーバー不要になります！）
+function exportHTML() {
+    // 現在のデータをJSONスクリプトブロックに書き戻す
+    dataScript.textContent = "\n" + JSON.stringify(L, null, 2) + "\n";
+    
+    // 編集モードを一時的に解除（出力ファイルに編集状態を含めないため）
+    const wasEditMode = isEditMode;
+    if(wasEditMode) toggleEditMode();
+    
+    // 描画エリアを一回空にする（重複描画を防ぐため）
+    document.getElementById('g').innerHTML = '';
+    
+    // 現在のHTML全体を取得
+    const htmlContent = "<!DOCTYPE html>\n<html lang=\"ja\">\n" + document.documentElement.innerHTML + "\n</html>";
+    
+    // ダウンロード用リンクを作成してクリック
+    const blob = new Blob([htmlContent], { type: "text/html" });
     const a = document.createElement('a');
-    a.href = l.url;
-    a.className = 'card';
-    a.target = '_blank';
+    a.href = URL.createObjectURL(blob);
+    a.download = "sns-portal-updated.html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     
-    const hasEmoji = l.icon && l.icon.trim() !== '';
+    // 画面を元の状態に戻す
+    renderCards();
+    if(wasEditMode) toggleEditMode();
     
-    // テンプレートリテラル（バッククォート）を使ってクォーテーションの衝突を回避
-    const ico = hasEmoji
-        ? `<div class="icon-wrap">${l.icon}</div>`
-        : `<div class="icon-wrap"><img class="favicon-img" src="${fav(l.url)}" alt="" onerror="this.style.display='none'"></div>`;
-        
-    a.innerHTML = `<span class="badge ${l.badgeClass}">${l.badgeText}</span>${ico}<div class="title">${l.title}</div><div class="desc">${l.desc}</div>`;
-    document.getElementById('g').appendChild(a);
-});
+    alert("「sns-portal-updated.html」という名前でダウンロードしました！\n次回からはこの新しいファイルを使うか、GitHub等にアップロードしてください。");
+}
+
+// 初期描画
+renderCards();
 </script>
 </body>
 </html>
