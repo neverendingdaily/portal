@@ -1,0 +1,323 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X高度な検索アプリ（プリセット保存対応・完全版）</title>
+<style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background-color: #f5f8fa; color: #333; }
+    .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #1da1f2; font-size: 1.4rem; margin-top: 0; margin-bottom: 20px; }
+    .section { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+    .section-title { font-size: 1.1rem; color: #1da1f2; margin-bottom: 15px; font-weight: bold; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.85rem; color: #555; }
+    input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #ccd6dd; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem; }
+    .flex-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .flex-row-nowrap { display: flex; gap: 10px; flex-wrap: nowrap; align-items: stretch;}
+    .checkbox-group { display: flex; align-items: center; margin-bottom: 10px; }
+    .checkbox-group input { margin-right: 10px; transform: scale(1.2); }
+    .checkbox-group label { margin-bottom: 0; font-weight: normal; font-size: 0.95rem; cursor: pointer; }
+    .btn-main { width: 100%; padding: 16px; background-color: #1da1f2; color: white; border: none; border-radius: 24px; font-size: 1.1rem; font-weight: bold; cursor: pointer; position: sticky; bottom: 10px; box-shadow: 0 4px 10px rgba(29,161,242,0.4); }
+    .btn-main:hover { background-color: #0c85d0; }
+    .btn-sub { background-color: #657786; color: white; border: none; border-radius: 8px; padding: 8px 15px; font-size: 0.85rem; font-weight: bold; cursor: pointer; white-space: nowrap; }
+    .btn-sub:hover { background-color: #38444d; }
+    .btn-pain { background-color: #e0245e; }
+    .btn-pain:hover { background-color: #c01b4c; }
+    .btn-benefit { background-color: #17bf63; }
+    .btn-benefit:hover { background-color: #12994f; }
+    .preset-box { background-color: #e8f5fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bce2fa; }
+    .note { font-size: 0.75rem; color: #888; margin-top: 5px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>X高度な検索アプリ</h2>
+    
+    <div class="preset-box">
+        <div class="section-title" style="margin-bottom: 10px; font-size: 1rem;">💾 検索条件の保存・読込</div>
+        <div class="form-group">
+            <select id="preset_list" onchange="loadPreset()">
+                <option value="">-- 保存済みの条件を選択して読込 --</option>
+            </select>
+        </div>
+        <div class="flex-row-nowrap">
+            <input type="text" id="preset_name" placeholder="保存する名前 (例: 競合A分析)" style="flex: 1;">
+            <button type="button" class="btn-sub" style="background-color: #1da1f2;" onclick="savePreset()">保存</button>
+            <button type="button" class="btn-sub" style="background-color: #e0245e;" onclick="deletePreset()">削除</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🔍 キーワード分析</div>
+        <div class="form-group">
+            <label>メインキーワード (すべての単語を含む)</label>
+            <div class="flex-row-nowrap">
+                <input type="text" id="all_words" placeholder="例: SNS">
+                <button type="button" class="btn-sub" onclick="fetchSuggests()">関連ワード</button>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>いずれかの単語を含む (OR)</label>
+            <input type="text" id="any_words" placeholder="例: マーケティング アフィリエイト">
+            <div class="flex-row" style="margin-top: 8px;">
+                <button type="button" class="btn-sub btn-pain" onclick="addWords('any_words', '最悪 つらい 失敗 騙された 後悔 微妙 悩む')">ペイン抽出(-)</button>
+                <button type="button" class="btn-sub btn-benefit" onclick="addWords('any_words', '最高 助かった おすすめ 解決 買ってよかった 神 感謝')">ベネフィット抽出(+)</button>
+                <button type="button" class="btn-sub" onclick="document.getElementById('any_words').value=''">クリア</button>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>フレーズと完全一致</label>
+            <input type="text" id="exact_phrase" placeholder="例: 売上アップ">
+        </div>
+        <div class="form-group">
+            <label>除外する単語 (-)</label>
+            <input type="text" id="exclude_words" placeholder="例: 相互フォロー">
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">👤 競合アカウント分析</div>
+        <div class="form-group">
+            <label>特定のアカウントの投稿 (from:)</label>
+            <div class="flex-row-nowrap">
+                <input type="text" id="from_account" placeholder="例: elonmusk">
+                <button type="button" class="btn-sub" style="background-color: #f4a100;" onclick="setCompetitorBuzz()">競合バズ抽出</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">⚙️ フィルター・メディア</div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="filter_images">
+            <label for="filter_images">画像を含む (filter:images)</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="filter_videos">
+            <label for="filter_videos">動画を含む (filter:videos)</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="exclude_zombies" checked>
+            <label for="exclude_zombies">インプレゾンビ除外 (日本語＋リプライ除外)</label>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">❤️ エンゲージメント</div>
+        <div class="flex-row-nowrap">
+            <div class="form-group" style="flex: 1;">
+                <label>最小いいね</label>
+                <input type="number" id="min_faves" placeholder="0">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>最小リポスト</label>
+                <input type="number" id="min_retweets" placeholder="0">
+            </div>
+        </div>
+    </div>
+
+    <div class="section" style="border-bottom: none;">
+        <div class="section-title">📅 日付</div>
+        <div class="flex-row-nowrap">
+            <div class="form-group" style="flex: 1;">
+                <label>開始 (since:)</label>
+                <input type="date" id="since_date">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>終了 (until:)</label>
+                <input type="date" id="until_date">
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-main" onclick="executeSearch()">Xアプリで検索する</button>
+</div>
+
+<script>
+    // --- プリセット機能のロジック ---
+    const PRESET_KEY = 'xSearchAppPresets';
+
+    // 全入力項目のIDリスト
+    const inputIds = [
+        'all_words', 'any_words', 'exact_phrase', 'exclude_words',
+        'from_account', 'min_faves', 'min_retweets', 'since_date', 'until_date'
+    ];
+    const checkboxIds = ['filter_images', 'filter_videos', 'exclude_zombies'];
+
+    // 起動時にプリセット一覧を読み込む
+    window.onload = function() {
+        updatePresetList();
+    };
+
+    function getPresets() {
+        const data = localStorage.getItem(PRESET_KEY);
+        return data ? JSON.parse(data) : {};
+    }
+
+    function updatePresetList() {
+        const presets = getPresets();
+        const select = document.getElementById('preset_list');
+        select.innerHTML = '<option value="">-- 保存済みの条件を選択して読込 --</option>';
+        for (let name in presets) {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            select.appendChild(option);
+        }
+    }
+
+    function savePreset() {
+        const name = document.getElementById('preset_name').value.trim();
+        if (!name) return alert("保存する名前を入力してください。");
+
+        const presets = getPresets();
+        const currentData = {};
+
+        inputIds.forEach(id => currentData[id] = document.getElementById(id).value);
+        checkboxIds.forEach(id => currentData[id] = document.getElementById(id).checked);
+
+        presets[name] = currentData;
+        localStorage.setItem(PRESET_KEY, JSON.stringify(presets));
+        
+        document.getElementById('preset_name').value = '';
+        updatePresetList();
+        document.getElementById('preset_list').value = name;
+        alert(`「${name}」を保存しました。`);
+    }
+
+    function loadPreset() {
+        const name = document.getElementById('preset_list').value;
+        if (!name) return;
+
+        const presets = getPresets();
+        const data = presets[name];
+        if (!data) return;
+
+        inputIds.forEach(id => {
+            if(data[id] !== undefined) document.getElementById(id).value = data[id];
+        });
+        checkboxIds.forEach(id => {
+            if(data[id] !== undefined) document.getElementById(id).checked = data[id];
+        });
+    }
+
+    function deletePreset() {
+        const name = document.getElementById('preset_list').value;
+        if (!name) return alert("削除するプリセットを選択してください。");
+        
+        if (!confirm(`「${name}」を削除しますか？`)) return;
+
+        const presets = getPresets();
+        delete presets[name];
+        localStorage.setItem(PRESET_KEY, JSON.stringify(presets));
+        
+        updatePresetList();
+        
+        // フォームのクリア
+        inputIds.forEach(id => document.getElementById(id).value = '');
+        checkboxIds.forEach(id => document.getElementById(id).checked = false);
+        document.getElementById('exclude_zombies').checked = true; // デフォルトONに戻す
+    }
+
+    // --- 既存の検索補助・実行ロジック ---
+    function addWords(targetId, words) {
+        const input = document.getElementById(targetId);
+        const currentVal = input.value.trim();
+        input.value = currentVal ? currentVal + ' ' + words : words;
+    }
+
+    function setCompetitorBuzz() {
+        document.getElementById('min_faves').value = 100;
+        document.getElementById('exclude_zombies').checked = true;
+        document.getElementById('from_account').focus();
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.innerText = "セット完了！";
+        setTimeout(() => { btn.innerText = originalText; }, 1500);
+    }
+
+    function applySuggests(data) {
+        if (data && data[1] && data[1].length > 0) {
+            const originalKeyword = data[0];
+            const suggests = data[1].filter(w => w !== originalKeyword).slice(0, 4);
+            if (suggests.length === 0) return;
+            addWords('any_words', suggests.join(' '));
+            const btn = document.querySelector('button[onclick="fetchSuggests()"]');
+            const originalText = btn.innerText;
+            btn.innerText = "取得完了！";
+            btn.style.backgroundColor = "#17bf63";
+            setTimeout(() => { btn.innerText = originalText; btn.style.backgroundColor = "#657786"; }, 2000);
+        } else {
+            alert("関連キーワードが見つかりませんでした。");
+        }
+    }
+
+    function fetchSuggests() {
+        const keyword = document.getElementById('all_words').value.trim();
+        if (!keyword) return alert("「メインキーワード」を入力してください。");
+        const script = document.createElement('script');
+        script.src = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(keyword)}&callback=applySuggests`;
+        document.body.appendChild(script);
+    }
+
+    function executeSearch() {
+        let queryParts = [];
+
+        const allWords = document.getElementById('all_words').value.trim();
+        if (allWords) queryParts.push(allWords);
+
+        const exactPhrase = document.getElementById('exact_phrase').value.trim();
+        if (exactPhrase) queryParts.push(`"${exactPhrase}"`);
+
+        const anyWords = document.getElementById('any_words').value.trim();
+        if (anyWords) {
+            const orQuery = anyWords.split(/\s+/).join(' OR ');
+            queryParts.push(`(${orQuery})`);
+        }
+
+        const excludeWords = document.getElementById('exclude_words').value.trim();
+        if (excludeWords) {
+            excludeWords.split(/\s+/).forEach(word => {
+                if(word) queryParts.push(`-${word}`);
+            });
+        }
+
+        const fromAcc = document.getElementById('from_account').value.trim().replace(/^@/, '');
+        if (fromAcc) queryParts.push(`from:${fromAcc}`);
+
+        if (document.getElementById('filter_images').checked) queryParts.push('filter:images');
+        if (document.getElementById('filter_videos').checked) queryParts.push('filter:videos');
+        
+        if (document.getElementById('exclude_zombies').checked) {
+            queryParts.push('lang:ja -filter:replies');
+        }
+
+        const minFaves = document.getElementById('min_faves').value;
+        if (minFaves) queryParts.push(`min_faves:${minFaves}`);
+
+        const minRetweets = document.getElementById('min_retweets').value;
+        if (minRetweets) queryParts.push(`min_retweets:${minRetweets}`);
+
+        const sinceDate = document.getElementById('since_date').value;
+        if (sinceDate) queryParts.push(`since:${sinceDate}`);
+
+        const untilDate = document.getElementById('until_date').value;
+        if (untilDate) queryParts.push(`until:${untilDate}`);
+
+        const finalQuery = queryParts.join(' ');
+        
+        if (!finalQuery) return alert("検索条件を入力してください。");
+
+        const encodedQuery = encodeURIComponent(finalQuery);
+        const targetUrl = `https://twitter.com/search?q=${encodedQuery}`;
+        window.open(targetUrl, '_blank');
+    }
+</script>
+
+</body>
+</html>
