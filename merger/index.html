@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HighRes PDF Merger</title>
+
+  <!-- pdf-lib: クライアントサイドPDF操作ライブラリ -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── CSS Variables (Light Mode / Fixed) ─────────────────────── */
+    :root {
+      --bg:          #f4f5f7;
+      --surface:     #ffffff;
+      --surface2:    #f0f1f3;
+      --border:      #e0e2e7;
+      --border2:     #cacdd6;
+      --text:        #1a1d23;
+      --text-muted:  #6b7080;
+      --accent:      #2563eb;
+      --accent-lt:   #eff4ff;
+      --accent-dark: #1d4ed8;
+      --danger:      #dc2626;
+      --danger-lt:   #fef2f2;
+      --success:     #16a34a;
+      --radius:      12px;
+      --radius-sm:   8px;
+      --shadow:      0 4px 16px rgba(0,0,0,.08);
+      --shadow-md:   0 8px 28px rgba(0,0,0,.12);
+    }
+
+    /* ─── Reset / Base ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 72px;
+      overflow-x: hidden;
+    }
+
+    /* Subtle grid pattern — very light, not distracting */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(37,99,235,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,.018) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── Layout ─────────────────────────────────────────────────────── */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ─── Header ─────────────────────────────────────────────────────── */
+    header { text-align: center; padding-top: 8px; }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-lt);
+      color: var(--accent);
+      border: 1px solid rgba(37,99,235,.2);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: clamp(1.8rem, 6vw, 2.6rem);
+      font-weight: 800;
+      letter-spacing: -.03em;
+      line-height: 1.1;
+      color: var(--text);
+    }
+    h1 span { color: var(--accent); }
+    .subtitle {
+      margin-top: 10px;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.7;
+    }
+
+    /* ─── Info Box ───────────────────────────────────────────────────── */
+    .info-box {
+      background: var(--accent-lt);
+      border: 1px solid rgba(37,99,235,.15);
+      border-radius: var(--radius-sm);
+      padding: 13px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .info-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .info-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 11.5px;
+      color: #3451b2;
+      line-height: 1.7;
+    }
+    .info-text strong { color: var(--accent-dark); }
+
+    /* ─── Drop Zone ──────────────────────────────────────────────────── */
+    .drop-zone {
+      border: 2px dashed var(--border2);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 44px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, transform .15s, box-shadow .2s;
+    }
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: var(--accent-lt);
+      transform: scale(1.008);
+      box-shadow: var(--shadow);
+    }
+    .drop-zone:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+    .drop-icon {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      background: var(--accent-lt);
+      border: 1px solid rgba(37,99,235,.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .drop-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .drop-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    #fileInput { display: none; }
+
+    /* ─── File Counter ───────────────────────────────────────────────── */
+    .counter-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2px;
+    }
+    .counter-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .counter-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-lt);
+      border: 1px solid rgba(37,99,235,.15);
+      padding: 3px 12px;
+      border-radius: 100px;
+    }
+
+    /* ─── File List ──────────────────────────────────────────────────── */
+    .file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .file-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 12px;
+      cursor: grab;
+      transition: border-color .18s, background .18s, box-shadow .18s, transform .12s;
+      animation: slideIn .22s ease forwards;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .file-card:hover { border-color: var(--border2); box-shadow: var(--shadow); }
+    .file-card.dragging { opacity: .32; border-color: var(--accent); }
+    .file-card.drag-target {
+      border-color: var(--accent);
+      background: var(--accent-lt);
+      transform: scale(1.015);
+    }
+
+    /* Thumbnail */
+    .thumb {
+      flex-shrink: 0;
+      width: 50px;
+      height: 62px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .25s ease;
+    }
+    .thumb-pdf { font-size: 24px; user-select: none; }
+
+    /* Info */
+    .file-info { flex: 1; min-width: 0; }
+    .file-name {
+      font-weight: 600;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+    .file-meta {
+      margin-top: 4px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .type-badge {
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .type-pdf { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .type-jpg { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .type-png { background: #faf5ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+    .rotation-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--accent);
+      background: var(--accent-lt);
+      border: 1px solid rgba(37,99,235,.2);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    /* Drag handle */
+    .drag-handle {
+      flex-shrink: 0;
+      width: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 3px;
+      opacity: .28;
+      transition: opacity .15s;
+      cursor: grab;
+      padding: 4px 0;
+    }
+    .file-card:hover .drag-handle { opacity: .6; }
+    .drag-handle span {
+      display: block;
+      width: 13px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+    }
+
+    /* Order badge */
+    .order-num {
+      flex-shrink: 0;
+      min-width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      cursor: pointer;
+      transition: border-color .15s, color .15s, background .15s;
+      user-select: none;
+    }
+    .order-num:hover { border-color: var(--accent); color: var(--accent); }
+    .order-num.selected {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* Card action buttons */
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    /* Rotate button */
+    .rotate-btn {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .15s, color .15s, background .15s;
+      line-height: 1;
+    }
+    .rotate-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-lt);
+    }
+
+    /* Remove button */
+    .remove-btn {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .15s, color .15s, background .15s;
+      line-height: 1;
+    }
+    .remove-btn:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: var(--danger-lt);
+    }
+
+    /* ─── Filename Input ─────────────────────────────────────────────── */
+    .filename-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .filename-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .filename-wrap {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .filename-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+    }
+    .filename-icon {
+      padding: 0 10px;
+      font-size: 15px;
+      background: var(--surface2);
+      border-right: 1px solid var(--border);
+      height: 42px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    #filenameInput {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 0 12px;
+      height: 42px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--text);
+      background: transparent;
+      min-width: 0;
+    }
+    .filename-suffix {
+      padding: 0 12px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--surface2);
+      border-left: 1px solid var(--border);
+      height: 42px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    /* ─── Actions ────────────────────────────────────────────────────── */
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-merge {
+      width: 100%;
+      padding: 16px 24px;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: .03em;
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(37,99,235,.3);
+      transition: background .15s, transform .12s, box-shadow .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+    }
+    .btn-merge:hover:not(:disabled) {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37,99,235,.38);
+    }
+    .btn-merge:active:not(:disabled) { transform: translateY(0); }
+    .btn-merge:disabled { opacity: .38; cursor: not-allowed; }
+
+    /* Sub-action row */
+    .sub-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-secondary {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--surface);
+      color: var(--text-muted);
+      transition: border-color .15s, color .15s, background .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .btn-secondary:hover {
+      border-color: var(--border2);
+      background: var(--surface2);
+      color: var(--text);
+    }
+    .btn-secondary.danger:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: var(--danger-lt);
+    }
+
+    /* ─── Status / Progress ──────────────────────────────────────────── */
+    .status-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: none;
+    }
+    .status-box.visible { display: block; }
+    .progress-bar-wrap {
+      height: 5px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), #60a5fa);
+      border-radius: 3px;
+      transition: width .3s ease;
+    }
+    .status-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .status-text.success { color: var(--success); }
+    .status-text.error   { color: var(--danger); }
+
+    /* ─── Toast ──────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(14px);
+      background: #1a1d23;
+      color: #f0ede8;
+      border-radius: var(--radius-sm);
+      padding: 11px 18px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.5;
+      box-shadow: 0 8px 24px rgba(0,0,0,.22);
+      opacity: 0;
+      transition: opacity .22s, transform .22s;
+      pointer-events: none;
+      z-index: 999;
+      max-width: 90vw;
+      text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ─── Footer ─────────────────────────────────────────────────────── */
+    footer {
+      margin-top: 4px;
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--border2);
+      letter-spacing: .05em;
+    }
+
+    /* ─── Responsive ─────────────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      body { padding: 20px 12px 56px; }
+      .drop-zone { padding: 36px 16px; }
+      .file-card { padding: 9px 10px; gap: 9px; }
+      .thumb { width: 44px; height: 54px; }
+      .sub-actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrapper">
+
+    <!-- ── Header ── -->
+    <header>
+      <div class="logo-badge">🔒 ブラウザ完結処理</div>
+      <h1>PDF <span>Merger</span></h1>
+      <p class="subtitle">
+        PDF / JPG / PNG を高画質のまま1ファイルに結合。<br />
+        ファイルはすべてブラウザ内で処理され、サーバーには送信されません。
+      </p>
+    </header>
+
+    <!-- ── Info Box ── -->
+    <div class="info-box">
+      <span class="info-icon">ℹ️</span>
+      <div class="info-text">
+        画像はPDF内に<strong>無劣化で埋め込まれ</strong>、ページサイズも元の解像度に合わせて自動調整されます。
+        最大 <strong>20 ファイル</strong>まで一度に結合可能です。
+      </div>
+    </div>
+
+    <!-- ── Drop Zone ── -->
+    <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="ファイルをドロップまたはクリックして選択">
+      <div class="drop-icon">📂</div>
+      <div class="drop-title">ここにファイルをドロップ</div>
+      <div class="drop-sub">
+        または クリック / タップ して選択<br />
+        対応形式：PDF・JPG・PNG &nbsp;／&nbsp; 最大 20 ファイルまで
+      </div>
+    </div>
+    <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" />
+
+    <!-- ── File Counter ── -->
+    <div class="counter-row" id="counterRow" style="display:none;">
+      <span class="counter-label">読み込み済みファイル</span>
+      <span class="counter-value" id="counterValue">0 / 20</span>
+    </div>
+
+    <!-- ── File List ── -->
+    <div class="file-list" id="fileList"></div>
+
+    <!-- ── Actions ── -->
+    <div class="actions" id="actionArea" style="display:none;">
+
+      <!-- ① 出力ファイル名 -->
+      <div class="filename-group">
+        <span class="filename-label">出力ファイル名</span>
+        <div class="filename-wrap">
+          <span class="filename-icon">📄</span>
+          <input type="text" id="filenameInput"
+                 value="merged_document"
+                 placeholder="ファイル名を入力"
+                 autocomplete="off"
+                 spellcheck="false" />
+          <span class="filename-suffix">.pdf</span>
+        </div>
+      </div>
+
+      <!-- ② 結合ボタン -->
+      <button class="btn-merge" id="mergeBtn" disabled>
+        🔗 &nbsp;PDF を結合してダウンロード
+      </button>
+
+      <!-- ③ 並び替え反転 ＆ クリア -->
+      <div class="sub-actions">
+        <button class="btn-secondary" id="reverseBtn" title="ファイルの並び順を上下逆にします">
+          ⇅ &nbsp;並び順を反転
+        </button>
+        <button class="btn-secondary danger" id="clearBtn">
+          🗑 &nbsp;すべてクリア
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ── Status / Progress ── -->
+    <div class="status-box" id="statusBox">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="status-text" id="statusText">処理中...</div>
+    </div>
+
+    <footer>HighRes PDF Merger &nbsp;—&nbsp; runs entirely in your browser &nbsp;🔒&nbsp; zero upload</footer>
+
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  // ═══════════════════════════════════════════════════════════════════════
+  //  STATE
+  // ═══════════════════════════════════════════════════════════════════════
+  const MAX_FILES = 20;
+
+  /**
+   * files[]: Array of {
+   *   id:        string        (unique key)
+   *   file:      File
+   *   type:      'pdf'|'jpg'|'png'
+   *   objectUrl: string|null   (Blob URL for preview; images only)
+   *   name:      string
+   *   sizeStr:   string
+   *   rotation:  0|90|180|270  (CW degrees; images only; 0 = no rotation)
+   * }
+   */
+  let files          = [];
+  let dragSrcIndex   = null;
+  let touchSelectIdx = null;
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  DOM REFS
+  // ═══════════════════════════════════════════════════════════════════════
+  const dropZone      = document.getElementById('dropZone');
+  const fileInput     = document.getElementById('fileInput');
+  const fileList      = document.getElementById('fileList');
+  const actionArea    = document.getElementById('actionArea');
+  const mergeBtn      = document.getElementById('mergeBtn');
+  const clearBtn      = document.getElementById('clearBtn');
+  const reverseBtn    = document.getElementById('reverseBtn');
+  const statusBox     = document.getElementById('statusBox');
+  const progressBar   = document.getElementById('progressBar');
+  const statusText    = document.getElementById('statusText');
+  const counterRow    = document.getElementById('counterRow');
+  const counterValue  = document.getElementById('counterValue');
+  const toastEl       = document.getElementById('toast');
+  const filenameInput = document.getElementById('filenameInput');
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  TOAST
+  // ═══════════════════════════════════════════════════════════════════════
+  let toastTimer;
+  function showToast(msg) {
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 4000);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  HELPERS
+  // ═══════════════════════════════════════════════════════════════════════
+  function formatBytes(b) {
+    if (b < 1024)    return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(1) + ' MB';
+  }
+
+  function getFileType(file) {
+    const n = file.name.toLowerCase();
+    if (file.type === 'application/pdf' || n.endsWith('.pdf')) return 'pdf';
+    if (file.type === 'image/jpeg' || n.endsWith('.jpg') || n.endsWith('.jpeg')) return 'jpg';
+    if (file.type === 'image/png'  || n.endsWith('.png')) return 'png';
+    return null;
+  }
+
+  function isImage(type) { return type === 'jpg' || type === 'png'; }
+
+  function genId() { return '_' + Math.random().toString(36).slice(2, 9); }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /** Build the final download filename from the input field */
+  function getOutputFilename() {
+    const raw = (filenameInput.value.trim() || 'merged_document')
+                  .replace(/\.pdf$/i, '')          // strip trailing .pdf if typed
+                  .replace(/[\\/:*?"<>|]/g, '_');  // sanitize illegal chars
+    return raw + '.pdf';
+  }
+
+  /** Yield to browser so the UI stays responsive during heavy processing */
+  function tick() { return new Promise(r => setTimeout(r, 0)); }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  ADD FILES
+  // ═══════════════════════════════════════════════════════════════════════
+  function addFiles(fileArr) {
+    const incoming = Array.from(fileArr);
+
+    // 1. Filter unsupported types
+    const valid = incoming.filter(f => {
+      const t = getFileType(f);
+      if (!t) { showToast(`"${f.name}" は対応外の形式です（PDF / JPG / PNG のみ）`); return false; }
+      return true;
+    });
+    if (!valid.length) return;
+
+    // 2. Respect MAX_FILES
+    const available = MAX_FILES - files.length;
+    if (available <= 0) {
+      showToast(`⚠️ 最大 ${MAX_FILES} ファイルに達しています。先にファイルを削除してください。`);
+      return;
+    }
+    if (valid.length > available) {
+      showToast(`⚠️ 上限に達したため、最初の ${available} ファイルのみ追加しました。`);
+    }
+
+    for (const f of valid.slice(0, available)) {
+      const type      = getFileType(f);
+      const objectUrl = isImage(type) ? URL.createObjectURL(f) : null;
+      files.push({
+        id: genId(), file: f, type, objectUrl,
+        name: f.name, sizeStr: formatBytes(f.size),
+        rotation: 0,
+      });
+    }
+
+    renderList();
+    updateUI();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  REMOVE / CLEAR / REVERSE
+  // ═══════════════════════════════════════════════════════════════════════
+  function removeFile(id) {
+    const idx = files.findIndex(f => f.id === id);
+    if (idx === -1) return;
+    if (files[idx].objectUrl) URL.revokeObjectURL(files[idx].objectUrl);
+    files.splice(idx, 1);
+    touchSelectIdx = null;
+    renderList();
+    updateUI();
+  }
+
+  function clearAll() {
+    files.forEach(f => { if (f.objectUrl) URL.revokeObjectURL(f.objectUrl); });
+    files = [];
+    touchSelectIdx = null;
+    fileInput.value = '';
+    fileList.innerHTML = '';
+    statusBox.classList.remove('visible');
+    updateUI();
+  }
+
+  function reverseOrder() {
+    if (files.length < 2) return;
+    files.reverse();
+    touchSelectIdx = null;
+    renderList();
+    showToast('↕ 並び順を反転しました');
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  ROTATE IMAGE  — adds 90° CW to stored rotation value
+  // ═══════════════════════════════════════════════════════════════════════
+  function rotateImage(id) {
+    const item = files.find(f => f.id === id);
+    if (!item || !isImage(item.type)) return;
+    item.rotation = (item.rotation + 90) % 360;
+    renderList();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  RENDER FILE LIST
+  // ═══════════════════════════════════════════════════════════════════════
+  function renderList() {
+    fileList.innerHTML = '';
+    touchSelectIdx = null;
+
+    files.forEach((item, idx) => {
+      const card = document.createElement('div');
+      card.className = 'file-card';
+      card.dataset.id = item.id;
+      card.draggable = true;
+
+      // ── Thumbnail ──
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb';
+      if (isImage(item.type)) {
+        const img = document.createElement('img');
+        img.src = item.objectUrl;
+        img.alt = item.name;
+        // CSS transform for visual preview only; actual rotation is done via Canvas at export time
+        if (item.rotation === 0) {
+          img.style.transform = '';
+        } else if (item.rotation === 90 || item.rotation === 270) {
+          img.style.transform = `rotate(${item.rotation}deg) scale(0.78)`;
+        } else {
+          img.style.transform = `rotate(${item.rotation}deg)`;
+        }
+        thumb.appendChild(img);
+      } else {
+        const ic = document.createElement('div');
+        ic.className = 'thumb-pdf';
+        ic.textContent = '📄';
+        thumb.appendChild(ic);
+      }
+
+      // ── Order badge (tap-to-swap on mobile) ──
+      const num = document.createElement('div');
+      num.className = 'order-num';
+      num.textContent = idx + 1;
+      num.title = 'タップで選択 → 別の番号をタップしてスワップ（モバイル並び替え用）';
+      num.addEventListener('click', () => handleTouchSelect(idx));
+
+      // ── File Info ──
+      const info = document.createElement('div');
+      info.className = 'file-info';
+      const rotBadge = (isImage(item.type) && item.rotation !== 0)
+        ? `<span class="rotation-badge">↻${item.rotation}°</span>`
+        : '';
+      info.innerHTML = `
+        <div class="file-name" title="${escHtml(item.name)}">${escHtml(item.name)}</div>
+        <div class="file-meta">
+          <span class="type-badge type-${item.type}">${item.type.toUpperCase()}</span>
+          <span>${item.sizeStr}</span>${rotBadge}
+        </div>`;
+
+      // ── Drag Handle ──
+      const handle = document.createElement('div');
+      handle.className = 'drag-handle';
+      handle.setAttribute('aria-label', 'ドラッグで並び替え');
+      handle.innerHTML = '<span></span><span></span><span></span>';
+
+      // ── Card action buttons ──
+      const cardActions = document.createElement('div');
+      cardActions.className = 'card-actions';
+
+      // Rotate button — images only
+      if (isImage(item.type)) {
+        const rotBtn = document.createElement('button');
+        rotBtn.className = 'rotate-btn';
+        rotBtn.title = '90° 時計回りに回転（PDFへの出力に反映されます）';
+        rotBtn.setAttribute('aria-label', '画像を90度時計回りに回転');
+        rotBtn.textContent = '↻';
+        rotBtn.addEventListener('click', e => { e.stopPropagation(); rotateImage(item.id); });
+        cardActions.appendChild(rotBtn);
+      }
+
+      // Remove button
+      const remBtn = document.createElement('button');
+      remBtn.className = 'remove-btn';
+      remBtn.title = 'このファイルを削除';
+      remBtn.setAttribute('aria-label', `${item.name} を削除`);
+      remBtn.textContent = '×';
+      remBtn.addEventListener('click', e => { e.stopPropagation(); removeFile(item.id); });
+      cardActions.appendChild(remBtn);
+
+      card.append(thumb, num, info, handle, cardActions);
+
+      // ── Drag & Drop reorder (PC) ──
+      card.addEventListener('dragstart', e => {
+        dragSrcIndex = idx;
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => card.classList.add('dragging'), 0);
+      });
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        document.querySelectorAll('.file-card').forEach(c => c.classList.remove('drag-target'));
+      });
+      card.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        document.querySelectorAll('.file-card').forEach(c => c.classList.remove('drag-target'));
+        if (dragSrcIndex !== idx) card.classList.add('drag-target');
+      });
+      card.addEventListener('dragleave', () => card.classList.remove('drag-target'));
+      card.addEventListener('drop', e => {
+        e.preventDefault();
+        card.classList.remove('drag-target');
+        if (dragSrcIndex === null || dragSrcIndex === idx) return;
+        const [moved] = files.splice(dragSrcIndex, 1);
+        files.splice(idx, 0, moved);
+        dragSrcIndex = null;
+        renderList();
+      });
+
+      fileList.appendChild(card);
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  TOUCH SELECT-AND-SWAP  (tap order badge to select, tap another to swap)
+  // ═══════════════════════════════════════════════════════════════════════
+  function handleTouchSelect(idx) {
+    const badges = document.querySelectorAll('.order-num');
+    if (touchSelectIdx === null) {
+      touchSelectIdx = idx;
+      badges.forEach((n, i) => n.classList.toggle('selected', i === idx));
+    } else if (touchSelectIdx === idx) {
+      touchSelectIdx = null;
+      badges.forEach(n => n.classList.remove('selected'));
+    } else {
+      const a = touchSelectIdx, b = idx;
+      [files[a], files[b]] = [files[b], files[a]];
+      touchSelectIdx = null;
+      renderList();
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  UPDATE UI STATE
+  // ═══════════════════════════════════════════════════════════════════════
+  function updateUI() {
+    const count = files.length;
+    counterRow.style.display   = count > 0 ? 'flex' : 'none';
+    counterValue.textContent   = `${count} / ${MAX_FILES}`;
+    actionArea.style.display   = count > 0 ? 'flex' : 'none';
+    mergeBtn.disabled          = count < 1;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  PROGRESS
+  // ═══════════════════════════════════════════════════════════════════════
+  function setProgress(pct, msg, cls) {
+    statusBox.classList.add('visible');
+    progressBar.style.width  = pct + '%';
+    statusText.textContent   = msg;
+    statusText.className     = 'status-text' + (cls ? ' ' + cls : '');
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  IMAGE ROTATION via Canvas
+  //  — Draws the image onto an offscreen canvas at the requested rotation,
+  //    then exports as JPEG (quality=1.0) or PNG (lossless).
+  //    This avoids the complexity of pdf-lib coordinate transforms and
+  //    guarantees the correct pixel layout regardless of rotation angle.
+  // ═══════════════════════════════════════════════════════════════════════
+  function getRotatedImageBuffer(item) {
+    return new Promise((resolve, reject) => {
+      // No rotation → read file bytes directly (zero re-encoding)
+      if (item.rotation === 0) {
+        item.file.arrayBuffer().then(resolve).catch(reject);
+        return;
+      }
+
+      const imgEl = new Image();
+      imgEl.onload = () => {
+        const { naturalWidth: w, naturalHeight: h } = imgEl;
+        const rot = item.rotation;
+
+        // For 90°/270° the canvas dimensions are swapped
+        const cw = (rot === 90 || rot === 270) ? h : w;
+        const ch = (rot === 90 || rot === 270) ? w : h;
+
+        const canvas = document.createElement('canvas');
+        canvas.width  = cw;
+        canvas.height = ch;
+        const ctx = canvas.getContext('2d');
+
+        // Rotate around the canvas centre
+        ctx.translate(cw / 2, ch / 2);
+        ctx.rotate(rot * Math.PI / 180);
+        ctx.drawImage(imgEl, -w / 2, -h / 2);
+
+        const mime    = item.type === 'png' ? 'image/png' : 'image/jpeg';
+        const quality = item.type === 'png' ? undefined   : 1.0;   // PNG is inherently lossless
+
+        canvas.toBlob(blob => {
+          if (!blob) { reject(new Error('Canvas の toBlob に失敗しました')); return; }
+          blob.arrayBuffer().then(resolve).catch(reject);
+        }, mime, quality);
+      };
+      imgEl.onerror = () => reject(new Error(`画像の読み込みに失敗しました: ${item.name}`));
+      imgEl.src = item.objectUrl;
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  MERGE PDF  ← core feature
+  // ═══════════════════════════════════════════════════════════════════════
+  async function mergePDF() {
+    if (!files.length) return;
+
+    mergeBtn.disabled   = true;
+    clearBtn.disabled   = true;
+    reverseBtn.disabled = true;
+    setProgress(0, '結合を開始しています...');
+
+    try {
+      const { PDFDocument } = PDFLib;
+      const merged = await PDFDocument.create();
+
+      for (let i = 0; i < files.length; i++) {
+        const item = files[i];
+        const pct  = Math.round((i / files.length) * 88);
+        setProgress(pct, `[${i + 1}/${files.length}] "${item.name}" を処理中...`);
+        await tick();
+
+        if (item.type === 'pdf') {
+          // ── Copy all pages from source PDF unchanged ──
+          const ab     = await item.file.arrayBuffer();
+          const srcPdf = await PDFDocument.load(ab, { ignoreEncryption: true });
+          const copied = await merged.copyPages(srcPdf, srcPdf.getPageIndices());
+          copied.forEach(p => merged.addPage(p));
+
+        } else {
+          // ── Embed image (rotation baked in via Canvas if rotation !== 0) ──
+          // getRotatedImageBuffer returns a correctly oriented ArrayBuffer.
+          // The embedded image's own dimensions already reflect the rotation,
+          // so we simply set the PDF page size to match those dimensions.
+          const ab  = await getRotatedImageBuffer(item);
+          const img = item.type === 'png'
+            ? await merged.embedPng(ab)
+            : await merged.embedJpg(ab);
+
+          // Page size = image pixel size → text stays razor-sharp at any zoom
+          const page = merged.addPage([img.width, img.height]);
+          page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+        }
+      }
+
+      setProgress(92, '最終PDFを生成中...');
+      await tick();
+
+      const pdfBytes = await merged.save({
+        useObjectStreams: false,  // maximises viewer compatibility
+        addDefaultPage: false,
+      });
+
+      setProgress(98, 'ダウンロードを準備中...');
+      await tick();
+
+      // ── Trigger browser download ──
+      const blob   = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url    = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href     = url;
+      anchor.download  = getOutputFilename();
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      setTimeout(() => URL.revokeObjectURL(url), 15000);
+
+      setProgress(100,
+        `✅ 完了！ ${files.length} ファイルを結合しました（合計 ${formatBytes(pdfBytes.byteLength)}）`,
+        'success'
+      );
+
+    } catch (err) {
+      console.error(err);
+      setProgress(0, `❌ エラー: ${err.message}`, 'error');
+    } finally {
+      mergeBtn.disabled   = files.length < 1;
+      clearBtn.disabled   = false;
+      reverseBtn.disabled = false;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  EVENT WIRING
+  // ═══════════════════════════════════════════════════════════════════════
+
+  // Drop zone – click / keyboard open
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+  });
+
+  // Drop zone – drag visual
+  dropZone.addEventListener('dragenter', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragover',  e => { e.preventDefault(); });
+  dropZone.addEventListener('dragleave', e => {
+    if (!dropZone.contains(e.relatedTarget)) dropZone.classList.remove('drag-over');
+  });
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    addFiles(e.dataTransfer.files);
+  });
+
+  // File input
+  fileInput.addEventListener('change', () => { addFiles(fileInput.files); fileInput.value = ''; });
+
+  // Buttons
+  mergeBtn.addEventListener('click', mergePDF);
+  clearBtn.addEventListener('click', clearAll);
+  reverseBtn.addEventListener('click', reverseOrder);
+
+  // Prevent browser's native file-open on accidental window drop
+  window.addEventListener('dragover', e => e.preventDefault());
+  window.addEventListener('drop',     e => e.preventDefault());
+
+  // Init
+  updateUI();
+  </script>
+</body>
+</html>
