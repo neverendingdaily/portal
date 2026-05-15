@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SNS クチコミ シミュレーター</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    /* ══════════════════════════════
+       リセット & 基本
+    ══════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:       #ff4d1a;
+      --accent-hover: #e03000;
+      --accent-light: #fff5f0;
+      --accent-border:#ffc8ae;
+      --bg:           #fafaf8;
+      --card:         #ffffff;
+      --border:       #e8e8e2;
+      --text:         #1a1a18;
+      --muted:        #6b6b60;
+      --radius:       14px;
+      --shadow:       0 1px 4px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.06);
+    }
+
+    body {
+      font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.7;
+    }
+
+    /* ══════════════════════════════
+       ヘッダー
+    ══════════════════════════════ */
+    .site-header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; }
+
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 9px;
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 17px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .logo-sub {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .beta-badge {
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      background: var(--accent-light);
+      border: 1px solid var(--accent-border);
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+
+    /* ══════════════════════════════
+       API キーバー
+    ══════════════════════════════ */
+    .api-bar {
+      background: #fef3ec;
+      border-bottom: 1px solid var(--accent-border);
+      padding: 10px 16px;
+    }
+
+    .api-bar-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    @media (min-width: 560px) {
+      .api-bar-inner { flex-direction: row; align-items: center; }
+    }
+
+    .api-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #c44400;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .api-input-wrap {
+      position: relative;
+      flex: 1;
+    }
+
+    .api-input-wrap input {
+      width: 100%;
+      background: #fff;
+      border: 1.5px solid var(--accent-border);
+      border-radius: 9px;
+      padding: 8px 44px 8px 12px;
+      font-size: 0.83rem;
+      font-family: inherit;
+      color: var(--text);
+      outline: none;
+    }
+
+    .api-input-wrap input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(255,77,26,0.12);
+    }
+
+    .toggle-pw-btn {
+      position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      font-size: 1.1rem; line-height: 1; color: var(--muted);
+    }
+
+    .api-link {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #c44400;
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .api-link:hover { text-decoration: underline; }
+
+    /* ══════════════════════════════
+       メインコンテンツ
+    ══════════════════════════════ */
+    .main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 16px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .intro-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.6rem, 5vw, 2.1rem);
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+
+    .intro-title .accent { color: var(--accent); }
+
+    .intro-desc {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.85;
+    }
+
+    /* ══════════════════════════════
+       カード
+    ══════════════════════════════ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* ══════════════════════════════
+       フォーム
+    ══════════════════════════════ */
+    .form-fields { display: flex; flex-direction: column; gap: 18px; }
+
+    .field-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .required-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.58rem;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      letter-spacing: 0.06em;
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(255,77,26,0.12);
+      background: #fff;
+    }
+
+    .form-textarea { resize: vertical; min-height: 88px; }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    @media (min-width: 480px) {
+      .field-row { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ══════════════════════════════
+       SNS セレクター
+    ══════════════════════════════ */
+    .sns-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    @media (min-width: 400px) {
+      .sns-grid { grid-template-columns: repeat(5, 1fr); }
+    }
+
+    .sns-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 10px 6px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--muted);
+      transition: all 0.18s;
+      user-select: none;
+    }
+
+    .sns-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .sns-btn.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(255,77,26,0.28);
+    }
+
+    .sns-icon { font-size: 1.3rem; line-height: 1; }
+
+    /* ══════════════════════════════
+       送信ボタン
+    ══════════════════════════════ */
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 15px 24px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(255,77,26,0.3);
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(255,77,26,0.38);
+    }
+
+    .btn-primary:disabled {
+      background: #d0cfc8;
+      color: #8f8f83;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* ══════════════════════════════
+       スピナー
+    ══════════════════════════════ */
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,77,26,0.25);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════
+       スケルトン
+    ══════════════════════════════ */
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+
+    .skeleton {
+      border-radius: 6px;
+      height: 16px;
+      background: linear-gradient(90deg, #eeede8 25%, #e4e3de 50%, #eeede8 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite;
+      margin-bottom: 9px;
+    }
+
+    .loading-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* ══════════════════════════════
+       結果エリア
+    ══════════════════════════════ */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-wrapper {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .result-header {
+      background: linear-gradient(135deg, var(--accent) 0%, #ff7a45 100%);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .result-header-text { flex: 1; }
+
+    .result-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #fff;
+    }
+
+    .result-subtitle {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.78);
+      margin-top: 3px;
+    }
+
+    .copy-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 1.3rem;
+      transition: transform 0.15s;
+    }
+    .copy-btn:hover { transform: scale(1.18); }
+
+    /* ── Markdown ── */
+    .markdown-body {
+      padding: 24px;
+      font-size: 0.91rem;
+      line-height: 1.85;
+      color: var(--text);
+    }
+
+    @media (max-width: 480px) {
+      .markdown-body { padding: 16px; }
+      .result-header { padding: 14px 16px; }
+    }
+
+    .markdown-body h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.3rem; font-weight: 800;
+      margin: 28px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    .markdown-body h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--accent);
+      margin: 26px 0 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .markdown-body h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px; height: 15px;
+      background: var(--accent);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .markdown-body h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem; font-weight: 700;
+      color: #3d3d38;
+      margin: 16px 0 8px;
+    }
+
+    .markdown-body p { margin-bottom: 11px; }
+
+    .markdown-body ul, .markdown-body ol {
+      margin: 8px 0 14px 4px;
+      padding-left: 0;
+    }
+
+    .markdown-body li {
+      margin-bottom: 6px;
+      list-style: none;
+      padding-left: 18px;
+      position: relative;
+    }
+
+    .markdown-body ul li::before {
+      content: '▸';
+      position: absolute; left: 0;
+      color: var(--accent);
+      font-size: 0.75em; top: 4px;
+    }
+
+    .markdown-body ol { counter-reset: ol-counter; }
+    .markdown-body ol li::before {
+      counter-increment: ol-counter;
+      content: counter(ol-counter) '.';
+      position: absolute; left: 0;
+      color: var(--accent);
+      font-weight: 700; font-size: 0.82em; top: 3px;
+    }
+
+    .markdown-body strong { font-weight: 700; color: #1a1a18; }
+    .markdown-body em { color: var(--accent); font-style: normal; font-weight: 600; }
+
+    .markdown-body blockquote {
+      border-left: 3px solid var(--accent);
+      background: var(--accent-light);
+      margin: 14px 0;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+    }
+
+    .markdown-body code {
+      background: #f0efeb;
+      border-radius: 5px;
+      padding: 2px 6px;
+      font-size: 0.83rem;
+    }
+
+    .markdown-body hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 22px 0;
+    }
+
+    .markdown-body table {
+      width: 100%; border-collapse: collapse;
+      margin: 14px 0; font-size: 0.86rem;
+    }
+    .markdown-body th {
+      background: var(--accent); color: #fff;
+      padding: 8px 12px; text-align: left;
+    }
+    .markdown-body td {
+      border-bottom: 1px solid var(--border);
+      padding: 8px 12px;
+    }
+    .markdown-body tr:nth-child(even) td { background: var(--accent-light); }
+
+    /* ══════════════════════════════
+       エラー
+    ══════════════════════════════ */
+    .error-card {
+      background: #fff5f5;
+      border: 1.5px solid #fca5a5;
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .error-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .error-title { font-size: 0.88rem; font-weight: 700; color: #b91c1c; margin-bottom: 4px; }
+    .error-msg   { font-size: 0.85rem; color: #7f1d1d; line-height: 1.6; }
+
+    /* ══════════════════════════════
+       ユーティリティ
+    ══════════════════════════════ */
+    .hidden { display: none !important; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .fade-in   { animation: fadeIn 0.45s both; }
+    .fade-in-2 { animation: fadeIn 0.45s 0.08s both; }
+    .fade-in-3 { animation: fadeIn 0.45s 0.14s both; }
+
+    .site-footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 0.72rem;
+      color: #b8b8ad;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="logo-mark">S</div>
+        <div>
+          <div class="logo-title">SNS Simulator</div>
+          <div class="logo-sub">Powered by Gemini AI</div>
+        </div>
+      </div>
+      <span class="beta-badge">BETA</span>
+    </div>
+  </header>
+
+  <div class="api-bar">
+    <div class="api-bar-inner">
+      <span class="api-label">🔑 Gemini API Key</span>
+      <div style="display: flex; gap: 8px; flex: 1; align-items: center;">
+        <div class="api-input-wrap" style="flex: 1;">
+          <input type="password" id="apiKey"
+            placeholder="AIza... （Google AI Studio から取得）" />
+          <button class="toggle-pw-btn" onclick="toggleApiVisibility()" title="表示切替">👁</button>
+        </div>
+        <button id="save-ak-btn" style="width: 38px; height: 38px; border-radius: 9px; border: 1.5px solid var(--accent-border); background: #fff; display: flex; justify-content: center; align-items: center; font-size: 16px; cursor: pointer; transition: all 0.2s; flex-shrink: 0;" title="APIキーを保存">💾</button>
+      </div>
+      <a class="api-link" href="https://aistudio.google.com/app/apikey"
+        target="_blank" rel="noopener">取得はこちら →</a>
+    </div>
+  </div>
+
+  <main class="main">
+
+    <div class="fade-in">
+      <h1 class="intro-title">
+        架空クチコミ &amp;<br>
+        SNSインサイトを<span class="accent"> 即生成</span>
+      </h1>
+      <p class="intro-desc">
+        商品・イベント・人物の情報を入力するだけで、Gemini AI が
+        リアルな反響・ペルソナ・炎上リスクまでシミュレートします。
+      </p>
+    </div>
+
+    <div class="card fade-in-2">
+      <div class="section-label">入力情報</div>
+      <div class="form-fields">
+
+        <div>
+          <label class="field-label" for="targetName">
+            対象名（商品・イベント・人物など）<span class="required-badge">必須</span>
+          </label>
+          <input type="text" id="targetName" class="form-input"
+            placeholder="例: 新作プロテインバー「RELOAD」" />
+        </div>
+
+        <div>
+          <label class="field-label" for="feature">
+            最大の特徴・魅力<span class="required-badge">必須</span>
+          </label>
+          <textarea id="feature" class="form-textarea"
+            placeholder="例: 砂糖不使用なのに甘くて美味しい。1本でたんぱく質20g補給。コンビニで買える手軽さ。"></textarea>
+        </div>
+
+        <div class="field-row">
+          <div>
+            <label class="field-label" for="cost">消費コスト（価格・所要時間など）</label>
+            <input type="text" id="cost" class="form-input" placeholder="例: 1本 298円 / 30分" />
+          </div>
+          <div>
+            <label class="field-label" for="targetUser">ターゲット・関心層</label>
+            <input type="text" id="targetUser" class="form-input" placeholder="例: 20〜30代フィットネス女子" />
+          </div>
+        </div>
+
+        <div>
+          <label class="field-label">メインで運用するSNS</label>
+          <div class="sns-grid">
+            <button class="sns-btn active" data-sns="X(Twitter)" onclick="selectSNS(this)">
+              <span class="sns-icon">𝕏</span>X (Twitter)
+            </button>
+            <button class="sns-btn" data-sns="Instagram" onclick="selectSNS(this)">
+              <span class="sns-icon">📸</span>Instagram
+            </button>
+            <button class="sns-btn" data-sns="TikTok" onclick="selectSNS(this)">
+              <span class="sns-icon">🎵</span>TikTok
+            </button>
+            <button class="sns-btn" data-sns="YouTube" onclick="selectSNS(this)">
+              <span class="sns-icon">▶️</span>YouTube
+            </button>
+            <button class="sns-btn" data-sns="その他SNS" onclick="selectSNS(this)">
+              <span class="sns-icon">🌐</span>その他
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="field-label" for="weakness">懸念点・弱点</label>
+          <textarea id="weakness" class="form-textarea" style="min-height:72px;"
+            placeholder="例: 価格が高め。味のバリエーションが少ない。認知度がまだ低い。"></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="fade-in-3">
+      <button id="submitBtn" class="btn-primary" onclick="runSimulation()">
+        <span>🚀</span>
+        <span>シミュレーション開始</span>
+      </button>
+    </div>
+
+    <div id="loadingArea" class="card hidden">
+      <div class="loading-header">
+        <div class="spinner"></div>
+        <span class="loading-text">Gemini がシミュレート中...</span>
+      </div>
+      <div class="skeleton" style="width:100%"></div>
+      <div class="skeleton" style="width:83%"></div>
+      <div class="skeleton" style="width:67%"></div>
+      <div class="skeleton" style="width:100%;margin-top:16px"></div>
+      <div class="skeleton" style="width:75%"></div>
+      <div class="skeleton" style="width:83%"></div>
+      <div class="skeleton" style="width:100%;margin-top:16px"></div>
+      <div class="skeleton" style="width:60%"></div>
+    </div>
+
+    <div id="resultArea" class="result-wrapper hidden">
+      <div class="result-header">
+        <div class="result-header-text">
+          <div class="result-title">シミュレーション結果</div>
+          <div class="result-subtitle" id="resultSubtitle"></div>
+        </div>
+        <button class="copy-btn" onclick="copyResults()" title="クリップボードにコピー">📋</button>
+      </div>
+      <div class="markdown-body" id="markdownOutput"></div>
+    </div>
+
+    <div id="errorArea" class="error-card hidden">
+      <span class="error-icon">⚠️</span>
+      <div style="flex:1;">
+        <div class="error-title">エラーが発生しました</div>
+        <div class="error-msg" id="errorMsg"></div>
+        <pre id="errorHint" style="display:none;margin-top:10px;font-size:0.78rem;color:#7f1d1d;background:#ffe4e4;border-radius:8px;padding:10px 12px;white-space:pre-wrap;word-break:break-all;font-family:inherit;line-height:1.7;"></pre>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>生成される内容はすべて架空のシミュレーションです。実際のユーザー投稿ではありません。</p>
+    <p>SNS Simulator — Powered by Google Gemini</p>
+  </footer>
+
+  <script>
+    /* ── APIキー保存・復元機能 ── */
+    var saveAkBtn = document.getElementById('save-ak-btn');
+    var akEl = document.getElementById('apiKey');
+
+    window.addEventListener('DOMContentLoaded', function() {
+      var savedKey = localStorage.getItem('savedGeminiApiKey');
+      if (savedKey) {
+        akEl.value = savedKey;
+      }
+    });
+
+    if(saveAkBtn) {
+      saveAkBtn.addEventListener('click', function() {
+        var currentKey = akEl.value.trim();
+        if (currentKey) {
+          localStorage.setItem('savedGeminiApiKey', currentKey);
+          var origText = saveAkBtn.textContent;
+          saveAkBtn.textContent = '✓';
+          saveAkBtn.style.color = '#fff';
+          saveAkBtn.style.borderColor = 'var(--accent)';
+          saveAkBtn.style.background = 'var(--accent)';
+          setTimeout(function(){
+            saveAkBtn.textContent = origText;
+            saveAkBtn.style.color = '';
+            saveAkBtn.style.borderColor = 'var(--accent-border)';
+            saveAkBtn.style.background = '#fff';
+          }, 2000);
+        } else {
+          localStorage.removeItem('savedGeminiApiKey');
+          alert('APIキーの保存を解除しました');
+        }
+      });
+    }
+
+    /* ── 状態管理 ── */
+    var selectedSNS = 'X(Twitter)';
+
+    /* ── SNS 選択 ── */
+    function selectSNS(el) {
+      document.querySelectorAll('.sns-btn').forEach(function(b){ b.classList.remove('active'); });
+      el.classList.add('active');
+      selectedSNS = el.getAttribute('data-sns');
+    }
+
+    /* ── APIキー 表示切替 ── */
+    function toggleApiVisibility() {
+      var input = document.getElementById('apiKey');
+      input.type = (input.type === 'password') ? 'text' : 'password';
+    }
+
+    /* ── 結果コピー ── */
+    function copyResults() {
+      var text = document.getElementById('markdownOutput').innerText;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(function(){ alert('✅ 結果をクリップボードにコピーしました！'); })
+          .catch(function(){ alert('コピーに失敗しました。'); });
+      } else {
+        alert('このブラウザではコピーがサポートされていません。');
+      }
+    }
+
+    /* ── メイン: シミュレーション実行 ── */
+    function runSimulation() {
+      var apiKey   = document.getElementById('apiKey').value.trim();
+      var name     = document.getElementById('targetName').value.trim();
+      var feature  = document.getElementById('feature').value.trim();
+      var cost     = document.getElementById('cost').value.trim()       || '不明';
+      var tgt      = document.getElementById('targetUser').value.trim() || '特定なし';
+      var weakness = document.getElementById('weakness').value.trim()   || '特になし';
+
+      /* バリデーション */
+      if (!apiKey)  { showError('Gemini APIキーが入力されていません。画面上部のAPIキー欄に入力してください。'); return; }
+      if (!name)    { showError('「対象名」を入力してください。'); return; }
+      if (!feature) { showError('「最大の特徴・魅力」を入力してください。'); return; }
+
+      setLoading(true);
+      hideError();
+      hideResult();
+
+      /* プロンプト構築 */
+      var prompt = 'あなたは優秀なSNSマーケターであり、消費者心理の専門家です。\n'
+        + '以下の情報を元に、SNS運用やマーケティング戦略立案に直結する「極めてリアルな架空の反響（クチコミ）」と「インサイト」を生成してください。\n\n'
+        + '[入力データ]\n'
+        + '* 対象名：' + name + '\n'
+        + '* 特徴：' + feature + '\n'
+        + '* コスト：' + cost + '\n'
+        + '* ターゲット：' + tgt + '\n'
+        + '* SNS：' + selectedSNS + '\n'
+        + '* 弱点：' + weakness + '\n\n'
+        + '[出力構成]（※必ずMarkdown形式で出力すること）\n\n'
+        + '## 1. 感情のプロセス（認知から熱狂まで）\n'
+        + 'ユーザーが対象を認知してから熱狂するまでの感情の変化を段階的に説明してください。\n\n'
+        + '## 2. リアルな架空の反響\n'
+        + '### 🔥 熱狂の声（ポジティブクチコミ × 3件）\n'
+        + '### 😤 リアルな不満（ネガティブクチコミ × 3件）\n'
+        + '### 💬 エモい声（感情に刺さるクチコミ × 3件）\n\n'
+        + '## 3. 劇的ビフォーアフター体験談\n'
+        + 'ユーザーが使用前後でどう変わったかをリアルな一人称で記述してください。\n\n'
+        + '## 4. 発見！裏ペルソナ（意外なターゲット）\n'
+        + '想定外の利用者層を2〜3タイプ発見し、それぞれの利用動機と潜在ニーズを説明してください。\n\n'
+        + '## 5. ' + selectedSNS + '向け 最適化発信アイデア\n'
+        + '### 最強のフック3案\n'
+        + '### 投稿構成案（テンプレート）\n\n'
+        + '## 6. 炎上リスク・ネガティブシミュレーション\n'
+        + 'ありえる批判・炎上パターンを3件挙げ、それぞれの対応策を記述してください。';
+
+      /* Gemini API 呼び出し */
+      var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
+
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.9, maxOutputTokens: 4096 }
+        })
+      })
+      .then(function(resp) {
+        /* HTTPステータスに関わらずまずJSONを取得して詳細を確認 */
+        return resp.json().then(function(json) {
+          return { ok: resp.ok, status: resp.status, json: json };
+        }).catch(function() {
+          return { ok: resp.ok, status: resp.status, json: null };
+        });
+      })
+      .then(function(result) {
+        if (!result.ok) {
+          /* Googleから返ってきたエラーメッセージをそのまま表示 */
+          var detail = result.json && result.json.error
+            ? ('[HTTP ' + result.status + '] ' + result.json.error.message)
+            : ('HTTP ' + result.status + ' エラー');
+
+          var hint = '';
+          if (result.status === 400) hint = '→ APIキーの形式が正しくないか、リクエストに問題があります。';
+          if (result.status === 401 || result.status === 403) hint = '→ APIキーが無効か、Gemini APIの利用が許可されていません。Google AI Studioでキーを確認してください。';
+          if (result.status === 429) hint = '→ APIの利用上限に達しました。しばらく待ってから再試行してください。';
+          if (result.status === 404) hint = '→ モデル名が見つかりません。APIキーが新しいGemini APIに対応しているか確認してください。';
+
+          throw new Error(detail + (hint ? '\n' + hint : ''));
+        }
+
+        var data = result.json;
+        var text = data && data.candidates && data.candidates[0]
+          && data.candidates[0].content && data.candidates[0].content.parts
+          && data.candidates[0].content.parts[0]
+          ? data.candidates[0].content.parts[0].text : null;
+
+        if (!text) throw new Error('APIからの応答テキストが空でした。\n→ APIキーは有効ですが、レスポンスが想定外の形式です。もう一度お試しください。');
+
+        /* Markdown → HTML */
+        var html = (typeof marked !== 'undefined' && marked.parse)
+          ? marked.parse(text)
+          : text.replace(/\n/g, '<br>');
+
+        document.getElementById('markdownOutput').innerHTML = html;
+        document.getElementById('resultSubtitle').textContent = '対象: ' + name + ' ／ SNS: ' + selectedSNS;
+        showResult();
+
+        setTimeout(function() {
+          document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 120);
+
+        setLoading(false);
+      })
+      .catch(function(err) {
+        setLoading(false);
+        var raw = err.message || '不明なエラー';
+        var msg, hint;
+
+        if (raw.indexOf('HTTP') === 0) {
+          /* すでに整形済みのエラー */
+          msg = raw;
+          hint = '';
+        } else {
+          /* fetchそのものが失敗した場合（通信不可・CORSなど） */
+          msg = '通信エラー（fetch失敗）';
+          hint = '考えられる原因：\n'
+            + '① APIキーを入力していない\n'
+            + '② インターネットに接続されていない\n'
+            + '③ Google APIがネットワークにブロックされている（VPN・学校Wi-Fiなど）\n'
+            + '④ ブラウザのセキュリティ設定\n\n'
+            + '【生のエラー】' + raw;
+        }
+
+        showError(msg, hint);
+      });
+    }
+
+    /* ── UI ヘルパー ── */
+    function setLoading(on) {
+      var btn  = document.getElementById('submitBtn');
+      var load = document.getElementById('loadingArea');
+      btn.disabled = on;
+      if (on) {
+        btn.innerHTML = '<div class="spinner"></div><span>生成中... しばらくお待ちください</span>';
+        load.classList.remove('hidden');
+      } else {
+        btn.innerHTML = '<span>🚀</span><span>シミュレーション開始</span>';
+        load.classList.add('hidden');
+      }
+    }
+
+    function showError(msg, hint) {
+      var el = document.getElementById('errorArea');
+      document.getElementById('errorMsg').textContent = msg;
+      var hintEl = document.getElementById('errorHint');
+      if (hint) {
+        hintEl.style.display = 'block';
+        hintEl.textContent = hint;
+      } else {
+        hintEl.style.display = 'none';
+        hintEl.textContent = '';
+      }
+      el.classList.remove('hidden');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function hideError()  { document.getElementById('errorArea').classList.add('hidden'); }
+    function showResult() { document.getElementById('resultArea').classList.remove('hidden'); }
+    function hideResult() {
+      document.getElementById('resultArea').classList.add('hidden');
+      document.getElementById('markdownOutput').innerHTML = '';
+    }
+
+    /* ── Enterキーで送信 ── */
+    document.getElementById('apiKey').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') runSimulation();
+    });
+  </script>
+</body>
+</html>
