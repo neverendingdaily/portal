@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gem Hub アイデアジェネレーター</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
+    <style>
+        /* ライトモードのベース設定 */
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: #F8FAFC; /* ごく薄いブルーグレー */
+            color: #334155;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: #FFFFFF;
+            width: 100%;
+            max-width: 900px;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+        }
+
+        h1 {
+            font-size: 26px;
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #0F172A;
+        }
+
+        p.description {
+            color: #64748B;
+            font-size: 15px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        /* 入力エリア */
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 16px;
+            font-size: 16px;
+            border: 2px solid #E2E8F0;
+            border-radius: 10px;
+            background-color: #F8FAFC;
+            color: #0F172A;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #3B82F6;
+            background-color: #FFFFFF;
+        }
+
+        .btn-generate {
+            background-color: #3B82F6;
+            color: #FFFFFF;
+            border: none;
+            padding: 0 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-generate:hover {
+            background-color: #2563EB;
+        }
+
+        /* 出力エリアヘッダー */
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #F1F5F9;
+            padding-bottom: 10px;
+        }
+
+        .output-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0F172A;
+            margin: 0;
+        }
+
+        .btn-copy-all {
+            background-color: #10B981;
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-copy-all:hover {
+            background-color: #059669;
+        }
+
+        /* リスト表示エリア */
+        .idea-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .idea-item {
+            background-color: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            line-height: 1.6;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .idea-item:hover {
+            border-color: #CBD5E1;
+        }
+
+        .idea-text {
+            flex: 1;
+        }
+
+        .btn-copy-single {
+            background-color: transparent;
+            color: #64748B;
+            border: 1px solid #CBD5E1;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .btn-copy-single:hover {
+            background-color: #E2E8F0;
+            color: #0F172A;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94A3B8;
+            background-color: #F8FAFC;
+            border-radius: 8px;
+            border: 1px dashed #CBD5E1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Gem Hub コンシェルジュ アイデア錬成アプリ</h1>
+        <p class="description">
+            キーワード（例：恋愛系スピリチュアル、SaaS営業、ダイエット等）を入力して「アイデアを30個生成」ボタンを押してください。<br>
+            Gem Hubの強力な機能（リサーチ、量産、多媒体展開、監査など）を想定した具体的なワークフローのアイデアを一気にリストアップします。
+        </p>
+
+        <div class="input-group">
+            <input type="text" id="keywordInput" placeholder="キーワードを入力...">
+            <button class="btn-generate" onclick="generateIdeas()">アイデアを30個生成</button>
+        </div>
+
+        <div class="output-header">
+            <h2 class="output-title" id="outputCount">生成されたアイデア (0)</h2>
+            <button class="btn-copy-all" id="copyAllBtn" onclick="copyAll()" style="display: none;">すべてコピー</button>
+        </div>
+
+        <ul class="idea-list" id="ideaList">
+            <div class="empty-state">
+                キーワードを入力すると、ここに30個の具体的なアイデアが表示されます。
+            </div>
+        </ul>
+    </div>
+
+    <script>
+        // 高解像度なワークフローアイデアのテンプレート群（【KW】が入力値に置換されます）
+        const templates = [
+            "【KW】のジャンルで特定のペルソナに向けた教育系コンテンツを30日分一気に量産したい。",
+            "【KW】発信用のXアカウントのプロフィール〜固定ポスト〜LINE登録までのユーザー導線を丸ごと再設計したい。",
+            "【KW】に関するひとつのテーマをnote (長文) とX・IG (短文・図解)の両方に最適化して展開したい。",
+            "【KW】のYouTube Shortsとインスタリールで使い回せる汎用動画台本を10本作りたい。",
+            "【KW】系のIG投稿を10本作ってBufferに一気に予約設定したい。",
+            "【KW】市場のライバルを徹底分析して「真似すべき型」と「避けるべきポイント」を抽出したい。",
+            "Canvaで【KW】特化の統一感のあるアイキャッチ画像デザイン仕様書を作りたい。",
+            "【KW】の最新トレンドをリサーチし、エンゲージメントが高まりやすい切り口を5つ提案してほしい。",
+            "【KW】に悩むユーザーの深いペインを抽出し、刺さるコピーライティングを施したLP（ランディングページ）原案を作成したい。",
+            "【KW】でマネタイズするためのフロントエンドからバックエンドまでの商品設計と販売ファネルを構築したい。",
+            "【KW】系の海外トレンドを深層リサーチし、日本市場向けにローカライズしたバズ企画を3つ立てたい。",
+            "過去の【KW】に関するUGCや口コミを分析し、ユーザーが本当に求めている「JTBD（片付けるべき用事）」を言語化したい。",
+            "【KW】のテーマでYouTubeの10分尺の台本を作成し、それを元にXのツリー投稿とブログ記事へ再構築したい。",
+            "【KW】をテーマにしたTikTokアカウントの立ち上げにあたり、競合の伸びている動画の構成をリバースエンジニアリングしてほしい。",
+            "【KW】のオンラインサロンに誘導するための、無料プレゼント（リードマグネット）の企画書と構成案を作成したい。",
+            "【KW】についてThreadsで教育・セールスを行うための自動生成モジュールを組みたい。",
+            "【KW】のコミュニティ（Redditや知恵袋など）から、リアルな悩みのデータベースを生成したい。",
+            "VeoやImagenを使って、【KW】の目を引くクリエイティブを生成するためのプロンプトを開発したい。",
+            "【KW】の発信において、炎上や表現リスクを回避するためのガイドライン（監査基準）を作成したい。",
+            "【KW】ジャンルでのA/Bテスト設計を行い、効果検証のフォーマットを作りたい。",
+            "【KW】の既存のブログ記事を10本、はてなブックマークで拡散されやすいタイトルと構成にリライトしたい。",
+            "【KW】に関する対談音声をテキスト化し、そこから有益なナレッジだけを抽出して資産化したい。",
+            "【KW】のジャンルで、全く新しい切り口のコンセプト設計とバリュープロップ（提供価値）を言語化したい。",
+            "Filmoraを使って【KW】の動画を量産するための、編集者向けSOP（標準作業手順書）を作りたい。",
+            "【KW】の市場調査を行い、ホワイトスペース（競合がいない領域）を見つけて参入戦略を立てたい。",
+            "【KW】に関する日常の気づきから、エンゲージメントを獲得できる共感型のポストを5つ作りたい。",
+            "【KW】をテーマにした音声配信（VoicyやPodcast）の1ヶ月分のトークテーマと構成案を出してほしい。",
+            "【KW】のセミナー集客のために、Facebook広告でテストする3パターンの画像テキストとコピーを作りたい。",
+            "【KW】の専門家としての権威性を高めるため、出版に向けた本の目次案と第1章の執筆を進めたい。",
+            "【KW】に関するニュースや一次情報を毎日自動で収集し、要約する仕組みを構築したい。",
+            "【KW】の初心者向けに、専門用語を一切使わずに解説する図解スライドの構成案を10枚分作りたい。",
+            "【KW】に関する自分の過去の成功体験をストーリーテリング形式に落とし込み、共感を呼ぶプロフィール記事を書きたい。",
+            "【KW】の既存サービスに対して、顧客単価を上げるためのアップセル・クロスセルのアイデアを複数出したい。",
+            "【KW】に関するよくある質問（FAQ）を50個リストアップし、それぞれの回答をSNS投稿用に短くまとめたい。",
+            "【KW】の競合他社が発信していない「裏側」や「失敗談」をテーマにした、人間味のあるコンテンツを企画したい。",
+            "【KW】ジャンルでアフィリエイト収益を最大化するため、キラーページへの自然な誘導文をパターン別に作成したい。",
+            "【KW】に興味がある潜在層を、具体的な購買行動へ引き上げるためのステップメール全7通を執筆したい。",
+            "【KW】の最新ツールやサービスを比較検証し、ユーザーにとって最も分かりやすいマトリクス表の項目を設計したい。"
+        ];
+
+        let currentIdeas = []; // 現在画面に表示されているアイデアを保持
+
+        // 配列をシャッフルする関数
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // アイデアを生成して画面に表示する関数
+        function generateIdeas() {
+            const keyword = document.getElementById('keywordInput').value.trim();
+            if (!keyword) {
+                alert('キーワードを入力してください。');
+                return;
+            }
+
+            // テンプレートをシャッフルし、最大30個取得
+            const shuffled = shuffleArray([...templates]);
+            const selectedTemplates = shuffled.slice(0, 30);
+            
+            currentIdeas = selectedTemplates.map(text => text.replace(/【KW】/g, keyword));
+
+            renderList();
+        }
+
+        // リストをHTMLに描画する関数
+        function renderList() {
+            const listElement = document.getElementById('ideaList');
+            const outputCount = document.getElementById('outputCount');
+            const copyAllBtn = document.getElementById('copyAllBtn');
+
+            listElement.innerHTML = ''; // クリア
+            outputCount.textContent = `生成されたアイデア (${currentIdeas.length})`;
+            copyAllBtn.style.display = currentIdeas.length > 0 ? 'block' : 'none';
+
+            currentIdeas.forEach((idea, index) => {
+                const li = document.createElement('li');
+                li.className = 'idea-item';
+                
+                const textDiv = document.createElement('div');
+                textDiv.className = 'idea-text';
+                textDiv.textContent = idea;
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'btn-copy-single';
+                copyBtn.textContent = 'コピー';
+                copyBtn.onclick = () => copySingle(idea, copyBtn);
+
+                li.appendChild(textDiv);
+                li.appendChild(copyBtn);
+                listElement.appendChild(li);
+            });
+        }
+
+        // 1つのアイデアをコピーする関数
+        function copySingle(text, btnElement) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btnElement.textContent;
+                btnElement.textContent = '完了!';
+                btnElement.style.backgroundColor = '#E2E8F0';
+                btnElement.style.color = '#0F172A';
+                setTimeout(() => {
+                    btnElement.textContent = originalText;
+                    btnElement.style.backgroundColor = 'transparent';
+                    btnElement.style.color = '#64748B';
+                }, 1500);
+            });
+        }
+
+        // すべてのアイデアをコピーする関数
+        function copyAll() {
+            if (currentIdeas.length === 0) return;
+            const textToCopy = currentIdeas.map(idea => `・${idea}`).join('\n');
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const btn = document.getElementById('copyAllBtn');
+                btn.textContent = 'コピーしました！';
+                btn.style.backgroundColor = '#475569';
+                setTimeout(() => {
+                    btn.textContent = 'すべてコピー';
+                    btn.style.backgroundColor = '#10B981';
+                }, 2000);
+            });
+        }
+
+        // Enterキー対応
+        document.getElementById('keywordInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                generateIdeas();
+            }
+        });
+    </script>
+</body>
+</html>
