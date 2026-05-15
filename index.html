@@ -1,889 +1,1380 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gem Hub コンシェルジュ</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💁</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #eaeef7;
-  --bg-panel: #f4f6fb;
-  --bg-white: #ffffff;
-  --border: rgba(0,0,0,0.08);
-  --border-mid: rgba(0,0,0,0.14);
-  --accent: #1a73e8;
-  --accent-bg: rgba(26,115,232,0.10);
-  --accent-bg2: rgba(26,115,232,0.06);
-  --danger: #e53935;
-  --danger-bg: rgba(229,57,53,0.09);
-  --green: #34a853;
-  --green-bg: rgba(52,168,83,0.09);
-  --purple: #7c3aed;
-  --purple-bg: rgba(124,58,237,0.08);
-  --purple-border: rgba(124,58,237,0.25);
-  --amber: #f59e0b;
-  --amber-dark: #d97706;
-  --amber-bg: rgba(245,158,11,0.10);
-  --text: #1f2937;
-  --text2: #4b5563;
-  --text3: #9ca3af;
-  --shadow: 0 1px 4px rgba(0,0,0,0.08);
-  --shadow-md: 0 2px 16px rgba(0,0,0,0.11);
-  --radius: 12px;
-  --radius-sm: 8px;
-  --font: 'Noto Sans JP', sans-serif;
-  --font-mono: 'DM Mono', monospace;
-  --input-col-w: 380px;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNS Marketing Portal</title>
+    <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text x=%2250%%22 y=%2250%%22 style=%22dominant-baseline:central;text-anchor:middle;font-size:90px;%22&gt;🚀&lt;/text&gt;&lt;/svg&gt;">
+    <style>
+        :root{--bg-color:#fcfaf2;--card-bg:#fff;--card-hover:#fdfdf8;--text-main:#2c2925;--text-sub:#787168;--border-color:#ede8d9;--primary:#0369a1}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg-color);color:var(--text-main);margin:0;padding:2rem;display:flex;justify-content:center}
+        
+        /* コンテナの最大幅を広げ、PCで多列表示（最大6列程度）を可能にする */
+        .container{max-width:1400px;width:100%}
+        
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem; flex-wrap:wrap; gap:1rem;}
+        h1{font-size:1.8rem;margin:0;letter-spacing:.05em}
+        
+        /* コントロールパネルのスタイル */
+        .controls-top{display:flex;gap:0.5rem;}
+        button{cursor:pointer;padding:0.5rem 1rem;border:none;border-radius:6px;font-weight:bold;font-size:0.9rem;transition:all 0.2s;}
+        .btn-edit{background:#e2e8f0;color:#334155;}
+        .btn-edit.active{background:#ef4444;color:white;}
+        .btn-export{background:var(--primary);color:white;}
+        
+        /* フォームのスタイル */
+        .add-form{background:#fff;padding:1.5rem;border-radius:12px;border:1px solid var(--border-color);margin-bottom:2rem;display:none;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;}
+        .add-form.active{display:grid;}
+        .form-group{display:flex;flex-direction:column;gap:0.3rem;}
+        .form-group input, .form-group select{padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;}
+        .form-full{grid-column:1 / -1;}
+        .btn-add{background:#10b981;color:white;padding:0.8rem;grid-column:1 / -1;}
+
+        /* 可変グリッド: ブラウザ幅に合わせて自動で列数が変わる（minmaxで最小幅を200pxに設定） */
+        .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.5rem}
+        
+        .card{background:var(--card-bg);border-radius:12px;padding:1.5rem;text-decoration:none;color:var(--text-main);transition:all .2s ease;border:1px solid var(--border-color);display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(0,0,0,.02);position:relative;}
+        .card:hover{transform:translateY(-3px);border-color:#cbd5e1;box-shadow:0 10px 20px rgba(0,0,0,.06)}
+        
+        .icon-wrap{font-size:2rem;margin-bottom:1rem;line-height:1}
+        .favicon-img{width:40px;height:40px;object-fit:contain;border-radius:6px}
+        .title{font-size:1.1rem;font-weight:bold;margin-bottom:.5rem}
+        .desc{font-size:.85rem;color:var(--text-sub);line-height:1.4;flex-grow:1;}
+        .badge{display:inline-block;padding:.2rem .5rem;border-radius:4px;font-size:.7rem;font-weight:bold;margin-bottom:1rem;width:fit-content}
+        
+        /* 編集モード時のカードのオーバーレイとボタン */
+        .card-edit-overlay{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.9);border-radius:12px;flex-direction:column;justify-content:center;align-items:center;gap:0.5rem;z-index:10;}
+        .edit-mode .card-edit-overlay{display:flex;}
+        .edit-mode.card:hover{transform:none;}
+        .action-btn{padding:0.4rem 1rem;font-size:1.2rem;background:#f1f5f9;border:1px solid #cbd5e1;}
+        .action-btn:hover{background:#e2e8f0;}
+        .delete-btn{background:#fee2e2;color:#ef4444;border-color:#fca5a5;}
+        
+        .bg-blue{background:#e0f2fe;color:#0369a1}.bg-green{background:#dcfce7;color:#15803d}.bg-purple{background:#f3e8ff;color:#7e22ce}.bg-orange{background:#ffedd5;color:#c2410c}.bg-gray{background:#f3f4f6;color:#4b5563}.bg-red{background:#fee2e2;color:#b91c1c}.bg-yellow{background:#fef9c3;color:#854d0e}.bg-teal{background:#ccfbf1;color:#0f766e}
+        
+        @media (max-width: 600px) {
+            .header { flex-direction: column; text-align: center; }
+        }
+    </style>
+<style type="text/css"></style><style type="text/css">.TnITTtw-fp-collapsed-button {
+    display: none;
+    position: fixed !important;
+    top: 16px !important;
+    right: 16px !important;
 }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--text); font-family: var(--font); font-weight: 400; line-height: 1.6; min-height: 100vh; }
-.page { max-width: 1200px; margin: 0 auto; padding: 0 16px 48px; }
 
-/* Header */
-.app-header { display: flex; align-items: center; gap: 12px; padding: 18px 0 14px; border-bottom: 1px solid var(--border-mid); margin-bottom: 20px; }
-.app-header-icon { width: 38px; height: 38px; background: linear-gradient(135deg, #1a73e8, #34a853); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-.app-header-text { flex: 1; }
-.app-header-title { font-size: 17px; font-weight: 700; line-height: 1.2; }
-.app-header-sub { font-size: 10.5px; color: var(--text3); font-family: var(--font-mono); margin-top: 2px; }
-.btn-api-key { display: flex; align-items: center; gap: 5px; background: none; border: 1.5px solid var(--border-mid); color: var(--text3); font-family: var(--font); font-size: 11px; padding: 5px 11px; border-radius: 20px; cursor: pointer; transition: all .14s; white-space: nowrap; flex-shrink: 0; }
-.btn-api-key:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg2); }
-.btn-api-key.set { border-color: var(--green); color: var(--green); background: var(--green-bg); }
-
-/* Layout */
-.app-main { display: flex; gap: 20px; align-items: flex-start; }
-.input-col { width: var(--input-col-w); min-width: var(--input-col-w); flex-shrink: 0; position: sticky; top: 16px; display: flex; flex-direction: column; gap: 14px; }
-.result-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
-
-/* Card */
-.card { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-mid); box-shadow: var(--shadow); overflow: hidden; }
-.card-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--bg-panel); }
-.card-header-label { font-size: 11px; font-weight: 600; color: var(--text2); font-family: var(--font-mono); letter-spacing: .03em; }
-.input-card-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
-
-.random-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: none; border: 1.5px solid var(--amber); color: var(--amber-dark); font-family: var(--font); font-size: 12px; font-weight: 600; padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; transition: all .14s; width: 100%; }
-.random-btn:hover { background: rgba(217,119,6,.08); border-color: var(--amber-dark); }
-.random-btn:active { transform: scale(.98); }
-.divider { display: flex; align-items: center; gap: 8px; color: var(--text3); font-size: 10.5px; }
-.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border-mid); }
-.main-textarea { width: 100%; border: 1.5px solid var(--border-mid); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; font-family: var(--font); color: var(--text); outline: none; resize: vertical; min-height: 88px; background: var(--bg-white); transition: border-color .2s, box-shadow .2s; line-height: 1.6; }
-.main-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,115,232,.1); }
-.main-textarea::placeholder { color: var(--text3); }
-.submit-row { display: flex; align-items: center; gap: 10px; }
-.submit-hint { font-size: 9.5px; color: var(--text3); font-family: var(--font-mono); flex-shrink: 0; }
-.submit-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px; border-radius: var(--radius-sm); border: none; background: var(--amber); color: #fff; font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s; min-height: 44px; }
-.submit-btn:hover { background: var(--amber-dark); }
-.submit-btn:disabled { background: var(--border-mid); cursor: default; }
-
-/* Examples */
-.examples-card-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 7px; }
-.shuffle-btn { display: flex; align-items: center; gap: 4px; background: none; border: 1.5px solid var(--border-mid); color: var(--text3); font-family: var(--font); font-size: 11px; padding: 4px 9px; border-radius: 12px; cursor: pointer; transition: all .14s; }
-.shuffle-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg2); }
-.shuffle-btn.spin .spin-icon { display: inline-block; animation: spin-once .35s ease; }
-@keyframes spin-once { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.example-btn { background: var(--bg); border: 1.5px solid var(--border-mid); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 11.5px; color: var(--text2); cursor: pointer; text-align: left; font-family: var(--font); transition: all .13s; line-height: 1.5; width: 100%; }
-.example-btn:hover { border-color: var(--accent); background: var(--accent-bg2); color: var(--accent); }
-.example-btn::before { content: '💬 '; opacity: .6; }
-
-/* Website list card */
-.webtools-card-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 5px; max-height: 240px; overflow-y: auto; }
-.webtool-item { display: flex; align-items: center; gap: 7px; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--purple-border); background: var(--purple-bg); font-size: 11px; color: var(--purple); text-decoration: none; transition: all .13s; }
-.webtool-item:hover { background: rgba(124,58,237,0.14); border-color: var(--purple); }
-.webtool-item-icon { font-size: 12px; flex-shrink: 0; }
-.webtool-item-text { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* Modal */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 300; align-items: center; justify-content: center; padding: 16px; }
-.modal-overlay.show { display: flex; }
-.modal-box { background: var(--bg-white); border-radius: var(--radius); padding: 22px 20px 18px; width: 100%; max-width: 400px; box-shadow: var(--shadow-md); }
-.modal-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-.modal-sub { font-size: 11.5px; color: var(--text3); margin-bottom: 14px; line-height: 1.6; }
-.modal-input { width: 100%; border: 1.5px solid var(--border-mid); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 13px; font-family: var(--font); outline: none; margin-bottom: 10px; transition: border-color .2s; }
-.modal-input:focus { border-color: var(--accent); }
-.modal-row { display: flex; gap: 8px; }
-.modal-cancel { flex: 1; padding: 9px; border: 1.5px solid var(--border-mid); border-radius: var(--radius-sm); background: none; font-family: var(--font); font-size: 13px; color: var(--text2); cursor: pointer; }
-.modal-cancel:hover { background: var(--bg); }
-.modal-save { flex: 2; padding: 9px; border: none; border-radius: var(--radius-sm); background: var(--accent); color: #fff; font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; }
-.modal-save:hover { background: #1557b0; }
-
-/* Result */
-.result-area { min-height: 200px; }
-.welcome-box { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-mid); box-shadow: var(--shadow); padding: 32px 20px; text-align: center; }
-.welcome-icon { font-size: 36px; margin-bottom: 10px; }
-.welcome-msg { font-size: 13px; color: var(--text2); line-height: 1.8; }
-.welcome-msg strong { color: var(--text); }
-.result-box { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-mid); box-shadow: var(--shadow); overflow: hidden; }
-.result-box-header { display: flex; align-items: flex-start; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border); background: var(--amber-bg); }
-.result-goal-icon { font-size: 14px; flex-shrink: 0; margin-top: 2px; }
-.result-goal-text { font-size: 12.5px; font-weight: 600; color: #92400e; line-height: 1.5; word-break: break-all; flex: 1; }
-.result-ts { font-size: 9.5px; color: var(--amber-dark); font-family: var(--font-mono); flex-shrink: 0; margin-top: 2px; }
-.result-body { padding: 16px 14px; font-size: 12.5px; line-height: 1.9; color: var(--text); }
-.result-body strong { font-weight: 700; color: var(--text); }
-.gem-link { color: var(--accent); text-decoration: none; font-weight: 600; border-bottom: 1px dotted rgba(26,115,232,.4); }
-.gem-link:hover { background: var(--accent-bg); border-radius: 3px; }
-.web-link { color: var(--purple); text-decoration: none; font-weight: 600; border-bottom: 1px dotted rgba(124,58,237,.4); }
-.web-link:hover { background: var(--purple-bg); border-radius: 3px; }
-.result-box-footer { padding: 10px 14px; border-top: 1px solid var(--border); background: var(--bg-panel); display: flex; gap: 8px; }
-.new-query-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; background: none; border: 1.5px dashed var(--border-mid); color: var(--text3); font-family: var(--font); font-size: 11.5px; padding: 7px; border-radius: var(--radius-sm); cursor: pointer; transition: all .14s; }
-.new-query-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg2); }
-.loading-box { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-mid); box-shadow: var(--shadow); padding: 48px 20px; text-align: center; }
-.adv-dots { display: inline-flex; gap: 5px; margin-bottom: 10px; }
-.adv-dots span { width: 9px; height: 9px; border-radius: 50%; background: var(--text3); animation: adv-dot .9s ease-in-out infinite; }
-.adv-dots span:nth-child(2) { animation-delay: .18s; }
-.adv-dots span:nth-child(3) { animation-delay: .36s; }
-@keyframes adv-dot { 0%,100%{transform:scale(.7);opacity:.4} 50%{transform:scale(1.2);opacity:1} }
-.loading-text { font-size: 12px; color: var(--text3); }
-.error-box { background: var(--danger-bg); color: var(--danger); border-radius: var(--radius); border: 1px solid rgba(229,57,53,.2); padding: 14px 16px; font-size: 12.5px; line-height: 1.65; }
-
-/* History */
-.history-section { display: flex; flex-direction: column; gap: 8px; }
-.history-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 2px 4px; }
-.history-title { font-size: 11.5px; font-weight: 700; color: var(--text2); display: flex; align-items: center; gap: 6px; }
-.history-count { font-size: 10px; background: var(--border-mid); border-radius: 10px; padding: 1px 7px; font-family: var(--font-mono); color: var(--text3); }
-.history-clear-btn { background: none; border: 1.5px solid var(--border-mid); color: var(--text3); font-family: var(--font); font-size: 11px; padding: 3px 10px; border-radius: 10px; cursor: pointer; transition: all .13s; }
-.history-clear-btn:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
-.history-empty { background: var(--bg-white); border: 1px solid var(--border-mid); border-radius: var(--radius); padding: 20px; text-align: center; font-size: 12px; color: var(--text3); }
-.hist-item { background: var(--bg-white); border: 1px solid var(--border-mid); border-radius: var(--radius-sm); overflow: hidden; box-shadow: var(--shadow); }
-.hist-item-hd { display: flex; align-items: center; gap: 8px; padding: 10px 13px; cursor: pointer; user-select: none; transition: background .13s; }
-.hist-item-hd:hover { background: var(--bg-panel); }
-.hist-item-arrow { font-size: 9px; color: var(--text3); flex-shrink: 0; transition: transform .2s; }
-.hist-item.open .hist-item-arrow { transform: rotate(90deg); }
-.hist-item-goal { flex: 1; font-size: 12px; font-weight: 600; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hist-item-ts { font-size: 9.5px; color: var(--text3); font-family: var(--font-mono); flex-shrink: 0; }
-.hist-item-del { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 13px; padding: 2px 4px; border-radius: 4px; flex-shrink: 0; line-height: 1; transition: all .13s; }
-.hist-item-del:hover { background: var(--danger-bg); color: var(--danger); }
-.hist-item-body { display: none; padding: 12px 14px 14px; border-top: 1px solid var(--border); font-size: 12px; line-height: 1.85; color: var(--text); background: var(--bg-panel); }
-.hist-item.open .hist-item-body { display: block; }
-
-/* Toolbar */
-.hist-toolbar { background: var(--bg-white); border: 1px solid var(--border-mid); border-radius: var(--radius); padding: 10px 14px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; box-shadow: var(--shadow); }
-.toolbar-label { font-size: 10.5px; color: var(--text3); font-family: var(--font-mono); white-space: nowrap; }
-.toolbar-btn { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font); font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: var(--radius-sm); border: 1.5px solid var(--border-mid); background: none; color: var(--text2); cursor: pointer; transition: all .13s; white-space: nowrap; }
-.toolbar-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg2); }
-.toolbar-btn.import-lbl { border-style: dashed; cursor: pointer; }
-.toolbar-btn.import-lbl:hover { border-color: var(--green); color: var(--green); background: var(--green-bg); }
-.toolbar-sep { width: 1px; height: 18px; background: var(--border-mid); flex-shrink: 0; }
-.gdrive-connected { border-color: #1a73e8 !important; color: #1a73e8 !important; background: rgba(26,115,232,.07) !important; }
-
-/* Drive Panel */
-.gdrive-panel { background: var(--bg-white); border: 1.5px solid #1a73e8; border-radius: var(--radius); padding: 16px; display: none; flex-direction: column; gap: 10px; box-shadow: 0 4px 16px rgba(26,115,232,.12); }
-.gdrive-panel.show { display: flex; }
-.gdrive-panel-title { font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
-.gdrive-panel-sub { font-size: 11.5px; color: var(--text2); line-height: 1.65; }
-.gdrive-panel-sub code { background: var(--bg); border: 1px solid var(--border-mid); border-radius: 4px; padding: 1px 5px; font-family: var(--font-mono); font-size: 10.5px; }
-.gdrive-panel-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.gdrive-action-btn { flex: 1; min-width: 110px; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border-mid); background: none; font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--text2); cursor: pointer; transition: all .13s; }
-.gdrive-action-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg2); }
-.gdrive-action-btn:disabled { opacity: .5; cursor: default; }
-.gdrive-status-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
-.gdrive-status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-mid); flex-shrink: 0; }
-.gdrive-status-dot.on { background: var(--green); }
-.gdrive-status-dot.warn { background: var(--amber); }
-
-/* Setup Modal */
-.gdrive-setup-body { max-height: 58vh; overflow-y: auto; padding-right: 2px; }
-.setup-steps { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
-.setup-step { display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--text2); line-height: 1.65; }
-.step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-.setup-step a { color: var(--accent); }
-.setup-step code { background: var(--bg); border: 1px solid var(--border-mid); border-radius: 4px; padding: 1px 5px; font-family: var(--font-mono); font-size: 10.5px; }
-.setup-note { background: var(--amber-bg); border: 1px solid rgba(245,158,11,.3); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 11.5px; color: #92400e; line-height: 1.6; }
-.setup-id-row { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
-.setup-id-label { font-size: 12px; font-weight: 600; color: var(--text); }
-
-/* Toast */
-.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1f2937; color: #fff; font-family: var(--font); font-size: 13px; padding: 10px 22px; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,.25); transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s; opacity: 0; pointer-events: none; z-index: 999; white-space: nowrap; }
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-/* Legend badge */
-.legend-row { display: flex; gap: 10px; flex-wrap: wrap; padding: 8px 14px; border-top: 1px solid var(--border); background: var(--bg-panel); }
-.legend-badge { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text3); font-family: var(--font-mono); }
-.badge-gem { width: 10px; height: 10px; border-radius: 2px; background: var(--accent); }
-.badge-web { width: 10px; height: 10px; border-radius: 2px; background: var(--purple); }
-
-@media (max-width: 768px) {
-  .page { padding: 0 12px 48px; }
-  .app-main { flex-direction: column; gap: 16px; }
-  .input-col { width: 100%; min-width: 0; position: static; }
-  .submit-row { flex-direction: column; align-items: stretch; }
-  .submit-hint { display: none; }
-  .submit-btn { width: 100%; font-size: 14px; min-height: 48px; }
-  .main-textarea { min-height: 80px; }
-  .gdrive-panel-actions { flex-direction: column; }
+.TnITTtw-fp-collapsed-button:hover {
+    opacity: 1.0 !important;
 }
-@media (max-width: 480px) { .app-header-sub { display: none; } }
-</style>
-</head>
+
+.TnITTtw-mate-fp-bar {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, Ubuntu, sans-serif !important;
+    color: #000;
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 999;
+    background: rgb(255 255 255 / 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 16px;
+    border-radius: 11px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 25%);
+    width: 320px;
+    line-height: initial;
+}
+
+@-moz-document url-prefix() {
+    .TnITTtw-mate-fp-bar {
+        background: rgb(255 255 255 / 1.0);
+    }
+}
+
+.TnITTtw-mate-fp-bar.TnITTtw-dark-mode {
+    background: rgb(44, 44, 43);
+}
+
+.TnITTtw-hide-fp-bar {
+    width: 12px;
+    height: 12px;
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/regular-close-tt.png) !important;
+    background-size: 12px 12px;
+    background-repeat: no-repeat;
+    background-position: center;
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    cursor: pointer;
+}
+
+.TnITTtw-hide-fp-bar:hover {
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/hover-close-tt.png) !important;
+}
+
+.TnITTtw-current-page-lang {
+    color: #6d6d72;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.TnITTtw-dark-mode .TnITTtw-current-page-lang {
+    color: #98989D;
+}
+
+.TnITTtw-fp-translate {
+    width: calc(100% - 73px) !important;
+    font-size: 14px !important;
+    text-transform: none !important;
+}
+
+.TnITTtw-fp-translate.TnITTtw-in-progress {
+    animation-name: funky-bg;
+    animation-duration: 10s;
+    animation-timing-function: ease-in;
+}
+
+.TnITTtw-fp-translate.TnITTtw-show-original {
+    width: calc(100% - 20px) !important;
+}
+
+@keyframes funky-bg {
+    from {
+        background-image: linear-gradient(145deg, #01EF92, #00D8FB),
+        linear-gradient(35deg, rgba(1, 239, 146, 0.25), rgba(0, 216, 251, 0.25)) !important;
+    }
+
+    to {
+        background-image: linear-gradient(90deg, #01EF92, #00D8FB),
+        linear-gradient(35deg, rgba(1, 239, 146, 0.25), rgba(0, 216, 251, 0.25)) !important;
+    }
+}
+
+.TnITTtw-change-language, .TnITTtw-stop-fp {
+    width: 38px;
+    height: 38px;
+    background-color: #EFEFF4;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 16px 16px;
+    border-radius: 11px;
+    display: inline-block;
+    vertical-align: top;
+    cursor: pointer;
+}
+
+.TnITTtw-change-language {
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/globe-earth.png) !important;
+}
+
+.TnITTtw-dark-mode .TnITTtw-change-language {
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/globe-earth-dark.png) !important;
+}
+
+.TnITTtw-stop-fp {
+    display: none;
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/regular-stt-stop.png) !important;
+    background-size: 12px 12px;
+}
+
+.TnITTtw-dark-mode .TnITTtw-change-language, .TnITTtw-dark-mode .TnITTtw-stop-fp {
+    background-color: #525251 !important;
+}
+
+.TnITTtw-change-language:hover, .TnITTtw-stop-fp:hover {
+    background-color: #F6F6F6;
+}
+
+.TnITTtw-change-language:active, .TnITTtw-stop-fp:active {
+    background-color: #E9E9E9;
+}
+
+.TnITTtw-dark-mode .TnITTtw-change-language:hover,
+.TnITTtw-dark-mode .TnITTtw-stop-fp:hover,
+.TnITTtw-dark-mode .TnITTtw-change-language:active,
+.TnITTtw-dark-mode .TnITTtw-stop-fp:active {
+    background-color: #767675;
+}
+
+#TnITTtw-always-translate {
+}
+
+.TnITTtw-fp-options input {
+    padding: initial;
+    width: auto;
+    border: initial;
+    box-shadow: initial;
+    line-height: initial;
+    height: auto;
+    display: initial;
+    position: initial;
+    appearance: auto;
+    top: initial;
+    cursor: pointer;
+    margin: 0;
+}
+
+.TnITTtw-fp-options input[readonly="readonly"] {
+    opacity: 0.5;
+}
+
+#TnITTtw-always-translate + label,
+#TnITTtw-never-translate-lang + label,
+#TnITTtw-never-translate-site + label {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, Ubuntu, sans-serif !important;
+    display: inline-block;
+    font-weight: 400;
+    font-size: 14px;
+    margin-left: 4px;
+    color: #000;
+    cursor: pointer;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 296px;
+    vertical-align: top;
+    line-height: initial;
+    letter-spacing: initial;
+    text-transform: initial;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+}
+
+#TnITTtw-always-translate + label::before,
+#TnITTtw-never-translate-lang + label::before,
+#TnITTtw-never-translate-site + label::before,
+#TnITTtw-always-translate + label::after,
+#TnITTtw-never-translate-lang + label::after,
+#TnITTtw-never-translate-site + label::after  {
+    content: initial;
+} 
+
+.TnITTtw-always-translate-inner-label {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 252px;
+    vertical-align: top;
+    display: inline-block;
+}
+
+.TnITTtw-dark-mode #TnITTtw-always-translate + label,
+.TnITTtw-dark-mode #TnITTtw-never-translate-lang + label,
+.TnITTtw-dark-mode #TnITTtw-never-translate-site + label {
+    color: #FFF;
+}
+
+#TnITTtw-always-translate + label.TnITTtw-not-pro {
+    opacity: 0.5;
+}
+
+#TnITTtw-always-translate + label .TnITTtw-pro-label {
+    position: relative;
+    background: #000;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #FFF;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: 10px;
+    top: -1px;
+    user-select: none;
+    -webkit-user-select: none;
+    display: inline;
+    font-weight: 500;
+}
+
+.TnITTtw-dark-mode #TnITTtw-always-translate + label .TnITTtw-pro-label {
+    background: #FFF;
+    color: #000;
+}
+
+.TnITTtw-inline-original-tooltip {
+    display: none;
+    position: absolute;
+    margin: 0px;
+    border: none;
+    padding: 16px;
+    color: rgb(0, 0, 0);
+    background-color: rgb(255 255 255 / 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 11px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 25%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, Ubuntu, sans-serif;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: normal;
+}
+
+.TnITTtw-dark-mode.TnITTtw-inline-original-tooltip {
+    background-color: rgb(0 0 0 / 0.915);
+    color: #FFF;
+}
+
+.TnITTtw-inline-original-tooltip .TnITTtw-close-original-tooltip {
+    width: 12px;
+    height: 12px;
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/regular-close-tt.png) !important;
+    background-size: 12px 12px;
+    background-repeat: no-repeat;
+    background-position: center;
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    cursor: pointer;
+}
+
+.TnITTtw-inline-original-tooltip .TnITTtw-close-original-tooltip:hover {
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/hover-close-tt.png) !important;
+}
+
+.TnITTtw-inline-original-tooltip .TnITTtw-original-label {
+    margin: 0;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    color: #6d6d72;
+    margin-bottom: 10px;
+}
+
+.TnITTtw-inline-original-tooltip.TnITTtw-dark-mode .TnITTtw-original-label {
+    color: #98989D;
+}
+
+.TnITTtw-inline-original-tooltip .TnITTtw-text-layout {
+    display: inline-block;
+    margin: 0;
+    font-size: 16px;
+    color: #000;
+}
+
+.TnITTtw-inline-original-tooltip.TnITTtw-dark-mode .TnITTtw-text-layout {
+    color: #FFF;
+}
+
+.TnITTtw-highlighted-for-original {
+    color: #0F0F5F;
+    background-color: #F0F0A0;
+}
+
+/* Dropdown scrollbars */
+
+#selVisibleScroll-1, #selVisibleScroll-2, #selVisibleScroll-3 {
+    overflow: hidden;
+    height: 259px;
+    width: 100%;
+    position: relative;
+}
+
+#sel-scrollbar-1, #sel-scrollbar-2, #sel-scrollbar-3 {
+    position: absolute;
+    width: 4px;
+    height: 259px;
+    left: 225px;
+}
+
+#sel-track-1, #sel-track-2, #sel-track-3 {
+    position: absolute;
+    top: 1px;
+    width: 4px;
+    height: calc(100% - 6px);
+}
+
+#sel-dragBar-1, #sel-dragBar-2, #sel-dragBar-3 {
+    position: absolute;
+    top: 1px;
+    width: 4px;
+    background: rgba(43, 43, 43, 0.5);
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.dark-mode #sel-dragBar-1, .dark-mode #sel-dragBar-2, .dark-mode #sel-dragBar-3 {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+#sel-dragBar-1:hover, #sel-dragBar-2:hover, #sel-dragBar-3:hover, 
+#sel-dragBar-1:active, #sel-dragBar-2:active, #sel-dragBar-3:active {
+    background: rgba(43, 43, 43, 0.675);
+}
+
+.dark-mode #sel-dragBar-1:hover,
+.dark-mode #sel-dragBar-2:hover,
+.dark-mode #sel-dragBar-3:hover,
+.dark-mode #sel-dragBar-1:active,
+.dark-mode #sel-dragBar-2:active,
+.dark-mode #sel-dragBar-3:active {
+    background: rgba(255, 255, 255, 0.675);
+}
+
+#sel-scrollbar-1, #sel-track-1, #sel-dragBar-1, 
+#sel-scrollbar-2, #sel-track-2, #sel-dragBar-2,
+#sel-scrollbar-3, #sel-track-3, #sel-dragBar-3 {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Spinner for when it's translating a page */
+
+.TnITTtw-cta-button-layout {
+    position: relative;
+    display: inline;
+}
+
+.TnITTtw-spinner {
+    display: none;
+    text-align: center;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    user-select: none;
+    -webkit-user-select: none;
+}
+  
+  @media screen and (max-width: 800px) {
+    .TnITTtw-spinner {
+      top: 28px;
+    }
+  }
+
+  .TnITTtw-spinner.in-text {
+    display: block;
+    background: transparent;
+    position: initial;
+  }
+
+  .TnITTtw-spinner.left {
+    text-align: left;
+  }
+  
+  .TnITTtw-spinner > div {
+    width: 12px;
+    height: 12px;
+    background-color: rgb(0, 71, 46);
+  
+    border-radius: 100%;
+    display: inline-block;
+    -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+    animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+  }
+
+  .TnITTtw-spinner.in-text > div {
+    background-color: #000;
+  }
+  
+  .TnITTtw-spinner .TnITTtw-bounce1 {
+    -webkit-animation-delay: -0.32s;
+    animation-delay: -0.32s;
+  }
+  
+  .TnITTtw-spinner .TnITTtw-bounce2 {
+    -webkit-animation-delay: -0.16s;
+    animation-delay: -0.16s;
+  }
+  
+  @-webkit-keyframes sk-bouncedelay {
+    0%, 80%, 100% { -webkit-transform: scale(0) }
+    40% { -webkit-transform: scale(1.0) }
+  }
+  
+  @keyframes sk-bouncedelay {
+    0%, 80%, 100% { 
+      -webkit-transform: scale(0);
+      transform: scale(0);
+    } 40% { 
+      -webkit-transform: scale(1.0);
+      transform: scale(1.0);
+    }
+  }</style><style type="text/css">/*
+ * contextMenu.js v 1.4.0
+ * Author: Sudhanshu Yadav
+ * s-yadav.github.com
+ * Copyright (c) 2013 Sudhanshu Yadav.
+ * Dual licensed under the MIT and GPL licenses
+**/
+
+.iw-contextMenu {
+    box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.10) !important;
+    border: 1px solid #c8c7cc !important;
+    border-radius: 11px !important;
+    display: none;
+    z-index: 1000000132;
+    max-width: 300px !important;
+    width: auto !important;
+}
+
+.dark-mode .iw-contextMenu,
+.TnITTtw-dark-mode.iw-contextMenu,
+.TnITTtw-dark-mode .iw-contextMenu {
+    border-color: #747473 !important;
+}
+
+.iw-cm-menu {
+    background: #fff !important;
+    color: #000 !important;
+    margin: 0px !important;
+    padding: 0px !important;
+    overflow: visible !important;
+}
+
+.dark-mode .iw-cm-menu,
+.TnITTtw-dark-mode.iw-cm-menu,
+.TnITTtw-dark-mode .iw-cm-menu {
+    background: #525251 !important;
+    color: #FFF !important;
+}
+
+.iw-curMenu {
+}
+
+.iw-cm-menu li {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, Ubuntu, sans-serif !important;
+    list-style: none !important;
+    padding: 10px !important;
+    padding-right: 20px !important;
+    border-bottom: 1px solid #c8c7cc !important;
+    font-weight: 400 !important;
+    cursor: pointer !important;
+    position: relative !important;
+    font-size: 14px !important;
+    margin: 0 !important;
+    line-height: inherit !important;
+    border-radius: 0 !important;
+    display: block !important;
+}
+
+.dark-mode .iw-cm-menu li, .TnITTtw-dark-mode .iw-cm-menu li {
+    border-bottom-color: #747473 !important;
+}
+
+.iw-cm-menu li:first-child {
+    border-top-left-radius: 11px !important;
+    border-top-right-radius: 11px !important;
+}
+
+.iw-cm-menu li:last-child {
+    border-bottom-left-radius: 11px !important;
+    border-bottom-right-radius: 11px !important;
+    border-bottom: none !important;
+}
+
+.iw-mOverlay {
+    position: absolute !important;
+    width: 100% !important;
+    height: 100% !important;
+    top: 0px !important;
+    left: 0px !important;
+    background: #FFF !important;
+    opacity: .5 !important;
+}
+
+.iw-contextMenu li.iw-mDisable {
+    opacity: 0.3 !important;
+    cursor: default !important;
+}
+
+.iw-mSelected {
+    background-color: #F6F6F6 !important;
+}
+
+.dark-mode .iw-mSelected, .TnITTtw-dark-mode .iw-mSelected {
+    background-color: #676766 !important;
+}
+
+.iw-cm-arrow-right {
+    width: 0 !important;
+    height: 0 !important;
+    border-top: 5px solid transparent !important;
+    border-bottom: 5px solid transparent !important;
+    border-left: 5px solid #000 !important;
+    position: absolute !important;
+    right: 5px !important;
+    top: 50% !important;
+    margin-top: -5px !important;
+}
+
+.dark-mode .iw-cm-arrow-right, .TnITTtw-dark-mode .iw-cm-arrow-right {
+    border-left-color: #FFF !important;
+}
+
+.iw-mSelected > .iw-cm-arrow-right {
+}
+
+/*context menu css end */</style><style type="text/css">.ui_selector, .TnITTtw-ui_selector {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, Ubuntu, sans-serif;
+    display: inline-block;
+}
+
+.ui_selector .select, .TnITTtw-ui_selector .TnITTtw-select {
+    color: #000;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid rgba(200, 199, 204, 0.5);
+    padding: 10px 15px;
+    width: 201px;
+    -webkit-user-select: none;
+    cursor: pointer;
+    border-radius: 11px;
+    display: inline-block;
+    background-image: -webkit-linear-gradient(top, #FAFAFA, #F6F6F6);
+    background-image: -moz-linear-gradient(top, #FAFAFA, #F6F6F6);
+    background-size: auto 48px;
+    background-position: 0px -11px;
+    box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.10);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.dark-mode .ui_selector .select, 
+.TnITTtw-dark-mode .TnITTtw-ui_selector .TnITTtw-select {
+    background-image: -webkit-linear-gradient(top, #4A4A49, #40403F);
+    background-image: -moz-linear-gradient(top, #4A4A49, #40403F);
+    color: #FFF;
+    border-color: #747473;
+}
+
+.ui_selector .select:hover,
+.TnITTtw-ui_selector .TnITTtw-select:hover {
+    color: #424242;
+    background-image: -webkit-linear-gradient(top, #FAFAFA, #FAFAFA);
+    background-image: -moz-linear-gradient(top, #FAFAFA, #FAFAFA);
+}
+
+.ui_selector .select:active,
+.TnITTtw-ui_selector .TnITTtw-select:active {
+    color: #6d6d72;
+    background-image: -webkit-linear-gradient(top, #F6F6F6, #F6F6F6);
+    background-image: -moz-linear-gradient(top, #F6F6F6, #F6F6F6);
+}
+
+.dark-mode .ui_selector .select:hover,
+.dark-mode .ui_selector .select:active,
+.TnITTtw-dark-mode .TnITTtw-ui_selector .TnITTtw-select:hover,
+.TnITTtw-dark-mode .TnITTtw-ui_selector .TnITTtw-select:active {
+    background-image: -webkit-linear-gradient(top, #4A4A49, #4A4A49);
+    background-image: -moz-linear-gradient(top, #4A4A49, #4A4A49);
+    color: #FFF;
+    border-color: #747473;
+}
+
+.ui_selector .select .detected-ico,
+.TnITTtw-ui_selector .TnITTtw-select .TnITTtw-detected-ico {
+    display: inline-block;
+}
+
+.ui_selector .active, .ui_selector .active:hover, .ui_selector .active:active,
+.TnITTtw-ui_selector .TnITTtw-active, .TnITTtw-ui_selector .TnITTtw-active:hover, .TnITTtw-ui_selector .TnITTtw-active:active {
+    box-shadow: 0 -1px 15px -10px rgba(0, 0, 0, 0.85) !important;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    background: #F3F3F3;
+}
+
+.sliding-text,
+.TnITTtw-sliding-text {
+    position: relative;
+}
+
+.ui_selector .options,
+.TnITTtw-ui_selector .TnITTtw-options {
+    margin-left: 0px;
+    margin-top: -4px;
+    background: #fff;
+    border: 1px solid rgba(200, 199, 204, 0.5);
+    width: 231px;
+    overflow: hidden;
+    max-height: 313px;
+    position: absolute;
+    font-size: 12px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 25%);
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    display: none;
+}
+
+.ui_selector .options.standalone,
+.TnITTtw-ui_selector .TnITTtw-options.TnITTtw-standalone {
+    border-radius: 11px;
+    margin-top: 16px;
+}
+
+/* for now, it can only be on the top */
+.ui_selector .options-arrow,
+.TnITTtw-ui_selector .TnITTtw-options-arrow {
+    display: none;
+    position: absolute;
+    width: 32px !important;
+    height: 18px !important;
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/tt-dropdown-arrow.png);
+    background-size: 32px 18px;
+    transform: rotate(180deg);
+    margin-top: -1px;
+}
+
+.dark-mode .ui_selector .options-arrow,
+.TnITTtw-dark-mode .TnITTtw-ui_selector .TnITTtw-options-arrow {
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/tt-dropdown-arrow-dark.png);
+}
+
+.dark-mode .ui_selector .options,
+.TnITTtw-dark-mode .TnITTtw-ui_selector .TnITTtw-options {
+    background: #525251;
+}
+
+.ui_selector .options ul,
+.TnITTtw-ui_selector .TnITTtw-options ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 232px;
+}
+
+.ui_selector .options ul li,
+.TnITTtw-ui_selector .TnITTtw-options ul li {
+    padding: 10px 0px;
+    -webkit-user-select: none;
+    text-align: center;
+    font-size: 17px;
+    -webkit-transition: all 600ms cubic-bezier(0.23, 1, 0.32, 1);
+    margin: 0 10px;
+    border-radius: 6px;
+    position: relative;
+}
+
+.dark-mode .options ul li,
+.TnITTtw-dark-mode .TnITTtw-options ul li {
+    color: #fff;
+}
+
+.ui_selector .options ul li:last-child,
+.TnITTtw-ui_selector .TnITTtw-options ul li:last-child {
+    margin-bottom: 16px;
+}
+
+.ui_selector .options ul li.option:first-child,
+.ui_selector .options ul li.option_selected:first-child,
+.TnITTtw-ui_selector .TnITTtw-options ul li.TnITTtw-option:first-child,
+.TnITTtw-ui_selector .TnITTtw-options ul li.TnITTtw-option_selected:first-child {
+    margin-top: 16px;
+}
+
+.ui_selector .options ul li.whenHover,
+.TnITTtw-ui_selector .TnITTtw-options ul li.TnITTtw-whenHover {
+    cursor: pointer;
+    background: #f3f3f3;
+    text-align: center;
+}
+
+.dark-mode .ui_selector .options ul li.whenHover,
+.TnITTtw-dark-mode .TnITTtw-ui_selector .TnITTtw-options ul li.TnITTtw-whenHover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.ui_selector .options ul li.option_selected,
+.TnITTtw-ui_selector .TnITTtw-options ul li.TnITTtw-option_selected {
+    cursor: pointer;
+    background-image: linear-gradient(145deg, #01EF92, #00D8FB),
+    linear-gradient(35deg, rgba(1, 239, 146, 0.25), rgba(0, 216, 251, 0.25)) !important;
+    color: #fff;
+    font-weight: 600;
+}
+
+.ui_selector .options ul .group,
+.ui_selector .options ul .group:hover,
+.ui_selector .options ul .group.whenHover,
+.TnITTtw-ui_selector .TnITTtw-options ul .TnITTtw-group,
+.TnITTtw-ui_selector .TnITTtw-options ul .TnITTtw-group:hover,
+.TnITTtw-ui_selector .TnITTtw-options ul .TnITTtw-group.whenHover {
+    padding: 16px 10px;
+    color: #8e8e93;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    text-align: center;
+    cursor: default;
+    background: #FFF;
+}
+
+.dark-mode .ui_selector .options ul .group,
+.dark-mode .ui_selector .options ul .group:hover,
+.dark-mode .ui_selector .options ul .group.whenHover,
+.TnITTtw-dark-mode .TnITTtw-ui_selector .TnITTtw-options ul .TnITTtw-group,
+.TnITTtw-dark-mode .TnITTtw-ui_selector .TnITTtw-options ul .TnITTtw-group:hover,
+.TnITTtw-dark-mode .TnITTtw-ui_selector .TnITTtw-options ul .TnITTtw-group.TnITTtw-whenHover {
+    color: #98989D;
+    background: #525251;
+}
+
+.group-element,
+.TnITTtw-group-element {
+    width: 153px;
+}
+
+.options .dd-search,
+.TnITTtw-options .TnITTtw-dd-search {
+    border-bottom: 1px solid rgba(200, 199, 204, 0.5);
+}
+
+.dark-mode .options .dd-search,
+.TnITTtw-dark-mode .TnITTtw-options .TnITTtw-dd-search {
+    border-bottom-color: #747473;
+}
+
+.dd-search .dd-input,
+.TnITTtw-dd-search .TnITTtw-dd-input {
+    padding: 16px;
+    padding-left: calc(16px * 3);
+    width: 168px;
+    border: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, Ubuntu, sans-serif;
+    text-align: left;
+    color: #000;
+    font-size: 17px;
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/searchfield-icon.png);
+    background-position: 16px;
+    background-size: 16px;
+    background-repeat: no-repeat;
+    margin: 0;
+    height: auto;
+}
+
+.dark-mode .dd-search .dd-input,
+.TnITTtw-dark-mode .TnITTtw-dd-search .TnITTtw-dd-input {
+    color: #FFF;
+    background-color: #525251;
+}
+
+.dd-search .dd-input:focus,
+.TnITTtw-dd-search .TnITTtw-dd-input:focus {
+    -webkit-transition: all 275ms cubic-bezier(0.23, 1, 0.32, 1);
+    outline: none;
+    text-align: left;
+}
+
+.dd-input::-webkit-input-placeholder,
+.TnITTtw-dd-input::-webkit-input-placeholder {
+    color: #8e8e93;
+}
+
+.search-failed-plaque,
+.TnITTtw-search-failed-plaque {
+    text-align: center;
+    padding: 20px;
+    color: #8e8e93;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.dark-mode .search-failed-plaque,
+.TnITTtw-dark-mode .TnITTtw-search-failed-plaque {
+    color: #98989D;
+}
+
+.rm-recent,
+.TnITTtw-rm-recent {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/regular-lang-remove.png);
+    background-size: 10px 10px;
+    top: 15px;
+    right: 10px;
+}
+
+.rm-recent:hover,
+.TnITTtw-rm-recent:hover {
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/hover-lang-remove.png);
+}
+
+.rm-recent:active,
+.TnITTtw-rm-recent:active {
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/down-lang-remove.png);
+}
+
+.option_selected .rm-recent,
+.TnITTtw-option_selected .TnITTtw-rm-recent {
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/down-active-lang-remove.png);
+}
+
+.option_selected .rm-recent:hover,
+.TnITTtw-option_selected .TnITTtw-rm-recent:hover {
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/hover-active-lang-remove.png);
+}
+
+.option_selected .rm-recent:active,
+.TnITTtw-option_selected .TnITTtw-rm-recent:active {
+    background-image: url(chrome-extension://ollghamalkmmhboihmhoaaobmamehjgn/res/images/ui/down-active-lang-remove.png);
+}
+
+.TnITTtw-hidden {
+    display: none;
+}</style><style type="text/css">@-webkit-keyframes load4 {
+    0%,
+    100% {
+        box-shadow: 0 -3em 0 0.2em, 2em -2em 0 0em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 0;
+    }
+    12.5% {
+        box-shadow: 0 -3em 0 0, 2em -2em 0 0.2em, 3em 0 0 0, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
+    }
+    25% {
+        box-shadow: 0 -3em 0 -0.5em, 2em -2em 0 0, 3em 0 0 0.2em, 2em 2em 0 0, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
+    }
+    37.5% {
+        box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 0, 2em 2em 0 0.2em, 0 3em 0 0em, -2em 2em 0 -1em, -3em 0em 0 -1em, -2em -2em 0 -1em;
+    }
+    50% {
+        box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 0em, 0 3em 0 0.2em, -2em 2em 0 0, -3em 0em 0 -1em, -2em -2em 0 -1em;
+    }
+    62.5% {
+        box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 0, -2em 2em 0 0.2em, -3em 0 0 0, -2em -2em 0 -1em;
+    }
+    75% {
+        box-shadow: 0em -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0.2em, -2em -2em 0 0;
+    }
+    87.5% {
+        box-shadow: 0em -3em 0 0, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0, -2em -2em 0 0.2em;
+    }
+}
+
+@keyframes load4 {
+    0%,
+    100% {
+        box-shadow: 0 -3em 0 0.2em, 2em -2em 0 0em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 0;
+    }
+    12.5% {
+        box-shadow: 0 -3em 0 0, 2em -2em 0 0.2em, 3em 0 0 0, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
+    }
+    25% {
+        box-shadow: 0 -3em 0 -0.5em, 2em -2em 0 0, 3em 0 0 0.2em, 2em 2em 0 0, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
+    }
+    37.5% {
+        box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 0, 2em 2em 0 0.2em, 0 3em 0 0em, -2em 2em 0 -1em, -3em 0em 0 -1em, -2em -2em 0 -1em;
+    }
+    50% {
+        box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 0em, 0 3em 0 0.2em, -2em 2em 0 0, -3em 0em 0 -1em, -2em -2em 0 -1em;
+    }
+    62.5% {
+        box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 0, -2em 2em 0 0.2em, -3em 0 0 0, -2em -2em 0 -1em;
+    }
+    75% {
+        box-shadow: 0em -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0.2em, -2em -2em 0 0;
+    }
+    87.5% {
+        box-shadow: 0em -3em 0 0, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0, -2em -2em 0 0.2em;
+    }
+}</style><style type="text/css">/* This is not a zero-length file! */</style></head>
 <body>
-<div class="page">
-
-<header class="app-header">
-  <div class="app-header-icon">🤖</div>
-  <div class="app-header-text">
-    <div class="app-header-title">Gem Hub コンシェルジュ</div>
-    <div class="app-header-sub">目的を入力 → Gem＋オリジナルツールの緻密なワークフローをAIが設計</div>
-  </div>
-  <button class="btn-api-key" id="apiKeyBtn" onclick="openApiKeyModal()">
-    🔑 <span id="apiKeyStatus">APIキー未設定</span>
-  </button>
-</header>
-
-<div class="app-main">
-  <div class="input-col">
-
-    <div class="card">
-      <div class="card-header">
-        <span class="card-header-label">📝 やりたいことを入力</span>
-      </div>
-      <div class="input-card-body">
-        <button class="random-btn" onclick="randomFill(this)">🎲 自動入力 — クリックするたびに別のアイデア</button>
-        <div class="divider">または自分で入力</div>
-        <textarea class="main-textarea" id="advisorInput" rows="4"
-          placeholder="例：恋愛系スピリチュアルのIG投稿を10本作ってBufferに予約設定したい
-
-Ctrl/Cmd+Enter でも送信できます"></textarea>
-        <div class="submit-row">
-          <span class="submit-hint">Ctrl+Enter で送信</span>
-          <button class="submit-btn" id="advisorSubmit" onclick="runAdvisor()">✨ ワークフローを設計</button>
+<div class="container">
+    <div class="header">
+        <h1>🚀 Marketing System Portal</h1>
+        <div class="controls-top">
+            <button class="btn-edit" id="toggle-edit" onclick="toggleEditMode()">編集モード ON</button>
+            <button class="btn-export" onclick="exportHTML()">💾 HTMLエクスポート</button>
         </div>
-      </div>
     </div>
 
-    <div class="card">
-      <div class="card-header">
-        <span class="card-header-label">💬 サンプル (5/30)</span>
-        <button class="shuffle-btn" onclick="shuffleExamples(this)"><span class="spin-icon">🔄</span> 別のアイデア</button>
-      </div>
-      <div class="examples-card-body">
-        <div id="examplesContainer"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <span class="card-header-label">🌐 オリジナルWebツール一覧</span>
-      </div>
-      <div class="webtools-card-body" id="webtoolsList"></div>
-      <div class="legend-row">
-        <span class="legend-badge"><span class="badge-gem"></span>Gem</span>
-        <span class="legend-badge"><span class="badge-web"></span>Webツール</span>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="result-col">
-
-    <div class="result-area" id="resultArea">
-      <div class="welcome-box">
-        <div class="welcome-icon">✨</div>
-        <div class="welcome-msg">
-          達成したい目的を入力すると、<br>
-          登録された全Gem＋オリジナルWebツールの中から<br>
-          <strong>10〜15ステップの緻密なワークフロー</strong>をAIが設計します。
+    <!-- サイト追加フォーム -->
+    <div class="add-form" id="add-form">
+        <div class="form-group">
+            <label>タイトル</label>
+            <input type="text" id="f-title" placeholder="例: 新しいツール">
         </div>
-      </div>
+        <div class="form-group">
+            <label>URL</label>
+            <input type="text" id="f-url" placeholder="https://...">
+        </div>
+        <div class="form-group">
+            <label>アイコン (絵文字)</label>
+            <input type="text" id="f-icon" placeholder="例: 🎯 (空欄ならファビコン)">
+        </div>
+        <div class="form-group">
+            <label>バッジ表示名</label>
+            <input type="text" id="f-badge-text" placeholder="例: Tool">
+        </div>
+        <div class="form-group">
+            <label>バッジの色</label>
+            <select id="f-badge-class">
+                <option value="bg-purple">紫 (Core/AI)</option>
+                <option value="bg-gray">グレー (Research)</option>
+                <option value="bg-red">赤 (Analysis)</option>
+                <option value="bg-yellow">黄 (Ideation)</option>
+                <option value="bg-green">緑 (Planning)</option>
+                <option value="bg-orange">オレンジ (Creative)</option>
+                <option value="bg-blue" selected="">青 (Tool/Studio)</option>
+                <option value="bg-teal">ティール (Design)</option>
+            </select>
+        </div>
+        <div class="form-group form-full">
+            <label>説明文</label>
+            <input type="text" id="f-desc" placeholder="ツールの概要や用途を入力">
+        </div>
+        <button class="btn-add" onclick="addSite()">+ リストに追加</button>
     </div>
 
-    <div class="hist-toolbar">
-      <label class="toolbar-btn import-lbl">
-        📥 インポート
-        <input type="file" accept=".json" id="importFileInput" onchange="importJson(event)" style="display:none">
-      </label>
-      <div class="toolbar-sep"></div>
-      <span class="toolbar-label">エクスポート:</span>
-      <button class="toolbar-btn" onclick="exportTxt()">📄 TXT</button>
-      <button class="toolbar-btn" onclick="exportCsv()">📊 CSV</button>
-      <button class="toolbar-btn" onclick="exportJson()">📦 JSON</button>
-      <div class="toolbar-sep"></div>
-      <button class="toolbar-btn" id="gdrivePanelBtn" onclick="toggleGdrivePanel()">☁️ Google Drive</button>
-    </div>
-
-    <div class="gdrive-panel" id="gdrivePanel">
-      <div class="gdrive-panel-title">☁️ Google Drive 同期</div>
-      <div class="gdrive-status-row">
-        <span class="gdrive-status-dot" id="gdriveStatusDot"></span>
-        <span id="gdriveStatusText">未接続</span>
-      </div>
-      <div class="gdrive-panel-actions">
-        <button class="gdrive-action-btn" onclick="openGdriveSetup()">⚙️ ClientID設定</button>
-        <button class="gdrive-action-btn" onclick="gdriveConnect()" id="gdriveConnectBtn">🔑 Googleでサインイン</button>
-        <button class="gdrive-action-btn" onclick="gdriveSave()" id="gdriveSaveBtn" disabled>💾 Driveへ保存</button>
-        <button class="gdrive-action-btn" onclick="gdriveLoad()" id="gdriveLoadBtn" disabled>📥 Driveから読込</button>
-      </div>
-      <div class="gdrive-panel-sub">Google Drive に <code>gemhub_history.json</code> として保存します。</div>
-    </div>
-
-    <div class="history-section" id="historySection"></div>
-
-  </div>
-</div>
+    <div class="grid" id="g"></div>
 </div>
 
-<div class="modal-overlay" id="apiModal">
-  <div class="modal-box">
-    <div class="modal-title">🔑 Gemini APIキーの設定</div>
-    <div class="modal-sub">Google AI Studio で取得した APIキー（AIza...）を入力してください。<br>キーはブラウザの localStorage に保存され、サーバーには送信されません。</div>
-    <input type="password" class="modal-input" id="apiKeyInput" placeholder="AIza..." autocomplete="off">
-    <div class="modal-row">
-      <button class="modal-cancel" onclick="closeApiKeyModal()">キャンセル</button>
-      <button class="modal-save" onclick="saveApiKey()">💾 保存</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="gdriveSetupModal">
-  <div class="modal-box" style="max-width:480px">
-    <div class="modal-title">☁️ Google Drive 同期の設定</div>
-    <div class="gdrive-setup-body">
-      <div class="setup-note">⚠️ Google Drive同期はファイルをサーバーでホストして開く必要があります。ローカルで試す場合: <code>python3 -m http.server 8080</code> を実行後 <code>http://localhost:8080/gemhub_concierge.html</code> で開く</div>
-      <div class="setup-steps">
-        <div class="setup-step"><span class="step-num">1</span><div><a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> でプロジェクトを作成</div></div>
-        <div class="setup-step"><span class="step-num">2</span><div>「APIとサービス」→「ライブラリ」で <strong>Google Drive API</strong> を有効化</div></div>
-        <div class="setup-step"><span class="step-num">3</span><div>「認証情報」→「OAuth 2.0クライアントID」を作成。アプリ種類: <strong>ウェブアプリケーション</strong></div></div>
-        <div class="setup-step"><span class="step-num">4</span><div>「承認済みJavaScriptオリジン」にこのファイルのURL（例: <code>http://localhost:8080</code>）を追加</div></div>
-        <div class="setup-step"><span class="step-num">5</span><div><strong>クライアントID</strong>（〜.apps.googleusercontent.com）を下に貼り付け</div></div>
-      </div>
-      <div class="setup-id-row">
-        <span class="setup-id-label">クライアントID</span>
-        <input type="text" class="modal-input" id="gdriveClientIdInput" placeholder="xxxxxxxx.apps.googleusercontent.com" style="margin-bottom:0" autocomplete="off">
-      </div>
-    </div>
-    <div class="modal-row" style="margin-top:14px">
-      <button class="modal-cancel" onclick="closeGdriveSetup()">キャンセル</button>
-      <button class="modal-save" onclick="saveGdriveClientId()">💾 保存</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
+<!-- ↓↓↓ サイトのデータはここにJSONとして格納し、エクスポート時に丸ごと書き換えます ↓↓↓ -->
+<script id="site-data" type="application/json">
+[
+  {
+    "title": "Gem Hub",
+    "url": "https://neverendingdaily.github.io/portal/home/",
+    "desc": "173のAIエージェント・SOP群。全ての作業の司令塔。",
+    "icon": "💎",
+    "badgeClass": "bg-purple",
+    "badgeText": "Core AI"
+  },
+  {
+    "title": "Gem Hub コンシェルジュ",
+    "url": "https://neverendingdaily.github.io/portal/aiconcierge/",
+    "desc": "達成したい目的を入力すると、最適な使用順序とワークフローをAIが提案します。",
+    "icon": "💁",
+    "badgeClass": "bg-purple",
+    "badgeText": "Assistant"
+  },
+  {
+    "title": "X高度な検索アプリ",
+    "url": "https://neverendingdaily.github.io/portal/x/",
+    "icon": "🔍",
+    "badgeText": "Research",
+    "badgeClass": "bg-blue",
+    "desc": "X Advanced Search"
+  },
+  {
+    "title": "Search Hub",
+    "url": "https://neverendingdaily.github.io/portal/searchhub/",
+    "desc": "Google/X/Bluesky/Reddit横断のリサーチツール。",
+    "icon": "🔍",
+    "badgeClass": "bg-gray",
+    "badgeText": "Research"
+  },
+  {
+    "title": "Trend Seed Finder",
+    "url": "https://neverendingdaily.github.io/portal/trend-seed-finder/",
+    "desc": "最新トレンドの種を発見し、バズるコンテンツの切り口を見つけるツール。",
+    "icon": "📈",
+    "badgeClass": "bg-gray",
+    "badgeText": "Research"
+  },
+  {
+    "title": "Persona Analyzer",
+    "url": "https://neverendingdaily.github.io/portal/persona-analyzer/",
+    "desc": "ターゲット層のペルソナを深掘りし、解像度を極限まで上げる分析ツール。",
+    "icon": "🕵️",
+    "badgeClass": "bg-red",
+    "badgeText": "Analysis"
+  },
+  {
+    "title": "トンマナ深層アナリスト",
+    "url": "https://neverendingdaily.github.io/portal/tonmana-tool/",
+    "desc": "文章のトーン＆マナーを分析し、ブランドに合った声質を解析します。",
+    "icon": "⚖️",
+    "badgeClass": "bg-red",
+    "badgeText": "Analysis"
+  },
+  {
+    "title": "総合アナライザー",
+    "url": "https://neverendingdaily.github.io/portal/analyze/",
+    "desc": "コンテンツやテキストデータの多角的な分析・スコアリングツール。",
+    "icon": "📊",
+    "badgeClass": "bg-red",
+    "badgeText": "Analysis"
+  },
+  {
+    "title": "言の葉（Kotodane）",
+    "url": "https://neverendingdaily.github.io/portal/kotodane/",
+    "desc": "思考の種やキーワードから、連想的にコンテンツアイデアを生成・拡張。",
+    "icon": "🌱",
+    "badgeClass": "bg-yellow",
+    "badgeText": "Ideation"
+  },
+  {
+    "title": "Gem Hub アイデア錬成",
+    "url": "https://neverendingdaily.github.io/portal/aiconcierge-idea/",
+    "desc": "キーワードからGem Hubの機能を想定したワークフロー案を一気に30個リストアップ。",
+    "icon": "💡",
+    "badgeClass": "bg-yellow",
+    "badgeText": "Ideation"
+  },
+  {
+    "title": "SNS 看板プランナー",
+    "url": "https://neverendingdaily.github.io/portal/sns-profile-planner/",
+    "desc": "全媒体のプロフィール・固定ポスト・導線の一括設計。",
+    "icon": "📢",
+    "badgeClass": "bg-blue",
+    "badgeText": "Setup"
+  },
+  {
+    "title": "SNS Content Studio",
+    "url": "https://neverendingdaily.github.io/portal/sns-content-studio/",
+    "desc": "【統合版】SNS投稿の全体計画、カレンダー管理、コンテンツ制作を一元管理。",
+    "icon": "📅",
+    "badgeClass": "bg-green",
+    "badgeText": "Planning"
+  },
+  {
+    "title": "X Schedule Generator",
+    "url": "https://neverendingdaily.github.io/portal/x-schedule-generator/",
+    "desc": "X（旧Twitter）のアルゴリズムに最適化された投稿スケジュールを自動生成。",
+    "icon": "🐦",
+    "badgeClass": "bg-green",
+    "badgeText": "Planning"
+  },
+  {
+    "title": "Strategic Content Generator",
+    "url": "https://neverendingdaily.github.io/portal/strategic-content-generator/",
+    "desc": "戦略的意図に基づいた高品質なコンテンツ構成と原稿を自動生成。",
+    "icon": "🎯",
+    "badgeClass": "bg-orange",
+    "badgeText": "Creative"
+  },
+  {
+    "title": "Product Review Creator",
+    "url": "https://neverendingdaily.github.io/portal/product-review-creation/",
+    "desc": "ユーザー心理に刺さる自然な商品レビュー・口コミ風コンテンツを生成。",
+    "icon": "⭐",
+    "badgeClass": "bg-orange",
+    "badgeText": "Creative"
+  },
+  {
+    "title": "ペルソナ憑依スタジオ",
+    "url": "https://neverendingdaily.github.io/portal/persona-possession-studio/",
+    "desc": "クリエイターの思考・口調・哲学を完全憑依させた高度なゴーストライティングツール。",
+    "icon": "🍻",
+    "badgeClass": "bg-blue",
+    "badgeText": "Studio"
+  },
+  {
+    "title": "メディア憑依スタジオ",
+    "url": "https://neverendingdaily.github.io/portal/media-possession-studio/",
+    "desc": "10軸トンマナ分析 × 完全憑依生成。メディアの「声」を完璧に再現。",
+    "icon": "🎭",
+    "badgeClass": "bg-blue",
+    "badgeText": "Studio"
+  },
+  {
+    "title": "Canva SNS Auto-Chef",
+    "url": "https://neverendingdaily.github.io/portal/canva/",
+    "desc": "画像・動画構成とSOP・プロンプトをGeminiで全自動生成。",
+    "icon": "🧑‍🍳",
+    "badgeClass": "bg-orange",
+    "badgeText": "Creative"
+  },
+  {
+    "title": "Filmora AI Workflow",
+    "url": "https://neverendingdaily.github.io/portal/fimora-ai-workflow-studio/",
+    "desc": "アイデア → 台本 → プロンプト → SOP を一気通貫生成。",
+    "icon": "🎬",
+    "badgeClass": "bg-orange",
+    "badgeText": "Creative"
+  },
+  {
+    "title": "LP Wireframe Generator",
+    "url": "https://neverendingdaily.github.io/portal/lp-wireframe-generater/",
+    "desc": "コンバージョン率を最大化するランディングページのワイヤーフレームを自動設計。",
+    "icon": "📐",
+    "badgeClass": "bg-teal",
+    "badgeText": "Design"
+  },
+  {
+    "title": "PostMesh Planner",
+    "url": "https://neverendingdaily.github.io/portal/postmesh-planner/",
+    "desc": "予約ツールへのデータストックと流し込み成形。",
+    "icon": "⚙️",
+    "badgeClass": "bg-blue",
+    "badgeText": "Automation"
+  },
+  {
+    "title": "Data Merger",
+    "url": "https://neverendingdaily.github.io/portal/merger/",
+    "desc": "複数のテキストデータやプロンプト結果を整理・統合・結合するユーティリティ。",
+    "icon": "🔗",
+    "badgeClass": "bg-blue",
+    "badgeText": "Tool"
+  },
+  {
+    "title": "OCRテキスト抽出",
+    "url": "https://neverendingdaily.github.io/portal/ocr-tool/",
+    "desc": "画像やPDFから文字情報を素早くテキストデータとして抽出します。",
+    "icon": "📄",
+    "badgeClass": "bg-blue",
+    "badgeText": "Tool"
+  },
+  {
+    "title": "dマガジン 直リンクポータル",
+    "url": "https://neverendingdaily.github.io/portal/dmagazine/",
+    "desc": "dマガジンの各種ページへ直接アクセスできるポータルサイトです。",
+    "icon": "📚",
+    "badgeClass": "bg-gray",
+    "badgeText": "Portal"
+  }
+]
+</script>
 
 <script>
-// ═══════════════════════════════
-// WEBSITE DATA（オリジナルWebツール）
-// ※ご指定のURLリストと詳細な役割説明を格納しています
-// ═══════════════════════════════
-const WEBSITE_DATA = [
-  { id:"w1",  name:"Search Intelligence Hub",        url:"https://neverendingdaily.github.io/searchhub/",                    icon:"🔍", note:"Google/X/Reddit等をまたぐ高度検索コマンドを視覚的に組み立て。UGC・競合・トレンドを多プラットフォームから一括収集できるマルチ検索ツール。キーワード設定→SNS横断検索→結果コピーの3ステップで使用。" },
-  { id:"w2",  name:"Trend Seed Finder",              url:"https://neverendingdaily.github.io/trend-seed-finder/",            icon:"🌱", note:"ジャンル・キーワードを入力するだけでGemini AIが売れるコンテンツの「種」を10〜20個発見・提案。競合が少なく検索需要のある穴場ネタを自動抽出。キーワード入力→生成→ネタ選定の順に使用。" },
-  { id:"w3",  name:"Creator Analyzer（ペルソナ版）",  url:"https://neverendingdaily.github.io/persona-analyzer/",            icon:"👤", note:"YouTubeチャンネルURLと動画URLを入力するとAIがクリエイターのキャラクター・口調・構成パターンを分析し、ゴーストライティング用ペルソナプロンプトを自動生成。競合分析・文体模倣に使用。" },
-  { id:"w4",  name:"トンマナ深層アナリスト",          url:"https://neverendingdaily.github.io/tonmana-tool/",                icon:"🎨", note:"画像・PDF・テキストを10軸（文体/テンポ/感情温度等）で深層分析し、媒体の「声」を完全憑依させるトンマナプロファイルを生成。雑誌スクショ等をアップロードして分析→プロファイルコピー→次ツールへ渡す流れ。" },
-  { id:"w5",  name:"Creator Analyzer（チャンネル解析版）", url:"https://neverendingdaily.github.io/analyze/",               icon:"📺", note:"YouTubeチャンネルを深層分析してゴーストライティング用ペルソナプロンプトを生成（persona-analyzerの別エディション）。チャンネル名・概要・動画URLを入力して分析実行。" },
-  { id:"w6",  name:"コトダネ",                       url:"https://neverendingdaily.github.io/kotodane/",                    icon:"🌱", note:"体験談・素材テキストを300〜1000文字で入力すると、X投稿/note/Instagram/TikTok台本等7種類のSNSコンテンツを一括生成。before→after変化・具体的数字・商品名を含めると精度向上。" },
-  { id:"w7",  name:"Gem Hub アイデアジェネレーター",  url:"https://neverendingdaily.github.io/aiconcierge-idea/",            icon:"💡", note:"ジャンル・キーワードを入力するとGem Hubの各機能を組み合わせた具体的なワークフローアイデアを30個一気に生成。本コンシェルジュへの入力ネタ収集に活用。" },
-  { id:"w8",  name:"SNS看板プランナー",               url:"https://neverendingdaily.github.io/sns-profile-planner/",         icon:"📢", note:"ターゲット層・月テーマ・マネタイズ導線を入力するとX/Instagram/Threads/YT・TikTok用プロフィール衣替えプランを一括生成。月初の定期アップデート作業に使用。" },
-  { id:"w9",  name:"SNS Content Studio Pro",         url:"https://neverendingdaily.github.io/sns-content-studio/",          icon:"🎬", note:"画像・PDFをアップロードして各種記事形式（X投稿/Wikipedia風/5ch/レビュー/アフィリエイト）＋Canva/Filmora/Veo/NanoBanana2の制作資料を一括生成。素材1枚から全SNS形式を量産する中核ツール。" },
-  { id:"w10", name:"X集客ループ・スケジュールジェネレーター", url:"https://neverendingdaily.github.io/x-schedule-generator/", icon:"🐦", note:"共感・ストーリー・交流・誘導の4種ポストを入力するとXアルゴリズムに最適化した週間投稿スケジュールを自動生成。各ポストの文章を入力欄に貼り付けて実行するだけ。" },
-  { id:"w11", name:"Strategic Content Generator",    url:"https://neverendingdaily.github.io/strategic-content-generator/", icon:"📅", note:"体験談・商品情報を入力し、ヒーローズジャーニー/PASONA等のマーケティング技法を選択すると7コンテンツ＋投稿カレンダーCSVを自動生成。アフィリエイト投稿の設計に最適。" },
-  { id:"w12", name:"SNSクチコミシミュレーター",        url:"https://neverendingdaily.github.io/product-review-creation/",    icon:"💬", note:"商品・イベント・人物情報からリアルな架空クチコミ・ペルソナ反響・炎上リスクをGemini AIでシミュレート。投稿前の訴求テスト・リスク確認に使用。" },
-  { id:"w13", name:"Creator Persona Studio",         url:"https://neverendingdaily.github.io/person/",                      icon:"🎭", note:"クリエイターの思考・口調・哲学を完全憑依させた高度なゴーストライティングツール。ペルソナデータをエクスポート・インポートして複数クリエイターを管理可能。" },
-  { id:"w14", name:"メディア憑依スタジオ",             url:"https://neverendingdaily.github.io/media-possession-studio/",    icon:"📰", note:"メディア（媒体）の「声」を10軸トンマナ分析×完全憑依生成で再現する究極のゴーストライティングツール。複数媒体を登録して媒体ごとに文体を切り替えながら投稿量産。" },
-  { id:"w15", name:"Canva SNS Auto-Chef",            url:"https://neverendingdaily.github.io/canva/",                       icon:"🧑‍🍳", note:"プラットフォーム・テーマ・絵柄指定を入力するとGemini AIがCanva用の投稿構成・デザインSOP・Magic Media/Design用プロンプトを全自動生成。制作前の設計書作りに使用。" },
-  { id:"w16", name:"Filmora AI Workflow Studio",     url:"https://neverendingdaily.github.io/fimora-ai-workflow-studio/",   icon:"🎞️", note:"Filmora向けのAI動画編集ワークフロー・台本・テロップ/SE指示込み編集仕様書を自動生成。動画編集の前工程として台本→仕様書→編集の流れを確立。" },
-  { id:"w17", name:"LPワイヤーフレーム自動生成ツール", url:"https://neverendingdaily.github.io/lp-wireframe-generater/",    icon:"🖼️", note:"アフィリエイトテキストを入力するとHERO/PROBLEM/SOLUTION/BENEFITS/CTAの構成でLPワイヤーフレームをリアルタイムHTML生成。完成HTMLをコピーしてそのまま公開可能。" },
-  { id:"w18", name:"PostMesh Planner",               url:"https://neverendingdaily.github.io/postmesh-planner/",            icon:"🕸️", note:"SNS投稿のメッシュ（網目）構造で複数媒体・複数テーマの投稿計画を立てるプランナーツール。コンテンツの重複なく全媒体をカバーする計画設計に使用。" },
-  { id:"w19", name:"PDF Merger",                     url:"https://neverendingdaily.github.io/merger/",                      icon:"📎", note:"PDF・JPG・PNGを最大20ファイルまで高画質のまま1つのPDFに結合するブラウザ完結ツール（サーバー送信なし）。dマガジンスクショ等を束ねて分析ツールに渡す前処理に使用。" },
-  { id:"w20", name:"OCRテキスト抽出ツール",            url:"https://neverendingdaily.github.io/ocr-tool/",                   icon:"📄", note:"画像・PDFからGemini AIがテキストを抽出。全文そのまま/整形・清書/Markdown化の3モード対応。dマガジンスクショや競合媒体の画像テキストをデジタル化してGem・Webツールへ渡す際に使用。" },
-];
+// JSONブロックから初期データを読み込み、ローカルストレージがあれば上書きする
+const dataScript = document.getElementById('site-data');
+let originalData = JSON.parse(dataScript.textContent);
+let L = JSON.parse(localStorage.getItem('my_portal_data')) || originalData;
 
-// ═══════════════════════════════
-// GEM DATA
-// ═══════════════════════════════
-const SAVED_DATA = [{"id":100,"sop":true,"sopTag":"W00","icon":"▶","name":"【SOP】ゴール設定・導線設計","gems":[{"id":"g_w00_1","name":"Xゴール＆導線設計｜0-conductor","url":"https://gemini.google.com/gem/8fea9c05b758","toolType":"skill","note":"KGI/KPI・対象媒体・導線マップを確定（所要5分）"},{"id":"g_w00_2","name":"ビジネスモデル相談用Gem","url":"https://gemini.google.com/gem/e2c8e6667c50","toolType":"gem","note":"マネタイズ全体像を俯瞰・事業構造を確認"},{"id":"g154","name":"SiteMap作成Gem","url":"https://gemini.google.com/gem/82867b75bd75","note":"対象サイトをWeb検索で解析"},{"id":"g155","name":"情報源ダッシュボード検索","url":"https://gemini.google.com/gem/e85c97023669","note":"84サイトDBから最適情報源を自動選定"},{"id":"g156","name":"#️⃣Webコンテンツ・解析アナリスト","url":"https://gemini.google.com/gem/fad67646a280","note":"複数URLを読み込み要約・情報抽出"},{"id":"g157","name":"#️⃣Web解析ナビゲーター","url":"https://gemini.google.com/gem/e7273a69f7d5","note":"URLを多角的に解析・提案"},{"id":"g158","name":"ペルソナ＆ジャーニー設計アシスタント","url":"https://gemini.google.com/gem/626b4268050c","toolType":"gem","note":"ペルソナ2パターン＋カスタマージャーニーを自動生成"}]},{"id":101,"sop":true,"sopTag":"W01","icon":"▶","name":"【SOP】YouTube多媒体アセット化","gems":[{"id":"g_w01_1","name":"YTナレッジベース抽出ジェネレーターMAX","url":"https://gemini.google.com/gem/309e1fb749a5","toolType":"gem","note":"YT動画からナレッジDB・台本素材を一括抽出"},{"id":"g_w01_2","name":"YouTubeレポート変換","url":"https://gemini.google.com/gem/b80530e48f8d","toolType":"gem","note":"動画URLをレポート形式に変換"},{"id":"g_w01_3","name":"⑩コンテンツ資産化GPT","url":"https://gemini.google.com/gem/7f5ddcdd1fa5","toolType":"gem","note":"1本の動画を複数媒体コンテンツへ資産化"}]},{"id":102,"sop":true,"sopTag":"W02","icon":"▶","name":"【SOP】UGC・ペイン発掘＆アフィリ設計","gems":[{"id":"g_w02_1","name":"全方位UGC・ディープインサイトOSINT","url":"https://gemini.google.com/gem/a96da76bd79f","toolType":"gem","note":"UGCから深層インサイトを収集・整理"},{"id":"g_w02_2","name":"❶ペイン抽出＆共感ライター","url":"https://gemini.google.com/gem/59dd7dee23ac","toolType":"gem","note":"ペインを言語化し共感フック文を生成"},{"id":"g_w02_3","name":"❷原因解決＆CTAジェネレーター","url":"https://gemini.google.com/gem/d9367ed17f76","toolType":"gem","note":"原因提示→ベネフィット→CTA文を生成"},{"id":"g_w02_4","name":"SNS・ビジネス設計・アフィリエイト設計Gem","url":"https://gemini.google.com/gem/c4f60f0d7f60","toolType":"gem","note":"マネタイズ構造・アフィリ設計を確定"}]},{"id":103,"sop":true,"sopTag":"W03","icon":"▶","name":"【SOP】Veo/Imagenクリエイティブ開発","gems":[{"id":"g_w03_1","name":"❺クリエイティブ生成＆プロンプト開発GPT（【ジャンル名】特化型）","url":"https://gemini.google.com/gem/7c8eb955e50b","toolType":"gem","note":"ジャンル特化の画像・動画プロンプトを開発"},{"id":"g_w03_2","name":"🎬 Gemini動画プロンプト・ディレクター","url":"https://gemini.google.com/gem/e64805517f70","toolType":"gem","note":"Veo用の高品質動画プロンプトを設計"},{"id":"g_w03_3","name":"🍌NanoBanana2 Prompt Lab🍌","url":"https://gemini.google.com/gem/260302e79b36","toolType":"gem","note":"実験的プロンプトラボ・品質の最終調整"}]},{"id":104,"sop":true,"sopTag":"W04","icon":"▶","name":"【SOP】SNSコンテンツ量産・クリエイティブ・予約連携ライン","gems":[{"id":"g147","name":"✴️dマガジン: トレンド抽出＆クリエイティブ設計AI","url":"https://gemini.google.com/gem/41007cdd7b0c","note":"マガジンからトレンドテーマを抽出しクリエイティブ指針まで提案"},{"id":"g_w04_1","name":"❸dマガジン:投稿ネタ構成AI","url":"https://gemini.google.com/gem/b5ec0582c00a","toolType":"gem","note":"荒いメモを元に投稿構成案を生成"},{"id":"g_w04_2","name":"エンゲージメント・ビルダー ｜ 共感特化型コピーライター","url":"https://gemini.google.com/gem/8b2ae0467fe7","toolType":"gem","note":"深い共感を生むテキストを作成"},{"id":"g_w04_3","name":"⑦ SNS投稿作成GPT","url":"https://gemini.google.com/gem/c050b50729e0","toolType":"gem","note":"各SNS媒体向けにテキストを最適化"},{"id":"g_w04_4","name":"⑨ CanvaデザインGPT","url":"https://gemini.google.com/gem/fb8a0740ae53","toolType":"gem","note":"画像・スライド構成案を作成"},{"id":"g_w04_5","name":"❾キャンバ Pro｜SNS編集手順書・仕様書メーカー","url":"https://gemini.google.com/gem/ad91ece9d7dd","toolType":"gem","note":"Canva操作用SOPを出力"},{"id":"g_w04_6","name":"✴️Filmora15 SNSディレクター（台本＆仕様書自動生成）","url":"https://gemini.google.com/gem/f3f1ef982b3a","toolType":"gem","note":"動画台本とFilmora編集SOPを出力"},{"id":"g_w04_7","name":"CraftTwix SNS Marketing_Console_2026用SNS予約シート・フォーマッター","url":"https://gemini.google.com/gem/9b408d54dcac","toolType":"skill","note":"専用スプレッドシート用データを成形"},{"id":"g_w04_8","name":"Buffer投稿クリエイター","url":"https://gemini.google.com/gem/7c6da89abfd2","toolType":"skill","note":"Buffer CSVインポート用データを成形"}]},{"id":106,"sop":true,"sopTag":"W05","icon":"▶","name":"【SOP】SNSプロフィール・看板設計","gems":[{"id":"g145","name":"SNSプロフィール設計士","url":"https://gemini.google.com/gem/4a1b51840d00","toolType":"gem","note":"プロフィール文・固定ポスト・CTA導線を設計"},{"id":"g146","name":"設計：Xアカウント骨格 {Bio/固定/UTM} [X]","url":"https://gemini.google.com/gem/deec721890e9","toolType":"gem","note":"Bio/固定ポスト/UTMリンクを一括設計"}]},{"id":107,"sop":true,"sopTag":"W06","icon":"▶","name":"dマガジン特化：トレンド抽出＆クリエイティブ統合ディレクター","gems":[{"id":"g149","name":"✴️dマガジン: トレンド抽出＆クリエイティブ設計AI","url":"https://gemini.google.com/gem/41007cdd7b0c","note":"トレンドテーマ抽出からクリエイティブ指針まで一気通貫"},{"id":"g150","name":"❎Canva Pro 統合ディレクター（SOP＆AIプロンプト生成）","url":"https://gemini.google.com/gem/3d8d41454fc3","note":"Canva Proの最適機能を選定しSOP・AIプロンプトを生成"},{"id":"g151","name":"✴️Filmora15 SNSディレクター（台本＆仕様書自動生成）","url":"https://gemini.google.com/gem/f3f1ef982b3a","note":"SNS台本とFilmora編集仕様書を即時出力"}]},{"id":1,"icon":"🤖","name":"AIエージェント・システム構築","gems":[{"name":"Gem Architect","url":"https://gemini.google.com/gem/56f4b5ad7e5d","id":"g4"},{"name":"Gem設計コンシェルジュ（即出力版）","url":"https://gemini.google.com/gem/1430f06ff56d","id":"g5"},{"name":"GPTs設計コンシェルジュ（即出力版）","url":"https://gemini.google.com/gem/84dae1a779ed","id":"g6"},{"name":"Antigravity❸アーキテクチャ設計顧問Gem","url":"https://gemini.google.com/gem/641cf3422e75","id":"g7"},{"name":"Antigravity❷スキル&エージェントファイル（MD）構築Gem","url":"https://gemini.google.com/gem/048624e4e157","id":"g8"},{"name":"Antigravity❶要件定義&初期プロンプト生成Gem","url":"https://gemini.google.com/gem/ebe356255a97","id":"g9"},{"name":"①AI司令塔GPT","url":"https://gemini.google.com/gem/1j4t8QvzqdL2PpQr4tgAa8KbgY-S4ilX6?usp=sharing","id":"g10"},{"name":"クリエイティブ生成&プロンプト開発GPT（【ジャンル名】特化型）","url":"https://gemini.google.com/gem/7c8eb955e50b","id":"g11"},{"name":"コーディングパートナー","url":"https://gemini.google.com/gem/coding-partner","id":"g12"}]},{"id":2,"icon":"🔗","name":"プロンプト最適化・外部連携ノード","gems":[{"name":"文体解析&憑依プロンプト生成職人","url":"https://gemini.google.com/gem/ba2bc881da0d","id":"g_new_6"},{"name":"Opal②提案資料オートメーションノード用（Gumma/Slides連携）","url":"https://gemini.google.com/gem/24a9575f5f64","id":"g13"},{"name":"Opal①アフィリエイト自動生成ノード用（X投稿・スレ展開特化）","url":"https://gemini.google.com/gem/71dbf4b2073e","id":"g14"},{"name":"Notebook用解説系分析プロンプトメーカー","url":"https://gemini.google.com/gem/612dcf3776fc","id":"g15"},{"name":"Notebook用指示プロンプト作成メーカー","url":"https://gemini.google.com/gem/4a57e85887b4","id":"g16"},{"name":"🎥NotebookLM風・資料構築AI","url":"https://gemini.google.com/gem/7becdf06b90b","id":"g17"},{"name":"📄NotebookLM風・資料構造化","url":"https://gemini.google.com/gem/7d7a586b6618","id":"g18"},{"name":"Claude Skill Formatter","url":"https://gemini.google.com/gem/6abd14afbec3","id":"g19"}]},{"id":3,"icon":"🎨","name":"生成AIクリエイティブ・プロンプト","gems":[{"name":"クリエーター登録用インフルエンサープロンプト作成Gem","url":"https://gemini.google.com/gem/b081d561bf88","id":"g_new_4"},{"name":"Opal❸クリエイティブ生成最適化ノード用（Veo/Imagen連携）","url":"https://gemini.google.com/gem/036665146805","id":"g20"},{"name":"🎬 Gemini動画プロンプト・ディレクター","url":"https://gemini.google.com/gem/e64805517f70","id":"g21"},{"name":"🎵Gemini音楽プロンプト・プロデューサー","url":"https://gemini.google.com/gem/0a6d0bd02ec8","id":"g22"},{"name":"🖼️ Gemini画像プロンプト・ディレクター","url":"https://gemini.google.com/gem/8a8747a849e7","id":"g23"},{"name":"🍌NanoBanana2 Prompt Lab🍌","url":"https://gemini.google.com/gem/260302e79b36","id":"g24"},{"name":"Veo Prompt Engineer","url":"https://gemini.google.com/gem/95d46ef2a3c9","id":"g25"},{"name":"Filmora AI Video Prompt Studio","url":"https://gemini.google.com/gem/8e0afb22cb1d","id":"g26"},{"name":"⑨ CanvaデザインGPT","url":"https://gemini.google.com/gem/fb8a0740ae53","id":"g27"},{"name":"Canva Design Prompt Generator","url":"https://gemini.google.com/gem/a4356b9e0722","id":"g28"}]},{"id":4,"icon":"🌏","name":"グローバルトレンド・一次情報リサーチ","gems":[{"name":"ベトナム深層ニュース・アナリスト","url":"https://gemini.google.com/gem/6850d27a89c6","id":"g29"},{"name":"韓国深層ニュース・アナリスト","url":"https://gemini.google.com/gem/b587265efb6a","id":"g30"},{"name":"中国・深層ニュースアナリスト","url":"https://gemini.google.com/gem/6dff8bab7c60","id":"g31"},{"name":"インド深層ニュース・アナリスト","url":"https://gemini.google.com/gem/838edc45cd79","id":"g32"},{"name":"ぐーぐるトレンド・ディスカバラー","url":"https://gemini.google.com/gem/670ec9d1e6f0","id":"g33"},{"name":"Viral Content Researcher-SNS競合分析 → バズパターン抽出 → ネタ生成材料作成","url":"https://gemini.google.com/gem/e099604bcb3c","id":"g34"}]},{"id":5,"icon":"📰","name":"メディア・UGC・コミュニティ抽出","gems":[{"name":"🌳媒体トンマナ・アナライザー🌳","url":"https://gemini.google.com/gem/be1644e50d3b","id":"g_new_7"},{"name":"はてなブログ・リサーチャー（記事→ブログ/著者集約）","url":"https://gemini.google.com/gem/7370f1743fe2","id":"g35"},{"name":"ライブドアブログ・リサーチャー（記事→ブログ/著者集約）","url":"https://gemini.google.com/gem/2cdf98922570","id":"g36"},{"name":"Amebaブログ・リサーチャー（記事→ブログ/著者集約）","url":"https://gemini.google.com/gem/0891ddb56b25","id":"g37"},{"name":"Mediumライバル抽出アシスタント（記事→著者/パブ集約）","url":"https://gemini.google.com/gem/f1fdc64ea87e","id":"g38"},{"name":"はてブ・ネタ掘り＆発信源リサーチャー（エントリ→発信源集約）","url":"https://gemini.google.com/gem/acc978c6cdc5","id":"g39"},{"name":"Togetterネタ＆発信者リサーチャー（まとめ→フック／Xアカ集約）","url":"https://gemini.google.com/gem/342858fd6a3e","id":"g40"},{"name":"インスタ・スレッズ・ライバルリサーチャー","url":"https://gemini.google.com/gem/3c7f0b0ed3ac","id":"g41"},{"name":"れでぃっとコミュニティ・リサーチャー（投稿→コミュニティ集約）","url":"https://gemini.google.com/gem/fa32c3d5fbe1","id":"g42"},{"name":"❹Knowledge生成GPT（全方位UGC・ディープ本音発掘型）","url":"https://gemini.google.com/gem/58cbedb1ca25","id":"g43"},{"name":"⓿ dマガジン: ネタ収集・トレンド抽出AI","url":"https://gemini.google.com/gem/dfc8abec6b27","id":"g44"},{"name":"❺ dマガジン: 悩みデータベース生成AI","url":"https://gemini.google.com/gem/8882d370418c","id":"g45"},{"name":"❹ dマガジン: ネタ評価AI","url":"https://gemini.google.com/gem/85c5ee7f8fd9","id":"g46"},{"name":"❸ dマガジン: 投稿ネタ構成AI","url":"https://gemini.google.com/gem/b5ec0582c00a","id":"g47"},{"name":"❷ dマガジン: SNSネタ生成AI","url":"https://gemini.google.com/gem/9f47b094d1b3","id":"g48"},{"name":"❶ dマガジン: テーマ・悩み抽出AI","url":"https://gemini.google.com/gem/f4c62a43a109","id":"g49"},{"name":"抽出：雑誌語彙→見出し母集団 {見出し/タグ候補} [Multi]","url":"https://gemini.google.com/gem/1286c344a135","id":"g50"},{"name":"YTナレッジベース抽出ジェネレーターMAX","url":"https://gemini.google.com/gem/309e1fb749a5","id":"g51"},{"name":"YTナレッジベース抽出エンジン","url":"https://gemini.google.com/gem/9d486139160e","id":"g52"}]},{"id":6,"icon":"🔬","name":"SNS競合アカウント・深層分析","gems":[{"name":"YouTubeチャンネル深掘りアナリスト","url":"https://gemini.google.com/gem/7e3506ea7448","id":"g_new_5"},{"id":"g_new_1","name":"SNSアカウント採点官（全SNS・動画・グローバル対応）","url":"https://gemini.google.com/gem/97b5202b89b0"},{"name":"Mediumアカウント競合アナライザー","url":"https://gemini.google.com/gem/79c674215d98","id":"g53"},{"name":"はてなブックマーク アカウント競合アナライザー","url":"https://gemini.google.com/gem/68a39a36f183","id":"g54"},{"name":"ようつべアカウント競合アナライザー","url":"https://gemini.google.com/gem/fc4f70a162e8","id":"g55"},{"name":"れでぃっとアカウント競合アナライザー","url":"https://gemini.google.com/gem/a10aba74ff33","id":"g56"},{"name":"インスタアカウント競合アナライザー","url":"https://gemini.google.com/gem/775a57355668","id":"g57"},{"name":"Threads アカウント競合アナライザー","url":"https://gemini.google.com/gem/580e50fdf459","id":"g58"},{"name":"【解析眼】アカウント・マルチアングル分析AI","url":"https://gemini.google.com/gem/571b07cc4ec8","id":"g59"},{"name":"④ バズ構造解析GPT","url":"https://gemini.google.com/gem/950cd1946516","id":"g60"},{"name":"⑫ SNS分析GPT","url":"https://gemini.google.com/gem/f7a45e2b56b7","id":"g61"},{"name":"SNS Trend Analyzer","url":"https://gemini.google.com/gem/220e1b71c9f8","id":"g62"},{"name":"③ SNS競合分析GPT","url":"https://gemini.google.com/gem/7b92caeb91d1","id":"g63"},{"name":"② SNSトレンド分析GPT","url":"https://gemini.google.com/gem/efd0a7c71d71","id":"g64"},{"name":"SNSトレンド・ペルソナ解剖AI","url":"https://gemini.google.com/gem/092307234f43","id":"g65"},{"name":"Instagram Strategy Analyzer","url":"https://gemini.google.com/gem/023a96dae5ea","id":"g66"},{"name":"YouTube-Storagetic-Analyzer","url":"https://gemini.google.com/gem/76105cc47954","id":"g67"},{"name":"YT戦略ノートジェネレーターMAX","url":"https://gemini.google.com/gem/5c63df5e16bf","id":"g68"},{"name":"YouTubeレポート変換","url":"https://gemini.google.com/gem/b80530e48f8d","id":"g69"},{"name":"抽出：競合＆セグメント等高帯 {ライバル5/読者像} [X]","url":"https://gemini.google.com/gem/d9808b4de808","id":"g70"},{"name":"抽出：ようつべライバル論点 {比較軸/台本の種}","url":"https://gemini.google.com/gem/07a10234c28c","id":"g71"},{"name":"⌘対話式Xアカウント戦略・モデリングアナリスト","url":"https://gemini.google.com/gem/8e2cdbc21691","id":"g72"},{"name":"⌘Xアカウント戦略・モデリングアナリスト","url":"https://gemini.google.com/gem/6ac823010875","id":"g73"},{"name":"YouTubeトレンド＆マーケティング戦術アナライザー","url":"https://gemini.google.com/gem/71cf0a3c386d","id":"g74"}]},{"id":7,"icon":"🕵️","name":"OSINT・高度検索コマンド","gems":[{"name":"X深層プロファイラー","url":"https://gemini.google.com/gem/28b56ba34409","id":"g75"},{"name":"Xライバル抽出アシスタント（投稿→アカウント集約）","url":"https://gemini.google.com/gem/634ae03f0ebf","id":"g76"},{"name":"Xライバルリサーチ","url":"https://gemini.google.com/gem/94e6ea555e99","id":"g77"},{"name":"X高度検索コマンド設計AI","url":"https://gemini.google.com/gem/f80607e12e3a","id":"g78"},{"name":"X市場調査&キーワード抽出エンジン","url":"https://gemini.google.com/gem/4caa9e77db15","id":"g79"},{"name":"Xトレンド市場調査・アフィリエイト設計AI","url":"https://gemini.google.com/gem/bbb0f58362aa","id":"g80"},{"name":"Twitter簡単検索を使ったベンチマークリサーチ用Gem","url":"https://gemini.google.com/gem/eea263395b9c","id":"g81"},{"name":"いいね&リプPostスナイパー","url":"https://gemini.google.com/gem/2a6fb4358dd0","id":"g82"}]},{"id":8,"icon":"💰","name":"ビジネスモデル・マネタイズ設計","gems":[{"name":"SNS・ビジネス設計・アフィリエイト設計Gem","url":"https://gemini.google.com/gem/c4f60f0d7f60","id":"g83"},{"name":"トレンド・マネタイズ・アナライザー","url":"https://gemini.google.com/gem/14999b778365","id":"g84"},{"name":"ビジネスモデル相談用Gem","url":"https://gemini.google.com/gem/e2c8e6667c50","id":"g85"},{"name":"⑶Webマネタイズ構造分析GPT","url":"https://gemini.google.com/gem/ff1174d6de6c","id":"g86"},{"name":"⑵SNS収益構造分析GPT","url":"https://gemini.google.com/gem/51dd65c99398","id":"g87"},{"name":"⑴SNS金脈ハンターGPT","url":"https://gemini.google.com/gem/51b770378762","id":"g88"},{"name":"Canva Creator Monetization Strategist","url":"https://gemini.google.com/gem/074e58e1bd03","id":"g89"},{"name":"Creator Monetization Strategist","url":"https://gemini.google.com/gem/0edab688198e","id":"g90"}]},{"id":9,"icon":"💡","name":"コンセプト・バリュープロップ・JTBD","gems":[{"name":"❸バリュープロップ・ピラミッド設計GPT","url":"https://gemini.google.com/gem/d02057e5ab46","id":"g91"},{"name":"❷JTBDディガー：コメント/レビューから「やりたいこと」を掘り出すGPT","url":"https://gemini.google.com/gem/39a4cfc7dc7a","id":"g92"},{"name":"❶ホワイトスペース・マトリクス設計GPT","url":"https://gemini.google.com/gem/c01e5b6c8ce8","id":"g93"},{"name":"⑤ コンセプト設計GPT","url":"https://gemini.google.com/gem/564310d3debd","id":"g94"},{"name":"企画：HARM設計 {KGI→KPI/PF別仕様} [Multi]","url":"https://gemini.google.com/gem/28288c8bf453","id":"g95"}]},{"id":10,"icon":"📅","name":"アカウント骨格・投稿計画","gems":[{"id":"g_new_3","name":"SNSコンテンツ・プランナー（1ヶ月計画自動生成）","url":"https://gemini.google.com/gem/b726bc0ce215"},{"name":"設計：Xアカウント骨格 {Bio/固定/UTM} [X]","url":"https://gemini.google.com/gem/deec721890e9","id":"g96"},{"name":"設計：30日予約投稿カレンダー {媒体別/CSV出力} [Multi]","url":"https://gemini.google.com/gem/953ba6852f97","id":"g97"},{"name":"❹4週間コンテンツカレンダー＆制作バッチ設計GPT","url":"https://gemini.google.com/gem/dbaeab84fac8","id":"g98"},{"name":"⑪ 投稿計画GPT","url":"https://gemini.google.com/gem/5bfc583db05b","id":"g99"},{"name":"設計：ハッシュタグ戦略 {主軸/準軸/実験} [X]","url":"https://gemini.google.com/gem/2303e1b4f18f","id":"g100"}]},{"id":11,"icon":"✍️","name":"ペイン抽出・コピーライティング","gems":[{"name":"エンゲージメント・ビルダー ｜ 共感特化型コピーライター","url":"https://gemini.google.com/gem/8b2ae0467fe7","id":"g101"},{"name":"❶ペイン抽出＆共感ライター","url":"https://gemini.google.com/gem/59dd7dee23ac","id":"g102"},{"name":"❷原因解決＆CTAジェネレーター","url":"https://gemini.google.com/gem/d9367ed17f76","id":"g103"},{"name":"❼CTA＆誘導設計GPT：コメント→DM→オファーまで一気通貫","url":"https://gemini.google.com/gem/247516dae185","id":"g104"},{"name":"整形：口語化＆SNS-SEO一体 {見出し/本文/アンカー} [Multi]","url":"https://gemini.google.com/gem/42634167c981","id":"g105"},{"name":"2️⃣Threads教育・セールス投稿の自動生成モジュール","url":"https://gemini.google.com/gem/db6af04e0436","id":"g106"},{"name":"⑦ SNS投稿作成GPT","url":"https://gemini.google.com/gem/c050b50729e0","id":"g107"}]},{"id":12,"icon":"💭","name":"ネタ出し・アイデア量産","gems":[{"name":"❸ ネタガチャGPT（【ジャンル名】生成型）マスターテンプレート","url":"https://gemini.google.com/gem/42f93454cd59","id":"g108"},{"name":"❷ ネタ評価＆競合分析GPT（【ジャンル名】特化型）マスターテンプレート","url":"https://gemini.google.com/gem/356b7c455274","id":"g109"},{"name":"❶ ネタ採掘GPT（【ジャンル名】収集型）マスターテンプレート","url":"https://gemini.google.com/gem/26cb235c0627","id":"g110"},{"name":"❸ネタガチャGPT（【ジャンル名】生成型）","url":"https://gemini.google.com/gem/c0498fe7db47","id":"g111"},{"name":"❷ネタ評価＆競合分析GPT（【ジャンル名】特化型）","url":"https://gemini.google.com/gem/be88dbc4696b","id":"g112"},{"name":"❶ネタ採掘GPT（【ジャンル名】収集型）","url":"https://gemini.google.com/gem/08c82846289c","id":"g113"},{"name":"ネタ採掘GPT（恋愛相談収集型）","url":"https://gemini.google.com/gem/0b01255681cc","id":"g114"},{"name":"❺フック＆アングル・バンク50｜媒体適応ジェネレーター","url":"https://gemini.google.com/gem/13ecd9af5768","id":"g115"},{"name":"抽出：バズワード探索 {候補語} [Multi]","url":"https://gemini.google.com/gem/0dda96b6de5f","id":"g116"},{"name":"⑥ 投稿アイデアGPT","url":"https://gemini.google.com/gem/7fe7a0583bc5","id":"g117"},{"name":"アイデア出しのプロ","url":"https://gemini.google.com/gem/brainstormer","id":"g118"},{"name":"Veo3.1-Trend & Idea Generator GPT","url":"https://gemini.google.com/gem/2d35eae47ce5","id":"g119"},{"name":"Viral Video Idea Generator","url":"https://gemini.google.com/gem/fdb869f7adc1","id":"g120"}]},{"id":13,"icon":"🎬","name":"台本・構成構築（YouTube / note）","gems":[{"name":"YouTube台本＆演出生成アシスタント（汎用型）","url":"https://gemini.google.com/gem/056d46bb6773","id":"g121"},{"name":"汎用パロディ台本アーキテクト","url":"https://gemini.google.com/gem/0a199c0d33cb","id":"g122"},{"name":"YouTubeスタイルクローン","url":"https://gemini.google.com/gem/97f8b43f030e","id":"g123"},{"name":"⑧ ストーリー台本GPT","url":"https://gemini.google.com/gem/ea787014802a","id":"g124"},{"name":"1️⃣売れるnote構成案の自動生成モジュール","url":"https://gemini.google.com/gem/9edb21454680","id":"g125"},{"name":"note出版エンジン（Free→Paid一気通貫）","url":"https://gemini.google.com/gem/71fda0a37bed","id":"g126"},{"name":"【まじん式】音声&字幕付き動画生成","url":"https://gemini.google.com/gem/176bfc0725b4","id":"g127"},{"name":"台本：フック/導入テンプレ（Conversation Starters）{1投稿=1狙い}","url":"https://gemini.google.com/gem/f04a3deeb5be","id":"g128"}]},{"id":14,"icon":"🛠️","name":"クリエイティブ制作用SOP・仕様書","gems":[{"name":"❎Canva Pro 統合ディレクター（SOP＆AIプロンプト生成）","url":"https://gemini.google.com/gem/3d8d41454fc3","id":"g129"},{"name":"➓Filmora 14｜SNS編集手順書・仕様書メーカー","url":"https://gemini.google.com/gem/fb7d2561150b","id":"g130"},{"name":"✴️Filmora15 SNSディレクター（台本＆仕様書自動生成）","url":"https://gemini.google.com/gem/f3f1ef982b3a","id":"g131"},{"name":"⓫Pippit AI｜SNS編集手順書・仕様書メーカー","url":"https://gemini.google.com/gem/470ca3a7454f","id":"g132"},{"name":"❾キャンバ Pro｜SNS編集手順書・仕様書メーカー","url":"https://gemini.google.com/gem/ad91ece9d7dd","id":"g133"},{"name":"❻角度→媒体別クリエイティブ一括展開GPT","url":"https://gemini.google.com/gem/0f051cefc18b","id":"g134"},{"name":"⑩ コンテンツ資産化GPT","url":"https://gemini.google.com/gem/7f5ddcdd1fa5","id":"g135"},{"name":"Trend Video Idea Engine","url":"https://gemini.google.com/gem/44486eed80c1","id":"g136"},{"name":"AI Video Production System","url":"https://gemini.google.com/gem/29503b7298c6","id":"g137"}]},{"id":15,"icon":"✅","name":"コンプライアンス・監査・A/Bテスト","gems":[{"name":"守：EPPM×YMYL遵守 {注意書き/表現基準} [Multi]","url":"https://gemini.google.com/gem/bb6c56a1b384","id":"g138"},{"name":"守：表現リスク管理（Fear Fix）{NG/対応テンプレ} [Multi]","url":"https://gemini.google.com/gem/c6026917c8fb","id":"g139"},{"name":"監査：プロフィール/固定/OGP/CTA（Page Analyzer）{ToDo} [Multi]","url":"https://gemini.google.com/gem/08a4b6c371eb","id":"g140"},{"name":"❽A/Bテスト設計＆計測SSOT（Single Source of Truth）GPT","url":"https://gemini.google.com/gem/790d984df4b5","id":"g141"},{"name":"Togetter/posfie まとめ&アカウント監査官","url":"https://gemini.google.com/gem/1e9af6814c88","id":"g142"}]},{"id":16,"icon":"📄","name":"ドキュメント・資料化","gems":[{"id":"g_new_2","name":"Tube2Manual","url":"https://gemini.google.com/gem/7c8c7143b698"},{"name":"YouTubeレポート変換","url":"https://gemini.google.com/gem/b80530e48f8d","id":"g143"},{"name":"Storybook","url":"https://gemini.google.com/gem/storybook","id":"g144"}]}];
+let isEditMode = false;
 
-const categories = SAVED_DATA;
-
-// ═══════════════════════════════
-// ADVISOR IDEAS
-// ═══════════════════════════════
-const ADVISOR_IDEAS = [
-  "特定のペルソナに向けた教育系コンテンツを30日分一気に量産したい",
-  "季節のイベントやセールに合わせた販促キャンペーンの投稿カレンダーを作りたい",
-  "特定の悩みに刺さる共感ポストを週5本ペースで量産したい",
-  "ひとつのテーマをnote（長文）とX・IG（短文・図解）の両方に最適化して展開したい",
-  "YouTubeの長尺動画1本から、X・IG・TikTok用のショート動画素材を一括生成したい",
-  "商品レビュー用の0〜60秒ショート動画台本を10本一気に作りたい",
-  "TikTokでエンゲージメントが高まりやすい「あるある・失敗談」動画台本を量産したい",
-  "YouTube ShortsとインスタリールBothで使い回せる汎用動画台本を作りたい",
-  "Filmoraでの編集まで見据えたテロップ・SE指示込みの完全台本＋仕様書セットを生成したい",
-  "月に一度のYouTube更新を起点にして全SNSへコンテンツを切り出す運用ルーティンを確立したい",
-  "競合アカウントを調査して自社の差別化ポイントとアカウント戦略を立案したい",
-  "同ジャンルのトップインフルエンサーの勝ちパターンを分析してモデリングしたい",
-  "今旬のトレンドキーワードをニュースメディアとSNS両方から同時に抽出したい",
-  "ライバルを徹底分析して「真似すべき型」と「避けるべきポイント」を抽出したい",
-  "ターゲット層のリアルな悩みとJTBDをSNSの検索結果から言語化したい",
-  "ホワイトスペースを特定して独自のアフィリエイトポジションを確立したい",
-  "LINE公式アカウントへの誘導CTAを全SNS投稿に自然に組み込みたい",
-  "noteの有料記事とLINEファネルを連動させた自動収益化の仕組みを一から固めたい",
-  "Xのプロフィール〜固定ポスト〜LINE登録までのユーザー導線を丸ごと再設計したい",
-  "フォロワーをLINE登録させ最終的に商品購入へつなぐステップ配信シナリオを組みたい",
-  "アフィリエイト商品のPRを普段の発信に違和感なく組み込みたい",
-  "Bufferに一括インポートするCSV用データをフル工程で作成したい",
-  "30日分の投稿カレンダーを教育・共感・セールスの軸でバランスよく組んで予約設定したい",
-  "新規立ち上げするSNSアカウントのゴール設定からプロフィール設計まで一気に済ませたい",
-  "Canvaで統一感のあるアイキャッチ画像のデザイン仕様書を作りたい",
-  "X・IG・TikTokで複数パターンのA/Bテストを設計しクリック率の高い訴求を見極めたい",
-  "スピリチュアル×恋愛系のIG投稿を10本作ってBufferに予約設定したい",
-  "顧客ペルソナ2パターンとカスタマージャーニーを商品データや雑誌スクショから自動生成したい",
-  "dマガジンの誌面データからSNSで刺さるトレンドテーマを抽出してクリエイティブ設計したい",
-  "最新ガジェットのレビュー記事をカルーセル×リール×Xスレッドに横展開したい",
-];
-
-const HISTORY_KEY = 'gemhub_history';
-const HISTORY_MAX = 100;
-
-let advisorApiKey = '';
-try { advisorApiKey = localStorage.getItem('gemhub_advisor_key') || ''; } catch(e) {}
-
-let _ideaShuffled = [], _ideaIdx = 0;
-function _ensurePool() {
-  if (_ideaIdx >= _ideaShuffled.length) {
-    _ideaShuffled = ADVISOR_IDEAS.map((_, i) => i).sort(() => Math.random() - 0.5);
-    _ideaIdx = 0;
-  }
-}
-function _pickNext() { _ensurePool(); return ADVISOR_IDEAS[_ideaShuffled[_ideaIdx++]]; }
-
-// ═══════════════════════════════
-// RENDER WEBTOOL LIST
-// ═══════════════════════════════
-function renderWebtoolsList() {
-  const c = document.getElementById('webtoolsList');
-  if (!c) return;
-  c.innerHTML = WEBSITE_DATA.map(w =>
-    '<a class="webtool-item" href="' + w.url + '" target="_blank" rel="noopener">' +
-      '<span class="webtool-item-icon">' + w.icon + '</span>' +
-      '<span class="webtool-item-text">' + w.name + '</span>' +
-      '<span style="font-size:10px;opacity:.6">↗</span>' +
-    '</a>'
-  ).join('');
-}
-
-// ═══════════════════════════════
-// EXAMPLES
-// ═══════════════════════════════
-function renderExamples() {
-  const c = document.getElementById('examplesContainer');
-  if (!c) return;
-  const picked = [];
-  for (let i = 0; i < 5; i++) picked.push(_pickNext());
-  c.innerHTML = picked.map(q =>
-    '<button class="example-btn" onclick="fillInput(this.dataset.q)" data-q="' + q.replace(/"/g, '&quot;') + '">' + q + '</button>'
-  ).join('');
-}
-function shuffleExamples(btn) {
-  btn.classList.add('spin');
-  setTimeout(() => btn.classList.remove('spin'), 380);
-  renderExamples();
-}
-function fillInput(q) {
-  const inp = document.getElementById('advisorInput');
-  if (inp) { inp.value = q; inp.focus(); }
-}
-function randomFill(btn) {
-  fillInput(_pickNext());
-  btn.style.background = 'rgba(217,119,6,.12)';
-  setTimeout(() => { btn.style.background = ''; }, 300);
-}
-
-// API KEY
-function openApiKeyModal() {
-  const modal = document.getElementById('apiModal');
-  document.getElementById('apiKeyInput').value = advisorApiKey;
-  modal.classList.add('show');
-  requestAnimationFrame(() => document.getElementById('apiKeyInput').focus());
-}
-function closeApiKeyModal() { document.getElementById('apiModal').classList.remove('show'); }
-function saveApiKey() {
-  const val = document.getElementById('apiKeyInput').value.trim();
-  advisorApiKey = val;
-  try { localStorage.setItem('gemhub_advisor_key', val); } catch(e) {}
-  updateApiKeyStatus();
-  closeApiKeyModal();
-}
-function updateApiKeyStatus() {
-  const btn = document.getElementById('apiKeyBtn');
-  const sp  = document.getElementById('apiKeyStatus');
-  if (advisorApiKey) { sp.textContent = 'APIキー設定済み'; btn.classList.add('set'); }
-  else { sp.textContent = 'APIキー未設定'; btn.classList.remove('set'); }
-}
-
-// ═══════════════════════════════
-// BUILD TOOL LIST FOR PROMPT
-// ═══════════════════════════════
-function buildToolList() {
-  let list = '\n=== 【登録済みGemリスト】===\n';
-  categories.forEach(cat => {
-    list += '\n■ ' + cat.name + '\n';
-    cat.gems.forEach(g => { list += '  [Gem] ' + g.name + (g.note ? '（' + g.note + '）' : '') + '\n'; });
-  });
-  list += '\n=== 【オリジナルWebツールリスト】===\n';
-  list += '※以下はブラウザで開くWebアプリです。GemとWebツールを組み合わせてワークフローを設計してください。\n';
-  WEBSITE_DATA.forEach(w => {
-    list += '\n  [Webツール] ' + w.name + '（' + w.note + '）\n    URL: ' + w.url + '\n';
-  });
-  return list;
-}
-
-function escapeRegex(str) {
-  var specials = ['\\','^','$','.','*','+','?','(',')','\[','\]','{','}','|'];
-  var r = str;
-  ['\\','^','$','.','*','+','?','(',')','[',']','{','}','|'].forEach(function(c) {
-    r = r.split(c).join('\\' + c);
-  });
-  return r;
-}
-
-function linkifyGems(text) {
-  var result = text;
-  // Linkify Gems
-  categories.forEach(function(cat) {
-    cat.gems.forEach(function(gem) {
-      if (gem.url && gem.url !== '#') {
-        try {
-          var safe = escapeRegex(gem.name);
-          result = result.replace(new RegExp('(' + safe + ')', 'g'),
-            '<a class="gem-link" href="' + gem.url + '" target="_blank" rel="noopener">$1 ↗</a>');
-        } catch(e) {}
-      }
+// 描画関数
+function renderCards() {
+    const g = document.getElementById('g');
+    g.innerHTML = '';
+    
+    L.forEach((l, index) => {
+        // 編集モード時はリンクを無効化するためにdivを使う
+        const wrapper = document.createElement(isEditMode ? 'div' : 'a');
+        if(!isEditMode) {
+            wrapper.href = l.url;
+            wrapper.target = '_blank';
+        }
+        wrapper.className = 'card' + (isEditMode ? ' edit-mode' : '');
+        
+        const hasEmoji = l.icon && l.icon.trim() !== '';
+        const fav = (u) => { try{ return 'https://www.google.com/s2/favicons?sz=64&domain=' + encodeURIComponent(new URL(u).hostname); }catch(e){ return ''; } }
+        
+        const ico = hasEmoji
+            ? `<div class="icon-wrap">${l.icon}</div>`
+            : `<div class="icon-wrap"><img class="favicon-img" src="${fav(l.url)}" alt="" onerror="this.style.display='none'"></div>`;
+            
+        let inner = `<span class="badge ${l.badgeClass}">${l.badgeText}</span>${ico}<div class="title">${l.title}</div><div class="desc">${l.desc}</div>`;
+        
+        // 編集モード用オーバーレイ
+        if(isEditMode) {
+            inner += `
+            <div class="card-edit-overlay">
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+                    <button class="action-btn" onclick="moveUp(${index}, event)">◀ 前へ</button>
+                    <button class="action-btn" onclick="moveDown(${index}, event)">次へ ▶</button>
+                </div>
+                <button class="action-btn delete-btn" onclick="deleteSite(${index}, event)">🗑️ 削除</button>
+            </div>`;
+        }
+        
+        wrapper.innerHTML = inner;
+        g.appendChild(wrapper);
     });
-  });
-  // Linkify Webtools
-  WEBSITE_DATA.forEach(function(w) {
-    try {
-      var safe = escapeRegex(w.name);
-      result = result.replace(new RegExp('(' + safe + ')', 'g'),
-        '<a class="web-link" href="' + w.url + '" target="_blank" rel="noopener">$1 ↗</a>');
-    } catch(e) {}
-  });
-  return result.split('\n').join('<br>');
 }
 
-// ═══════════════════════════════
-// HISTORY
-// ═══════════════════════════════
-function loadHistory() {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e) { return []; }
-}
-function saveHistory(h) {
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); } catch(e) {}
-}
-function addToHistory(goal, resultHtml) {
-  const history = loadHistory();
-  history.unshift({ id: Date.now(), goal, resultHtml,
-    ts: new Date().toLocaleString('ja-JP', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) });
-  if (history.length > HISTORY_MAX) history.splice(HISTORY_MAX);
-  saveHistory(history);
-  renderHistory();
-}
-function deleteHistoryItem(id) { saveHistory(loadHistory().filter(h => h.id !== id)); renderHistory(); }
-function clearHistory() { if (!confirm('履歴を全件削除しますか？')) return; saveHistory([]); renderHistory(); }
-function toggleHistItem(id) { const el = document.getElementById('hist-' + id); if (el) el.classList.toggle('open'); }
-function renderHistory() {
-  const sec = document.getElementById('historySection');
-  const history = loadHistory();
-  if (!sec) return;
-  if (history.length === 0) {
-    sec.innerHTML =
-      '<div class="history-header"><span class="history-title">🕘 ワークフロー履歴 <span class="history-count">0 / ' + HISTORY_MAX + '</span></span></div>' +
-      '<div class="history-empty">まだ履歴がありません。<br>ワークフローを設計すると自動的に保存されます。</div>';
-    return;
-  }
-  const items = history.map(h =>
-    '<div class="hist-item" id="hist-' + h.id + '">' +
-      '<div class="hist-item-hd" onclick="toggleHistItem(' + h.id + ')">' +
-        '<span class="hist-item-arrow">▶</span>' +
-        '<span class="hist-item-goal">' + h.goal.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>' +
-        '<span class="hist-item-ts">' + h.ts + '</span>' +
-        '<button class="hist-item-del" onclick="event.stopPropagation();deleteHistoryItem(' + h.id + ')" title="削除">✕</button>' +
-      '</div>' +
-      '<div class="hist-item-body">' + h.resultHtml + '</div>' +
-    '</div>'
-  ).join('');
-  sec.innerHTML =
-    '<div class="history-header"><span class="history-title">🕘 ワークフロー履歴 <span class="history-count">' + history.length + ' / ' + HISTORY_MAX + '</span></span>' +
-    '<button class="history-clear-btn" onclick="clearHistory()">全削除</button></div>' + items;
-}
-
-// ═══════════════════════════════
-// RUN ADVISOR
-// ═══════════════════════════════
-function showWelcome() {
-  document.getElementById('resultArea').innerHTML =
-    '<div class="welcome-box"><div class="welcome-icon">✨</div><div class="welcome-msg">' +
-    '達成したい目的を入力すると、<br>登録された全Gem＋オリジナルWebツールの中から<br>' +
-    '<strong>10〜15ステップ以上の緻密なワークフロー</strong>をAIが設計します。</div></div>';
-}
-
-async function runAdvisor() {
-  const inp    = document.getElementById('advisorInput');
-  const submit = document.getElementById('advisorSubmit');
-  const area   = document.getElementById('resultArea');
-  if (!inp || !submit || !area) return;
-  const goal = inp.value.trim();
-  if (!goal) { inp.focus(); return; }
-  if (!advisorApiKey) { openApiKeyModal(); return; }
-
-  submit.disabled = true;
-  area.innerHTML =
-    '<div class="loading-box"><div class="adv-dots"><span></span><span></span><span></span></div>' +
-    '<div class="loading-text">AIが緻密なワークフロー（SOP）を設計中…（20〜40秒かかる場合があります）</div></div>';
-  area.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // ✨ 強力にアップデートされたシステムプロンプト ✨
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const systemPrompt =
-`あなたは「Gem Hub コンシェルジュ」の最上位プロフェッショナル・ワークフロー設計アーキテクトです。
-ユーザーが提示した目的を達成するため、【登録済みGemリスト】と【オリジナルWebツールリスト】を駆使し、
-「初心者が読んでも一切迷わず、完全に同じ結果を出力できる超・緻密な完全再現マニュアル（SOP）」を構築してください。
-
-【絶対厳守ルール】
-1. 圧倒的なステップ数と解像度：
-　 - 最低でも10〜15ステップ以上の詳細な工程を組むこと。4〜5ステップの簡素で「舌足らず」な回答は絶対に禁止します。
-　 - リサーチ・抽出 → 分析・設計 → コンテンツ生成 → 加工・仕上げ → 予約・検証 といった、実際の業務に必要な一連のプロセスを全て網羅してください。
-2. ツールの網羅的・ハイブリッド活用：
-　 - [Gem]と[Webツール]の両方を必ず組み合わせて使用すること。Webツールを経由して得たデータをGemに渡す、またはその逆の「ツール間連携」を必ず含めてください。
-　 - 必要であれば、同じツールを目的を変えて複数回使用しても構いません。
-3. 各ステップの記述形式（以下のフォーマットで必ず統一すること）：
-
-━━━━━━━━━━━━━━━━━━━━━
-STEP N ／ 【ツール名】　（種別：[Gem] または [Webツール]）
-─────────────────────────
-▶ 目的：この工程の具体的な狙いと理由
-▶ 具体的な入力（プロンプト・操作）：
-　 ・ユーザーがそのままコピペして使える具体的なテキストやキーワード（例：「以下の文章をコピーして送信：『〇〇について〜』」）
-　 ・Webツールの場合は、クリックするボタンやアップロードするファイルなど具体的な操作手順
-▶ 出力される結果：
-　 ・ここで得られるデータや文章のイメージ
-▶ 次工程への引き継ぎ（ハンドオフ）：
-　 ・得られた結果の「どの部分」をコピーして、次のSTEPの「どこへ」持っていくか（超具体的に）
-━━━━━━━━━━━━━━━━━━━━━
-
-4. 必須の全体構成：
-　 ① 【ミッション概要と戦略】このワークフロー全体の狙いと戦略的意図
-　 ② 【フロー俯瞰図】全STEPの流れを図解（例：ツールA → ツールB → ツールC...）
-　 ③ 【詳細マニュアル】上記のSTEP Nフォーマットによる10〜15工程の完全解説
-　 ④ 【品質担保のコツ・注意点】このフローを成功させるための重要なアドバイス
-　 ⑤ 【合計所要時間の目安】
-
-一切の妥協なく、専門家レベルの緻密なワークフローを出力してください。`;
-
-  const userPrompt = '【達成したい目的】\n' + goal + '\n\n' + buildToolList();
-  const now = new Date().toLocaleString('ja-JP', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
-
-  try {
-    const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + advisorApiKey;
-    const res = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 16000 } // 温度を少し上げて長文・詳細化を促す
-      })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message || 'APIエラー');
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error('応答テキストが見つかりません');
-
-    const resultHtml = linkifyGems(text);
-    const escapedGoal = goal.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-    area.innerHTML =
-      '<div class="result-box">' +
-        '<div class="result-box-header">' +
-          '<span class="result-goal-icon">🎯</span>' +
-          '<span class="result-goal-text">' + escapedGoal + '</span>' +
-          '<span class="result-ts">' + now + '</span>' +
-        '</div>' +
-        '<div class="result-body">' + resultHtml + '</div>' +
-        '<div class="result-box-footer">' +
-          '<button class="new-query-btn" onclick="clearResult()">＋ 新しい目的で設計する</button>' +
-        '</div>' +
-      '</div>';
-
-    addToHistory(goal, resultHtml);
-    inp.value = '';
-
-  } catch(err) {
-    const isFetch = err.message === 'Failed to fetch' || err.message.includes('NetworkError');
-    area.innerHTML =
-      '<div class="error-box">' +
-        (isFetch
-          ? '通信エラー（Failed to fetch）<br><br>このファイルはブラウザで直接開いたときのみ動作します。Claude.ai プレビューではセキュリティ制限により外部APIへの通信がブロックされます。<br><br><strong>→ ダウンロードしたHTMLをブラウザで直接開いてください。</strong>'
-          : '❌ エラー：' + err.message) +
-      '</div>' +
-      '<div style="margin-top:10px">' +
-        '<button class="new-query-btn" style="background:var(--bg-white);border:1.5px dashed var(--border-mid);color:var(--text3);font-family:var(--font);font-size:11.5px;padding:8px;border-radius:var(--radius-sm);cursor:pointer;width:100%" onclick="clearResult()">再試行する</button>' +
-      '</div>';
-  } finally {
-    submit.disabled = false;
-  }
-}
-
-function clearResult() {
-  showWelcome();
-  const inp = document.getElementById('advisorInput');
-  if (inp) inp.focus();
-}
-
-// KEYBOARD
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runAdvisor();
-  if (e.key === 'Escape') { closeApiKeyModal(); closeGdriveSetup(); }
-});
-document.getElementById('apiModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('apiModal')) closeApiKeyModal();
-});
-document.getElementById('gdriveSetupModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('gdriveSetupModal')) closeGdriveSetup();
-});
-
-// INIT
-document.addEventListener('DOMContentLoaded', () => {
-  updateApiKeyStatus();
-  renderExamples();
-  renderHistory();
-  renderWebtoolsList();
-  initGdrive();
-});
-
-// ═══════════════════════════════
-// EXPORT / IMPORT
-// ═══════════════════════════════
-function stripHtml(html) { var d = document.createElement('div'); d.innerHTML = html; return (d.textContent || d.innerText || '').trim(); }
-function triggerDownload(filename, content, mime) {
-  var b = new Blob([content], { type: mime });
-  var u = URL.createObjectURL(b);
-  var a = document.createElement('a'); a.href = u; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(u), 1500);
-}
-function todayStr() { return new Date().toISOString().slice(0, 10); }
-
-function exportTxt() {
-  var h = loadHistory(); if (!h.length) { showToast('履歴がありません'); return; }
-  var sep = '================================================================';
-  var lines = ['Gem Hub コンシェルジュ - ワークフロー履歴', 'エクスポート日: ' + new Date().toLocaleString('ja-JP'), sep, ''];
-  h.forEach((item, i) => { lines.push('[' + (i+1) + '] ' + item.ts + '  |  ' + item.goal); lines.push(sep); lines.push(stripHtml(item.resultHtml)); lines.push(''); });
-  triggerDownload('gemhub_history_' + todayStr() + '.txt', lines.join('\n'), 'text/plain;charset=utf-8');
-  showToast('TXTをダウンロードしました (' + h.length + '件)');
-}
-function exportCsv() {
-  var h = loadHistory(); if (!h.length) { showToast('履歴がありません'); return; }
-  var rows = [['No','日時','目的','ワークフロー']];
-  h.forEach((item, i) => rows.push([String(i+1), item.ts, item.goal, stripHtml(item.resultHtml)]));
-  var csv = rows.map(r => r.map(c => '"' + c.replace(/"/g,'""') + '"').join(',')).join('\r\n');
-  triggerDownload('gemhub_history_' + todayStr() + '.csv', '\uFEFF' + csv, 'text/csv;charset=utf-8');
-  showToast('CSVをダウンロードしました (' + h.length + '件)');
-}
-function exportJson() {
-  var h = loadHistory(); if (!h.length) { showToast('履歴がありません'); return; }
-  triggerDownload('gemhub_history_' + todayStr() + '.json', JSON.stringify(h, null, 2), 'application/json;charset=utf-8');
-  showToast('JSONをダウンロードしました (' + h.length + '件)');
-}
-function importJson(event) {
-  var file = event.target.files[0]; if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      var imported = JSON.parse(e.target.result);
-      if (!Array.isArray(imported)) throw new Error('形式エラー');
-      var existing = loadHistory(); var ids = {}; existing.forEach(h => ids[h.id] = true);
-      var added = imported.filter(h => h.id && h.goal && !ids[h.id]);
-      var merged = added.concat(existing); if (merged.length > HISTORY_MAX) merged = merged.slice(0, HISTORY_MAX);
-      saveHistory(merged); renderHistory();
-      showToast('インポート完了: ' + added.length + '件追加 / 重複' + (imported.length - added.length) + '件スキップ', 4000);
-    } catch(err) { alert('インポートエラー: ' + err.message); }
-    event.target.value = '';
-  };
-  reader.readAsText(file, 'utf-8');
-}
-
-// TOAST
-var _toastTimer = null;
-function showToast(msg, duration) {
-  if (!duration) duration = 3000;
-  var el = document.getElementById('toast'); if (!el) return;
-  el.textContent = msg; el.classList.add('show');
-  if (_toastTimer) clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => el.classList.remove('show'), duration);
-}
-
-// ═══════════════════════════════
-// GOOGLE DRIVE
-// ═══════════════════════════════
-var _gdClientId='', _gdToken=null, _gdFileId=null;
-var GD_FILENAME='gemhub_history.json', GD_SCOPE='https://www.googleapis.com/auth/drive.file';
-var GD_FILES_API='https://www.googleapis.com/drive/v3/files';
-var GD_UPLOAD_API='https://www.googleapis.com/upload/drive/v3/files';
-
-function initGdrive() { try { _gdClientId = localStorage.getItem('gemhub_gdrive_client_id') || ''; } catch(e) {} _updateGdStatus(); }
-function toggleGdrivePanel() { document.getElementById('gdrivePanel').classList.toggle('show'); }
-function openGdriveSetup() {
-  var inp = document.getElementById('gdriveClientIdInput'); if (inp) inp.value = _gdClientId;
-  document.getElementById('gdriveSetupModal').classList.add('show');
-  setTimeout(() => { if (inp) inp.focus(); }, 50);
-}
-function closeGdriveSetup() { document.getElementById('gdriveSetupModal').classList.remove('show'); }
-function saveGdriveClientId() {
-  var v = document.getElementById('gdriveClientIdInput').value.trim();
-  if (!v) { alert('クライアントIDを入力してください'); return; }
-  _gdClientId = v; try { localStorage.setItem('gemhub_gdrive_client_id', v); } catch(e) {}
-  closeGdriveSetup(); _updateGdStatus(); showToast('クライアントIDを保存しました');
-}
-function gdriveConnect() {
-  if (!_gdClientId) { openGdriveSetup(); return; }
-  if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) { showToast('Google Identity Servicesを読み込み中… 再試行してください', 4000); return; }
-  google.accounts.oauth2.initTokenClient({ client_id: _gdClientId, scope: GD_SCOPE,
-    callback: function(resp) {
-      if (resp.error) { showToast('認証エラー: ' + resp.error, 5000); return; }
-      _gdToken = resp.access_token; _gdFileId = null; _updateGdStatus(); showToast('Google Driveに接続しました');
+// 編集モード切替
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    const btn = document.getElementById('toggle-edit');
+    const form = document.getElementById('add-form');
+    
+    if(isEditMode) {
+        btn.textContent = "編集モード OFF";
+        btn.classList.add('active');
+        form.classList.add('active');
+    } else {
+        btn.textContent = "編集モード ON";
+        btn.classList.remove('active');
+        form.classList.remove('active');
     }
-  }).requestAccessToken({ prompt: '' });
+    renderCards();
 }
-function _updateGdStatus() {
-  var dot=document.getElementById('gdriveStatusDot'), text=document.getElementById('gdriveStatusText');
-  var sb=document.getElementById('gdriveSaveBtn'), lb=document.getElementById('gdriveLoadBtn'), pb=document.getElementById('gdrivePanelBtn');
-  if (!_gdClientId) { if(dot) dot.className='gdrive-status-dot'; if(text) text.textContent='未設定 — ClientIDを設定してください'; if(sb) sb.disabled=true; if(lb) lb.disabled=true; if(pb) pb.classList.remove('gdrive-connected'); }
-  else if (!_gdToken) { if(dot) dot.className='gdrive-status-dot warn'; if(text) text.textContent='ClientID設定済み — Googleでサインインしてください'; if(sb) sb.disabled=true; if(lb) lb.disabled=true; if(pb) pb.classList.remove('gdrive-connected'); }
-  else { if(dot) dot.className='gdrive-status-dot on'; if(text) text.textContent='接続済み — 保存・読み込みができます'; if(sb) sb.disabled=false; if(lb) lb.disabled=false; if(pb) pb.classList.add('gdrive-connected'); }
+
+// データの操作
+function saveData() {
+    localStorage.setItem('my_portal_data', JSON.stringify(L));
+    renderCards();
 }
-function _gdFetch(url, opts) {
-  if (!opts) opts = {}; if (!opts.headers) opts.headers = {};
-  opts.headers['Authorization'] = 'Bearer ' + _gdToken;
-  return fetch(url, opts).then(r => { if (r.status===401||r.status===403) { _gdToken=null; _updateGdStatus(); throw new Error('セッション切れ — 再度サインインしてください'); } return r; });
+
+function moveUp(index, event) {
+    event.stopPropagation();
+    if(index > 0) {
+        [L[index - 1], L[index]] = [L[index], L[index - 1]];
+        saveData();
+    }
 }
-async function _gdSearch() { var q=encodeURIComponent("name='"+GD_FILENAME+"' and trashed=false"); var r=await _gdFetch(GD_FILES_API+'?q='+q+'&fields=files(id,modifiedTime)&spaces=drive'); var d=await r.json(); return (d.files&&d.files.length)?d.files[0]:null; }
-async function _gdCreate(content) { var bnd='gdbound_'+Date.now(); var meta=JSON.stringify({name:GD_FILENAME,mimeType:'application/json'}); var body='--'+bnd+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+'\r\n--'+bnd+'\r\nContent-Type: application/json\r\n\r\n'+content+'\r\n--'+bnd+'--'; var r=await _gdFetch(GD_UPLOAD_API+'?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bnd},body}); var d=await r.json(); return d.id; }
-async function _gdUpdate(fid,content) { await _gdFetch(GD_UPLOAD_API+'/'+fid+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body:content}); }
-async function _gdRead(fid) { var r=await _gdFetch(GD_FILES_API+'/'+fid+'?alt=media'); return await r.text(); }
-async function gdriveSave() {
-  if (!_gdToken) { gdriveConnect(); return; }
-  var btn=document.getElementById('gdriveSaveBtn'); if(btn){btn.disabled=true;btn.textContent='保存中…';}
-  try { var c=JSON.stringify(loadHistory(),null,2); if(!_gdFileId){var f=await _gdSearch();_gdFileId=f?f.id:null;} if(_gdFileId){await _gdUpdate(_gdFileId,c);}else{_gdFileId=await _gdCreate(c);} showToast('Google Drive に保存しました ('+loadHistory().length+'件)'); }
-  catch(err){showToast('保存エラー: '+err.message,5000);}
-  finally{if(btn){btn.disabled=false;btn.textContent='💾 Driveへ保存';}}
+
+function moveDown(index, event) {
+    event.stopPropagation();
+    if(index < L.length - 1) {
+        [L[index + 1], L[index]] = [L[index], L[index + 1]];
+        saveData();
+    }
 }
-async function gdriveLoad() {
-  if (!_gdToken) { gdriveConnect(); return; }
-  var btn=document.getElementById('gdriveLoadBtn'); if(btn){btn.disabled=true;btn.textContent='読込中…';}
-  try {
-    if(!_gdFileId){var f=await _gdSearch();_gdFileId=f?f.id:null;}
-    if(!_gdFileId){showToast('Driveにファイルがありません',4000);return;}
-    var imported=JSON.parse(await _gdRead(_gdFileId)); if(!Array.isArray(imported)) throw new Error('ファイル形式エラー');
-    var existing=loadHistory(); var ids={}; existing.forEach(h=>ids[h.id]=true);
-    var added=imported.filter(h=>h.id&&!ids[h.id]); var merged=added.concat(existing);
-    if(merged.length>HISTORY_MAX) merged=merged.slice(0,HISTORY_MAX);
-    saveHistory(merged); renderHistory(); showToast('Driveから読み込みました (新規'+added.length+'件追加)',4000);
-  } catch(err){showToast('読込エラー: '+err.message,5000);}
-  finally{if(btn){btn.disabled=false;btn.textContent='📥 Driveから読込';}}
+
+function deleteSite(index, event) {
+    event.stopPropagation();
+    if(confirm("このサイトをリストから削除しますか？")) {
+        L.splice(index, 1);
+        saveData();
+    }
 }
+
+function addSite() {
+    const title = document.getElementById('f-title').value;
+    const url = document.getElementById('f-url').value;
+    if(!title || !url) return alert("タイトルとURLは必須です");
+    
+    const newSite = {
+        title: title,
+        url: url,
+        icon: document.getElementById('f-icon').value,
+        badgeText: document.getElementById('f-badge-text').value || "New",
+        badgeClass: document.getElementById('f-badge-class').value,
+        desc: document.getElementById('f-desc').value
+    };
+    
+    L.push(newSite);
+    saveData();
+    
+    // 入力リセット
+    document.getElementById('f-title').value = '';
+    document.getElementById('f-url').value = '';
+    document.getElementById('f-desc').value = '';
+    alert("追加しました！一番下に追加されています。");
+}
+
+// HTMLエクスポート（このマジックでサーバー不要になります！）
+function exportHTML() {
+    // 現在のデータをJSONスクリプトブロックに書き戻す
+    dataScript.textContent = "\n" + JSON.stringify(L, null, 2) + "\n";
+    
+    // 編集モードを一時的に解除（出力ファイルに編集状態を含めないため）
+    const wasEditMode = isEditMode;
+    if(wasEditMode) toggleEditMode();
+    
+    // 描画エリアを一回空にする（重複描画を防ぐため）
+    document.getElementById('g').innerHTML = '';
+    
+    // 現在のHTML全体を取得
+    const htmlContent = "<!DOCTYPE html>\n<html lang=\"ja\">\n" + document.documentElement.innerHTML + "\n</html>";
+    
+    // ダウンロード用リンクを作成してクリック
+    const blob = new Blob([htmlContent], { type: "text/html" });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "sns-portal-updated.html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // 画面を元の状態に戻す
+    renderCards();
+    if(wasEditMode) toggleEditMode();
+    
+    alert("「sns-portal-updated.html」という名前でダウンロードしました！\n次回からはこの新しいファイルを使うか、GitHub等にアップロードしてください。");
+}
+
+// 初期描画
+renderCards();
 </script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+
+<div class="__selection-popup-container__" style="display: none; left: 707px; top: 248px;"><ul><li data-is-command="true" data-action="copy">Copy</li><li data-is-command="false" data-action="https://google.com/search?q=%s">Google</li><li data-is-command="false" data-action="https://www.youtube.com/results?search_query=%s">Youtube</li><li data-is-command="false" data-action="https://search.yahoo.co.jp/search?p=%s">Yahoo検索</li><li data-is-command="false" data-action="https://www.google.com/maps/place/search?q=%s">Google Map</li><li data-is-command="false" data-action="https://x.com/search?q=%s">X</li><li data-is-command="false" data-action="https://www.threads.com/@%s">Threads</li><li data-is-command="false" data-action="https://www.google.com/search?q=site:tiktok.com+&quot;%s&quot;">TikTok</li><li data-is-command="false" data-action="https://www.google.com/search?q=site:instagram.com+&quot;%s&quot;">Instagram（Google内）</li><li data-is-command="false" data-action="https://www.google.com/search?q=site:youtube.com+&quot;%s&quot;">YouTube（Google内）</li></ul></div><textarea id="BFI_DATA" style="width: 1px; height: 1px; display: none;"></textarea><title> </title><div id="WidgetFloaterPanels" translate="no" style="display: none; text-align: left; direction: ltr; visibility: hidden;" class="LTRStyle"> <div id="WidgetFloater" style="display: none" onmouseover="Microsoft.Translator.OnMouseOverFloater()" onmouseout="Microsoft.Translator.OnMouseOutFloater()"> <div id="WidgetLogoPanel"> <span id="WidgetTranslateWithSpan"><span>TRANSLATE with </span><img id="FloaterLogo"></span> <span id="WidgetCloseButton" title="Exit Translation" onclick="Microsoft.Translator.FloaterOnClose()">x</span></div> <div id="LanguageMenuPanel"> <div class="DDStyle_outer"><input name="LanguageMenu_svid" type="text" id="LanguageMenu_svid" style="display:none;" autocomplete="on" value="en" onclick="this.select()"> <input name="LanguageMenu_textid" type="text" id="LanguageMenu_textid" style="display:none;" autocomplete="on" onclick="this.select()"> <span onselectstart="return false" tabindex="0" class="DDStyle" id="__LanguageMenu_header" onclick="return LanguageMenu &amp;&amp; !LanguageMenu.Show('__LanguageMenu_popup', event);" onkeydown="return LanguageMenu &amp;&amp; !LanguageMenu.Show('__LanguageMenu_popup', event);">English</span> <div style="position:relative;text-align:left;left:0;"><div style="position:absolute;width:;left:0px;"><div class="DDStyle" style="display:none;" id="__LanguageMenu_popup"> <table id="LanguageMenu" border="0"> <tbody><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('ar');" ondragstart="LanguageMenu.ondragstart(event);" href="#ar">Arabic</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('he');" ondragstart="LanguageMenu.ondragstart(event);" href="#he">Hebrew</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('pl');" ondragstart="LanguageMenu.ondragstart(event);" href="#pl">Polish</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('bg');" ondragstart="LanguageMenu.ondragstart(event);" href="#bg">Bulgarian</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('hi');" ondragstart="LanguageMenu.ondragstart(event);" href="#hi">Hindi</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('pt');" ondragstart="LanguageMenu.ondragstart(event);" href="#pt">Portuguese</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('ca');" ondragstart="LanguageMenu.ondragstart(event);" href="#ca">Catalan</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('mww');" ondragstart="LanguageMenu.ondragstart(event);" href="#mww">Hmong Daw</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('ro');" ondragstart="LanguageMenu.ondragstart(event);" href="#ro">Romanian</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('zh-CHS');" ondragstart="LanguageMenu.ondragstart(event);" href="#zh-CHS">Chinese Simplified</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('hu');" ondragstart="LanguageMenu.ondragstart(event);" href="#hu">Hungarian</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('ru');" ondragstart="LanguageMenu.ondragstart(event);" href="#ru">Russian</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('zh-CHT');" ondragstart="LanguageMenu.ondragstart(event);" href="#zh-CHT">Chinese Traditional</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('id');" ondragstart="LanguageMenu.ondragstart(event);" href="#id">Indonesian</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('sk');" ondragstart="LanguageMenu.ondragstart(event);" href="#sk">Slovak</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('cs');" ondragstart="LanguageMenu.ondragstart(event);" href="#cs">Czech</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('it');" ondragstart="LanguageMenu.ondragstart(event);" href="#it">Italian</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('sl');" ondragstart="LanguageMenu.ondragstart(event);" href="#sl">Slovenian</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('da');" ondragstart="LanguageMenu.ondragstart(event);" href="#da">Danish</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('ja');" ondragstart="LanguageMenu.ondragstart(event);" href="#ja">Japanese</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('es');" ondragstart="LanguageMenu.ondragstart(event);" href="#es">Spanish</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('nl');" ondragstart="LanguageMenu.ondragstart(event);" href="#nl">Dutch</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('tlh');" ondragstart="LanguageMenu.ondragstart(event);" href="#tlh">Klingon</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('sv');" ondragstart="LanguageMenu.ondragstart(event);" href="#sv">Swedish</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('en');" ondragstart="LanguageMenu.ondragstart(event);" href="#en">English</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('ko');" ondragstart="LanguageMenu.ondragstart(event);" href="#ko">Korean</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('th');" ondragstart="LanguageMenu.ondragstart(event);" href="#th">Thai</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('et');" ondragstart="LanguageMenu.ondragstart(event);" href="#et">Estonian</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('lv');" ondragstart="LanguageMenu.ondragstart(event);" href="#lv">Latvian</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('tr');" ondragstart="LanguageMenu.ondragstart(event);" href="#tr">Turkish</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('fi');" ondragstart="LanguageMenu.ondragstart(event);" href="#fi">Finnish</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('lt');" ondragstart="LanguageMenu.ondragstart(event);" href="#lt">Lithuanian</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('uk');" ondragstart="LanguageMenu.ondragstart(event);" href="#uk">Ukrainian</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('fr');" ondragstart="LanguageMenu.ondragstart(event);" href="#fr">French</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('ms');" ondragstart="LanguageMenu.ondragstart(event);" href="#ms">Malay</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('ur');" ondragstart="LanguageMenu.ondragstart(event);" href="#ur">Urdu</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('de');" ondragstart="LanguageMenu.ondragstart(event);" href="#de">German</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('mt');" ondragstart="LanguageMenu.ondragstart(event);" href="#mt">Maltese</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('vi');" ondragstart="LanguageMenu.ondragstart(event);" href="#vi">Vietnamese</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('el');" ondragstart="LanguageMenu.ondragstart(event);" href="#el">Greek</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('no');" ondragstart="LanguageMenu.ondragstart(event);" href="#no">Norwegian</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('cy');" ondragstart="LanguageMenu.ondragstart(event);" href="#cy">Welsh</a></td> </tr><tr> <td><a tabindex="-1" onclick="return LanguageMenu.onclick('ht');" ondragstart="LanguageMenu.ondragstart(event);" href="#ht">Haitian Creole</a></td><td><a tabindex="-1" onclick="return LanguageMenu.onclick('fa');" ondragstart="LanguageMenu.ondragstart(event);" href="#fa">Persian</a></td><td></td> </tr> </tbody></table> <img alt="" style="height:7px;width:17px;border-width:0px;left:20px;"> </div></div></div></div> <script type="text/javascript"> var LanguageMenu; var LanguageMenu_keys=["ar","bg","ca","zh-CHS","zh-CHT","cs","da","nl","en","et","fi","fr","de","el","ht","he","hi","mww","hu","id","it","ja","tlh","ko","lv","lt","ms","mt","no","fa","pl","pt","ro","ru","sk","sl","es","sv","th","tr","uk","ur","vi","cy"]; var LanguageMenu_values=["Arabic","Bulgarian","Catalan","Chinese Simplified","Chinese Traditional","Czech","Danish","Dutch","English","Estonian","Finnish","French","German","Greek","Haitian Creole","Hebrew","Hindi","Hmong Daw","Hungarian","Indonesian","Italian","Japanese","Klingon","Korean","Latvian","Lithuanian","Malay","Maltese","Norwegian","Persian","Polish","Portuguese","Romanian","Russian","Slovak","Slovenian","Spanish","Swedish","Thai","Turkish","Ukrainian","Urdu","Vietnamese","Welsh"]; var LanguageMenu_callback=function(){ }; var LanguageMenu_popupid='__LanguageMenu_popup'; </script> </div> <div id="CTFLinksPanel"> <span id="ExternalLinksPanel"><a id="HelpLink" title="Help" target="_blank" href="https://go.microsoft.com/?linkid=9722454"> <img id="HelpImg"></a> <a id="EmbedLink" href="javascript:Microsoft.Translator.FloaterShowEmbed()" title="Get this widget for your own site"> <img id="EmbedImg"></a> <a id="ShareLink" title="Share translated page with friends" href="javascript:Microsoft.Translator.FloaterShowSharePanel()"> <img id="ShareImg"></a> </span> </div> <div id="FloaterProgressBar"> <span id="ProgressFill"></span> </div> </div> <div id="WidgetFloaterCollapsed" style="display: none" onmouseover="Microsoft.Translator.OnMouseOverFloater()"> <span>TRANSLATE with </span><img id="CollapsedLogoImg"></div> <div id="FloaterSharePanel" style="display: none"> <div id="ShareTextDiv"> <span id="ShareTextSpan"> COPY THE URL BELOW </span> </div> <div id="ShareTextboxDiv"> <input name="ShareTextbox" type="text" id="ShareTextbox" readonly="readonly" onclick="this.select()"> <!--a id="TwitterLink" title="Share on Twitter"> <img id="TwitterImg" /></a> <a-- id="FacebookLink" title="Share on Facebook"> <img id="FacebookImg" /></a--> <a id="EmailLink" title="Email this translation"> <img id="EmailImg"></a> </div> <div id="ShareFooter"> <span id="ShareHelpSpan"><a id="ShareHelpLink"> <img id="ShareHelpImg"></a></span> <span id="ShareBackSpan"><a id="ShareBack" href="javascript:Microsoft.Translator.FloaterOnShareBackClick()" title="Back To Translation"> Back</a></span> </div> <input name="EmailSubject" type="hidden" id="EmailSubject" value="Check out this page in {0} translated from {1}"> <input name="EmailBody" type="hidden" id="EmailBody" value="Translated: {0}%0d%0aOriginal: {1}%0d%0a%0d%0aAutomatic translation powered by Microsoft® Translator%0d%0ahttp://www.bing.com/translator?ref=MSTWidget"> <input type="hidden" id="ShareHelpText" value="This link allows visitors to launch this page and automatically translate it to {0}."> </div> <div id="FloaterEmbed" style="display: none"> <div id="EmbedTextDiv"> <span id="EmbedTextSpan">EMBED THE SNIPPET BELOW IN YOUR SITE</span> <a id="EmbedHelpLink" title="Copy this code and place it into your HTML."> <img id="EmbedHelpImg"></a> </div> <div id="EmbedTextboxDiv"> <input name="EmbedSnippetTextBox" type="text" id="EmbedSnippetTextBox" readonly="readonly" value="&lt;div id='MicrosoftTranslatorWidget' class='Dark' style='color:white;background-color:#555555'&gt;&lt;/div&gt;&lt;script type='text/javascript'&gt;setTimeout(function(){var s=document.createElement('script');s.type='text/javascript';s.charset='UTF-8';s.src=((location &amp;&amp; location.href &amp;&amp; location.href.indexOf('https') == 0)?'https://ssl.microsofttranslator.com':'http://www.microsofttranslator.com')+'/ajax/v3/WidgetV3.ashx?siteData=ueOIGRSKkd965FeEGM5JtQ**&amp;ctf=true&amp;ui=true&amp;settings=manual&amp;from=en';var p=document.getElementsByTagName('head')[0]||document.documentElement;p.insertBefore(s,p.firstChild); },0);&lt;/script&gt;" onclick="this.select()"> </div> <div id="EmbedNoticeDiv"><span id="EmbedNoticeSpan">Enable collaborative features and customize widget: <a href="http://www.bing.com/widget/translator" target="_blank">Bing Webmaster Portal</a></span></div> <div id="EmbedFooterDiv"><span id="EmbedBackSpan"><a href="javascript:Microsoft.Translator.FloaterOnEmbedBackClick()" title="Back To Translation">Back</a></span></div> </div> <script type="text/javascript"> var intervalId = setInterval(function () { if (MtPopUpList) { LanguageMenu = new MtPopUpList(); var langMenu = document.getElementById(LanguageMenu_popupid); var origLangDiv = document.createElement("div"); origLangDiv.id = "OriginalLanguageDiv"; origLangDiv.innerHTML = "<span id='OriginalTextSpan'>ORIGINAL: </span><span id='OriginalLanguageSpan'></span>"; langMenu.appendChild(origLangDiv); LanguageMenu.Init('LanguageMenu', LanguageMenu_keys, LanguageMenu_values, LanguageMenu_callback, LanguageMenu_popupid); window["LanguageMenu"] = LanguageMenu; clearInterval(intervalId); } }, 1); </script> </div><div></div>
 </body>
 </html>
