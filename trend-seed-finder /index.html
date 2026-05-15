@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trend Seed Finder — 売れるコンテンツの種を見つける</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;700;900&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream:       #faf7f2;
+    --cream-dark:  #f2ede4;
+    --cream-mid:   #ede8df;
+    --brown:       #2c2825;
+    --brown-mid:   #5a4f46;
+    --brown-light: #8a7a6e;
+    --amber:       #b87333;
+    --amber-light: #d4925a;
+    --amber-pale:  #f0dcc8;
+    --sage:        #7a9e7e;
+    --sage-light:  #a0bca4;
+    --sage-pale:   #dbeadc;
+    --rose:        #c07070;
+    --rose-pale:   #f5e0e0;
+    --shadow-sm:   rgba(150,110,70,0.08);
+    --shadow-md:   rgba(150,110,70,0.13);
+    --shadow-lg:   rgba(150,110,70,0.18);
+    --border:      rgba(150,110,70,0.18);
+    --font-serif:  'Noto Serif JP', serif;
+    --font-sans:   'Noto Sans JP', sans-serif;
+    --radius-sm:   10px;
+    --radius-md:   16px;
+    --radius-lg:   22px;
+    --radius-xl:   28px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--cream);
+    color: var(--brown);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.75;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 10% 0%, rgba(184,115,51,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(122,158,126,0.07) 0%, transparent 60%);
+  }
+
+  /* ─── NOISE TEXTURE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── LAYOUT ─── */
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ─── HEADER ─── */
+  .site-header {
+    text-align: center;
+    margin-bottom: 52px;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--amber-pale);
+    color: var(--amber);
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 99px;
+    border: 1px solid rgba(184,115,51,0.25);
+    margin-bottom: 18px;
+  }
+  .site-title {
+    font-family: var(--font-serif);
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    color: var(--brown);
+    margin-bottom: 12px;
+  }
+  .site-title span { color: var(--amber); }
+  .site-subtitle {
+    font-size: 14px;
+    color: var(--brown-light);
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  /* ─── CARD BASE ─── */
+  .card {
+    background: rgba(255,253,248,0.85);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 2px 12px var(--shadow-sm), 0 1px 3px var(--shadow-sm);
+    backdrop-filter: blur(4px);
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .card:hover { box-shadow: 0 6px 24px var(--shadow-md); }
+
+  /* ─── API KEY SECTION ─── */
+  .api-section {}
+  .api-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    gap: 12px;
+  }
+  .api-toggle-left { display: flex; align-items: center; gap: 10px; }
+  .api-icon {
+    width: 36px; height: 36px;
+    background: var(--amber-pale);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .api-label {
+    font-family: var(--font-serif);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--brown);
+  }
+  .api-sublabel {
+    font-size: 11px;
+    color: var(--brown-light);
+    margin-top: 1px;
+  }
+  .api-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px;
+    color: var(--brown-light);
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--brown-light);
+    transition: background 0.3s;
+  }
+  .dot.active { background: var(--sage); box-shadow: 0 0 6px rgba(122,158,126,0.5); }
+  .dot.saved { background: var(--amber); }
+
+  .api-toggle-chevron {
+    font-size: 14px;
+    color: var(--brown-light);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+  }
+  .api-toggle-chevron.open { transform: rotate(180deg); }
+
+  .api-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    opacity: 0;
+  }
+  .api-body.open { max-height: 200px; opacity: 1; }
+
+  .api-body-inner {
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ─── INPUTS ─── */
+  input[type="text"], input[type="password"], textarea {
+    width: 100%;
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--brown);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    line-height: 1.6;
+    resize: vertical;
+  }
+  input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 3px rgba(184,115,51,0.1);
+  }
+  input::placeholder, textarea::placeholder { color: var(--brown-light); opacity: 0.7; }
+
+  /* ─── API KEY ROW ─── */
+  .api-key-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .api-key-row input { flex: 1; }
+
+  .btn-save {
+    background: var(--sage);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0 18px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-save:hover { background: #6a8e6e; }
+  .btn-save:active { transform: scale(0.97); }
+
+  .api-hint {
+    font-size: 11.5px;
+    color: var(--brown-light);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .api-hint a { color: var(--amber); text-decoration: none; }
+  .api-hint a:hover { text-decoration: underline; }
+
+  /* ─── SEARCH SECTION ─── */
+  .search-section {}
+  .section-label {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brown);
+    margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-desc {
+    font-size: 12.5px;
+    color: var(--brown-light);
+    margin-bottom: 14px;
+  }
+
+  textarea.main-input {
+    min-height: 90px;
+    margin-bottom: 14px;
+    font-size: 15px;
+  }
+
+  /* ─── ANALYZE BUTTON ─── */
+  .btn-analyze {
+    width: 100%;
+    background: linear-gradient(135deg, var(--amber) 0%, var(--amber-light) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 16px 24px;
+    font-family: var(--font-serif);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 4px 16px rgba(184,115,51,0.3);
+    transition: all 0.2s ease;
+    letter-spacing: 0.02em;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-analyze::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .btn-analyze:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(184,115,51,0.35);
+  }
+  .btn-analyze:active:not(:disabled) { transform: translateY(0); }
+  .btn-analyze:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-icon { font-size: 20px; }
+
+  /* ─── LOADING ─── */
+  .loading-area {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .loading-area.visible { display: flex; }
+
+  .loading-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 24px;
+    background: rgba(255,253,248,0.85);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--amber-pale);
+    border-top-color: var(--amber);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-family: var(--font-serif);
+    font-size: 14px;
+    color: var(--brown-mid);
+  }
+  .loading-dots span {
+    display: inline-block;
+    animation: blink 1.2s ease-in-out infinite;
+    opacity: 0;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100% { opacity: 0; } 40% { opacity: 1; } }
+
+  /* skeleton */
+  .skeleton-card {
+    background: rgba(255,253,248,0.85);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .skel {
+    background: linear-gradient(90deg, var(--cream-mid) 25%, var(--cream-dark) 50%, var(--cream-mid) 75%);
+    background-size: 400% 100%;
+    border-radius: 8px;
+    animation: shimmer 1.4s ease infinite;
+  }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  .skel-h { height: 20px; }
+  .skel-p { height: 13px; }
+  .skel.w-40 { width: 40%; }
+  .skel.w-70 { width: 70%; }
+  .skel.w-90 { width: 90%; }
+  .skel.w-55 { width: 55%; }
+
+  /* ─── RESULT AREA ─── */
+  .result-area {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 24px;
+  }
+  .result-area.visible { display: flex; animation: fadeUp 0.5s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── RESULT CARDS ─── */
+  .result-card {
+    background: rgba(255,253,248,0.92);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 2px 14px var(--shadow-sm);
+    overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+  }
+  .result-card:nth-child(2) { animation-delay: 0.05s; }
+  .result-card:nth-child(3) { animation-delay: 0.10s; }
+  .result-card:nth-child(4) { animation-delay: 0.15s; }
+
+  .result-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-card-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .ic-amber { background: var(--amber-pale); }
+  .ic-sage  { background: var(--sage-pale); }
+  .ic-rose  { background: var(--rose-pale); }
+  .ic-brown { background: var(--cream-mid); }
+
+  .result-card-title {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brown);
+  }
+  .result-card-subtitle {
+    font-size: 11.5px;
+    color: var(--brown-light);
+    margin-top: 1px;
+  }
+
+  .result-card-body { padding: 24px 28px; }
+
+  /* trend text */
+  .trend-text {
+    font-size: 14.5px;
+    line-height: 1.85;
+    color: var(--brown-mid);
+    background: var(--cream-dark);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+  }
+
+  /* personas */
+  .persona-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 580px) { .persona-grid { grid-template-columns: 1fr; } }
+
+  .persona-chip {
+    background: var(--cream-dark);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+  }
+  .persona-tag {
+    display: inline-block;
+    background: var(--sage-pale);
+    color: var(--sage);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 99px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(122,158,126,0.3);
+  }
+  .persona-profile {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--brown);
+    margin-bottom: 6px;
+  }
+  .persona-pain {
+    font-size: 12.5px;
+    color: var(--brown-mid);
+    line-height: 1.7;
+  }
+
+  /* products */
+  .product-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .product-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--cream-dark);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+  }
+  .product-bullet {
+    width: 28px; height: 28px;
+    background: var(--amber-pale);
+    color: var(--amber);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-family: var(--font-serif);
+  }
+  .product-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--brown);
+    margin-bottom: 3px;
+  }
+  .product-reason {
+    font-size: 12px;
+    color: var(--brown-mid);
+    line-height: 1.65;
+  }
+
+  /* angles */
+  .angle-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .angle-item {
+    background: var(--cream-dark);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    position: relative;
+  }
+  .angle-item:nth-child(2) { border-left-color: var(--sage); }
+  .angle-item:nth-child(3) { border-left-color: var(--rose); }
+
+  .angle-num {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+  .angle-item:nth-child(2) .angle-num { color: var(--sage); }
+  .angle-item:nth-child(3) .angle-num { color: var(--rose); }
+
+  .angle-type {
+    display: inline-block;
+    background: var(--amber-pale);
+    color: var(--amber);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 99px;
+    margin-left: 6px;
+    border: 1px solid rgba(184,115,51,0.25);
+  }
+  .angle-item:nth-child(2) .angle-type {
+    background: var(--sage-pale); color: var(--sage);
+    border-color: rgba(122,158,126,0.25);
+  }
+  .angle-item:nth-child(3) .angle-type {
+    background: var(--rose-pale); color: var(--rose);
+    border-color: rgba(192,112,112,0.25);
+  }
+
+  .angle-title {
+    font-family: var(--font-serif);
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--brown);
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .angle-hook {
+    font-size: 12.5px;
+    color: var(--brown-mid);
+    line-height: 1.7;
+  }
+  .hook-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--brown-light);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  /* ─── ERROR ─── */
+  .error-box {
+    background: var(--rose-pale);
+    border: 1px solid rgba(192,112,112,0.3);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    display: none;
+    margin-top: 16px;
+  }
+  .error-box.visible { display: flex; animation: fadeUp 0.3s ease; }
+  .error-icon { font-size: 20px; flex-shrink: 0; }
+  .error-text { font-size: 13.5px; color: #8b4040; line-height: 1.65; }
+  .error-text strong { color: #7a2a2a; }
+
+  /* ─── FOOTER ─── */
+  .site-footer {
+    text-align: center;
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--brown-light);
+    opacity: 0.7;
+  }
+  .site-footer span { color: var(--amber); }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--cream); }
+  ::-webkit-scrollbar-thumb { background: var(--amber-pale); border-radius: 99px; }
+</style>
+</head>
+
+<body>
+<div class="page-wrap">
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="badge">✦ AI-Powered Affiliate Research</div>
+    <h1 class="site-title">Trend Seed<br><span>Finder</span></h1>
+    <p class="site-subtitle">ジャンルやキーワードを入力するだけで、<br>売れるコンテンツの「種」をAIが発見します</p>
+  </header>
+
+  <!-- API Key Section -->
+  <div class="card api-section">
+    <div class="api-toggle" id="apiToggle">
+      <div class="api-toggle-left">
+        <div class="api-icon">🔑</div>
+        <div>
+          <div class="api-label">Gemini APIキー設定</div>
+          <div class="api-sublabel">クリックして展開 / ローカルに保存されます</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="api-status">
+          <div class="dot" id="apiDot"></div>
+          <span id="apiStatusText">未設定</span>
+        </div>
+        <div class="api-toggle-chevron" id="apiChevron">▾</div>
+      </div>
+    </div>
+
+    <div class="api-body" id="apiBody">
+      <div class="api-body-inner">
+        <div class="api-key-row">
+          <input type="password" id="apiKeyInput" placeholder="AIzaSy..." autocomplete="off">
+          <button class="btn-save" id="btnSaveKey">保存する</button>
+        </div>
+        <div class="api-hint">
+          <span>📎</span>
+          <span>APIキーは <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> から取得できます（無料）</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Section -->
+  <div class="card search-section">
+    <div class="section-label">🔍 調査キーワード</div>
+    <div class="section-desc">ジャンル・商品カテゴリ・Xのトレンドワードなど、自由に入力してください</div>
+    <textarea class="main-input" id="keywordInput"
+      placeholder="例：花粉症 対策グッズ&#10;例：ChatGPT 副業&#10;例：韓国コスメ スキンケア"></textarea>
+    <button class="btn-analyze" id="btnAnalyze">
+      <span class="btn-icon">🌱</span>
+      コンテンツの種を発見する
+    </button>
+  </div>
+
+  <!-- Error Box -->
+  <div class="error-box" id="errorBox">
+    <div class="error-icon">⚠️</div>
+    <div class="error-text" id="errorText">
+      <strong>エラーが発生しました</strong><br>
+      APIキーを確認し、再度お試しください。
+    </div>
+  </div>
+
+  <!-- Loading Area -->
+  <div class="loading-area" id="loadingArea">
+    <div class="loading-header">
+      <div class="spinner"></div>
+      <div class="loading-text">
+        AIがトレンドを分析中<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+      </div>
+    </div>
+    <div class="skeleton-card">
+      <div class="skel skel-h w-40" style="margin-bottom:4px"></div>
+      <div class="skel skel-p w-90"></div>
+      <div class="skel skel-p w-70"></div>
+      <div class="skel skel-p w-55"></div>
+    </div>
+    <div class="skeleton-card">
+      <div class="skel skel-h w-40" style="margin-bottom:4px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="skel skel-p w-90"></div>
+          <div class="skel skel-p w-70"></div>
+          <div class="skel skel-p w-55"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="skel skel-p w-90"></div>
+          <div class="skel skel-p w-70"></div>
+          <div class="skel skel-p w-55"></div>
+        </div>
+      </div>
+    </div>
+    <div class="skeleton-card">
+      <div class="skel skel-h w-40" style="margin-bottom:4px"></div>
+      <div class="skel skel-p w-90"></div>
+      <div class="skel skel-p w-70"></div>
+      <div class="skel skel-p w-90"></div>
+      <div class="skel skel-p w-55"></div>
+    </div>
+  </div>
+
+  <!-- Result Area -->
+  <div class="result-area" id="resultArea"></div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    Trend Seed Finder — Powered by <span>Gemini AI</span> ✦ データはAI生成です。実際の収益を保証するものではありません。
+  </footer>
+
+</div>
+
+<script>
+/* ─── STATE ─── */
+let apiKey = localStorage.getItem('tsf_gemini_key') || '';
+
+/* ─── API KEY UI ─── */
+const apiToggle  = document.getElementById('apiToggle');
+const apiBody    = document.getElementById('apiBody');
+const apiChevron = document.getElementById('apiChevron');
+const apiDot     = document.getElementById('apiDot');
+const apiStatus  = document.getElementById('apiStatusText');
+const apiKeyInput = document.getElementById('apiKeyInput');
+const btnSave    = document.getElementById('btnSaveKey');
+
+function updateApiStatus() {
+  if (apiKey) {
+    apiDot.className = 'dot saved';
+    apiStatus.textContent = '保存済み';
+    apiKeyInput.value = apiKey;
+  } else {
+    apiDot.className = 'dot';
+    apiStatus.textContent = '未設定';
+  }
+}
+updateApiStatus();
+
+apiToggle.addEventListener('click', () => {
+  const isOpen = apiBody.classList.toggle('open');
+  apiChevron.classList.toggle('open', isOpen);
+});
+
+btnSave.addEventListener('click', () => {
+  const val = apiKeyInput.value.trim();
+  if (!val) { showError('APIキーを入力してください。'); return; }
+  apiKey = val;
+  localStorage.setItem('tsf_gemini_key', val);
+  updateApiStatus();
+  apiBody.classList.remove('open');
+  apiChevron.classList.remove('open');
+  hideError();
+});
+
+/* ─── ANALYZE ─── */
+document.getElementById('btnAnalyze').addEventListener('click', analyze);
+document.getElementById('keywordInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) analyze();
+});
+
+async function analyze() {
+  const keyword = document.getElementById('keywordInput').value.trim();
+  if (!keyword) { showError('キーワードを入力してください。'); return; }
+  if (!apiKey)  { showError('APIキーを設定してください。'); return; }
+
+  hideError();
+  setLoading(true);
+  clearResult();
+
+  const prompt = `
+あなたは月100万円以上を稼ぐトップアフィリエイターです。
+以下のキーワードを分析し、必ず以下のJSON形式のみで回答してください（コードブロック不要、前置き不要）。
+
+キーワード: "${keyword}"
+
+{
+  "trendBackground": "なぜ今このキーワードが注目されているか。需要の背景・社会的文脈を150文字程度で。",
+  "personas": [
+    {
+      "tag": "ペルソナA",
+      "profile": "年齢・性別・職業など（例：35歳・会社員女性）",
+      "pain": "具体的な悩みや課題（2〜3文）"
+    },
+    {
+      "tag": "ペルソナB",
+      "profile": "年齢・性別・職業など",
+      "pain": "具体的な悩みや課題（2〜3文）"
+    }
+  ],
+  "products": [
+    {
+      "name": "商品ジャンル名（具体的に）",
+      "reason": "なぜこれが売れるか・どのASPで紹介すべきか"
+    },
+    {
+      "name": "商品ジャンル名2",
+      "reason": "紹介すべき理由"
+    },
+    {
+      "name": "商品ジャンル名3",
+      "reason": "紹介すべき理由"
+    }
+  ],
+  "angles": [
+    {
+      "type": "切り口タイプ（例：コスパ重視）",
+      "title": "SNSでバズるタイトル案（30文字以内）",
+      "hook": "最初の1〜2文の引きになる文章（フック）"
+    },
+    {
+      "type": "切り口タイプ2",
+      "title": "タイトル案2",
+      "hook": "フック文2"
+    },
+    {
+      "type": "切り口タイプ3",
+      "title": "タイトル案3",
+      "hook": "フック文3"
+    }
+  ]
+}
+`;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.85,
+            maxOutputTokens: 2048
+          }
+        })
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = err?.error?.message || `HTTP ${res.status}`;
+      throw new Error(msg);
+    }
+
+    const data = await res.json();
+    const raw  = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      // fallback: extract JSON block
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) parsed = JSON.parse(match[0]);
+      else throw new Error('JSONのパースに失敗しました。再度お試しください。');
+    }
+
+    setLoading(false);
+    renderResult(keyword, parsed);
+
+  } catch (e) {
+    setLoading(false);
+    showError(`<strong>エラーが発生しました</strong><br>${e.message}`);
+  }
+}
+
+/* ─── RENDER ─── */
+function renderResult(keyword, d) {
+  const area = document.getElementById('resultArea');
+  area.innerHTML = '';
+
+  // keyword pill
+  const pill = document.createElement('div');
+  pill.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:13px;color:var(--brown-light);';
+  pill.innerHTML = `<span style="background:var(--amber-pale);color:var(--amber);padding:4px 14px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid rgba(184,115,51,0.25)">🔍 ${escHtml(keyword)}</span><span>の分析レポート</span>`;
+  area.appendChild(pill);
+
+  // 1. Trend
+  area.appendChild(createCard({
+    icon: '📈', iconClass: 'ic-amber',
+    title: '需要予測とトレンド背景',
+    subtitle: 'なぜ今このキーワードが熱いのか',
+    body: `<div class="trend-text">${escHtml(d.trendBackground || '—')}</div>`
+  }));
+
+  // 2. Personas
+  const personasHtml = (d.personas || []).map(p => `
+    <div class="persona-chip">
+      <span class="persona-tag">${escHtml(p.tag)}</span>
+      <div class="persona-profile">👤 ${escHtml(p.profile)}</div>
+      <div class="persona-pain">${escHtml(p.pain)}</div>
+    </div>
+  `).join('');
+  area.appendChild(createCard({
+    icon: '🎯', iconClass: 'ic-sage',
+    title: 'ペルソナ設定案',
+    subtitle: 'ターゲットユーザーの解像度を上げる',
+    body: `<div class="persona-grid">${personasHtml}</div>`
+  }));
+
+  // 3. Products
+  const productsHtml = (d.products || []).map((p, i) => `
+    <div class="product-item">
+      <div class="product-bullet">${i + 1}</div>
+      <div>
+        <div class="product-name">${escHtml(p.name)}</div>
+        <div class="product-reason">${escHtml(p.reason)}</div>
+      </div>
+    </div>
+  `).join('');
+  area.appendChild(createCard({
+    icon: '🛒', iconClass: 'ic-brown',
+    title: '売れる商品・サービス案',
+    subtitle: 'Amazon / 楽天 / A8.net などで紹介すべきアイテム',
+    body: `<div class="product-list">${productsHtml}</div>`
+  }));
+
+  // 4. Angles
+  const numLabels = ['01', '02', '03'];
+  const anglesHtml = (d.angles || []).map((a, i) => `
+    <div class="angle-item">
+      <div class="angle-num">Angle ${numLabels[i]}<span class="angle-type">${escHtml(a.type)}</span></div>
+      <div class="angle-title">「${escHtml(a.title)}」</div>
+      <div class="hook-label">フック文</div>
+      <div class="angle-hook">${escHtml(a.hook)}</div>
+    </div>
+  `).join('');
+  area.appendChild(createCard({
+    icon: '⚡', iconClass: 'ic-rose',
+    title: 'キラーアングル（3つの切り口）',
+    subtitle: 'SNSでバズる「目を引く切り口」とタイトル案',
+    body: `<div class="angle-list">${anglesHtml}</div>`
+  }));
+
+  area.classList.add('visible');
+}
+
+function createCard({ icon, iconClass, title, subtitle, body }) {
+  const div = document.createElement('div');
+  div.className = 'result-card';
+  div.innerHTML = `
+    <div class="result-card-header">
+      <div class="result-card-icon ${iconClass}">${icon}</div>
+      <div>
+        <div class="result-card-title">${title}</div>
+        <div class="result-card-subtitle">${subtitle}</div>
+      </div>
+    </div>
+    <div class="result-card-body">${body}</div>
+  `;
+  return div;
+}
+
+/* ─── HELPERS ─── */
+function setLoading(on) {
+  document.getElementById('loadingArea').classList.toggle('visible', on);
+  document.getElementById('btnAnalyze').disabled = on;
+}
+function clearResult() {
+  const area = document.getElementById('resultArea');
+  area.innerHTML = '';
+  area.classList.remove('visible');
+}
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  document.getElementById('errorText').innerHTML = msg;
+  box.classList.add('visible');
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function hideError() {
+  document.getElementById('errorBox').classList.remove('visible');
+}
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
