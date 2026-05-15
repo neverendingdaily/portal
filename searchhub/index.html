@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search Intelligence Hub</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Plus+Jakarta+Sans:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"><style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f1f5f9;color:#0f172a;font-family:'Noto Sans JP',sans-serif;min-height:100vh;font-size:14px;}
+.tab-btn{padding:11px 15px;font-size:13px;font-weight:500;color:#64748b;border:none;border-bottom:2.5px solid transparent;background:none;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s;font-family:'Noto Sans JP',sans-serif;}
+.tab-btn:hover{color:#334155;}
+.tab-btn[data-tab="google"].active{color:#1a73e8;border-bottom-color:#1a73e8;}
+.tab-btn[data-tab="x"].active{color:#000;border-bottom-color:#000;}
+.tab-btn[data-tab="bluesky"].active{color:#0085ff;border-bottom-color:#0085ff;}
+.tab-btn[data-tab="reddit"].active{color:#e84118;border-bottom-color:#e84118;}
+.tab-btn[data-tab="trends"].active{color:#e67e00;border-bottom-color:#e67e00;}
+.tab-btn[data-tab="favorites"].active{color:#d97706;border-bottom-color:#d97706;}
+.tab-content{display:none;}.tab-content.active{display:block;}
+.card{background:#fff;border:1px solid #e8edf5;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(15,23,42,.05);}
+.card-sm{background:#fff;border:1px solid #e8edf5;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(15,23,42,.04);}
+.fi{width:100%;background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 11px;font-size:13px;color:#0f172a;font-family:'Noto Sans JP',sans-serif;outline:none;transition:border-color .15s,box-shadow .15s;}
+.fi:focus{border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.1);}
+.fi::placeholder{color:#b0bec5;}
+select.fi option{background:#fff;color:#0f172a;}
+textarea.fi{resize:vertical;line-height:1.5;}
+.fi-x:focus{border-color:#111;box-shadow:0 0 0 3px rgba(0,0,0,.08);}
+.fi-b:focus{border-color:#0085ff;box-shadow:0 0 0 3px rgba(0,133,255,.1);}
+.fi-r:focus{border-color:#e84118;box-shadow:0 0 0 3px rgba(232,65,24,.1);}
+.fl{display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:4px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;}
+.sec-title{font-size:10.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.09em;font-family:'JetBrains Mono',monospace;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';flex:1;height:1px;background:#f1f5f9;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Noto Sans JP',sans-serif;transition:filter .15s,transform .1s;letter-spacing:.01em;}
+.btn:hover{filter:brightness(1.07);}
+.btn:active{transform:scale(.98);}
+.btn-g{background:#1a73e8;color:#fff;}
+.btn-x{background:#111;color:#fff;}
+.btn-b{background:#0085ff;color:#fff;}
+.btn-r{background:#e84118;color:#fff;}
+.btn-a{background:#f59e0b;color:#fff;}
+.btn-tr{background:linear-gradient(135deg,#e67e00,#f59e0b);color:#fff;}
+.btn-out{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid #e2e8f0;color:#475569;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;transition:all .13s;font-family:'Noto Sans JP',sans-serif;}
+.btn-out:hover{border-color:#94a3b8;color:#0f172a;background:#f8fafc;}
+.date-sc{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;background:#f1f5f9;border:1.5px solid #e2e8f0;color:#64748b;transition:all .12s;font-family:'Noto Sans JP',sans-serif;white-space:nowrap;}
+.date-sc:hover{background:#e2e8f0;color:#334155;}
+.date-sc-clear{color:#ef4444;border-color:#fecaca;background:#fff1f2;}
+.date-sc-clear:hover{background:#fee2e2;border-color:#f87171;}
+.site-cb{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:6px;cursor:pointer;font-size:12px;color:#475569;border:1.5px solid transparent;background:#f8fafc;transition:all .13s;user-select:none;}
+.site-cb:hover{background:#f1f5f9;color:#0f172a;}
+.site-cb.on{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;}
+.site-cb input{accent-color:#1a73e8;width:13px;height:13px;flex-shrink:0;}
+.rtprev{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;padding:11px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;min-height:42px;word-break:break-all;line-height:1.6;transition:all .2s;}
+.rtprev.empty{color:#94a3b8;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-style:italic;}
+.rtprev.has-q{border-color:#bfdbfe;background:#eff6ff;color:#1e3a8a;}
+.rtprev.has-q-x{border-color:#d1d5db;background:#f9fafb;color:#111;}
+.rtprev.has-q-b{border-color:#bae6fd;background:#f0f9ff;color:#0c4a6e;}
+.rtprev.has-q-r{border-color:#fed7aa;background:#fff7ed;color:#7c2d12;}
+.prev-label{font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;display:flex;align-items:center;gap:6px;color:#94a3b8;}
+.load-bar{background:#fff;border:1px solid #e8edf5;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(15,23,42,.04);}
+.dd-wrap{position:relative;display:inline-block;}
+.dd-menu{position:absolute;z-index:30;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:6px;min-width:230px;box-shadow:0 8px 24px rgba(15,23,42,.1);top:calc(100% + 4px);left:0;max-height:360px;overflow-y:auto;}
+.dd-item{padding:7px 10px;border-radius:6px;font-size:12px;cursor:pointer;color:#475569;display:flex;align-items:center;gap:6px;transition:background .1s,color .1s;}
+.dd-item:hover{background:#f8fafc;color:#0f172a;}
+.dd-grp-label{padding:6px 8px;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-top:4px;}
+.fav-item{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;background:#fafbfc;border:1.5px solid #f1f5f9;border-radius:9px;transition:all .15s;}
+.fav-item:hover{border-color:#e2e8f0;box-shadow:0 1px 4px rgba(15,23,42,.06);}
+.hist-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#fafbfc;border:1px solid #f1f5f9;border-radius:7px;font-size:12px;color:#64748b;cursor:pointer;transition:all .13s;margin-bottom:4px;}
+.hist-item:hover{background:#fff;border-color:#e2e8f0;color:#0f172a;box-shadow:0 1px 3px rgba(15,23,42,.05);}
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(6px);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal-box{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(15,23,42,.14);}
+.stab{padding:8px 15px;border-radius:7px 7px 0 0;font-size:13px;background:transparent;color:#64748b;border:none;cursor:pointer;transition:all .13s;font-family:'Noto Sans JP',sans-serif;font-weight:500;}
+.stab.on{background:#fff;color:#0f172a;box-shadow:0 -2px 6px rgba(15,23,42,.05);}
+/* ── TREND HUB ── */
+.trend-cat{background:#fff;border:1px solid #e8edf5;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(15,23,42,.04);}
+.trend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:10px;margin-top:14px;}
+.tool-card{border-radius:10px;padding:13px 15px;transition:box-shadow .15s,transform .12s;cursor:default;}
+.tool-card:hover{box-shadow:0 3px 12px rgba(15,23,42,.1);transform:translateY(-1px);}
+.tool-name{font-size:12.5px;font-weight:700;color:#0f172a;margin-bottom:3px;}
+.tool-desc{font-size:11px;color:#64748b;line-height:1.55;margin-bottom:10px;}
+.tool-btns{display:flex;gap:5px;flex-wrap:wrap;}
+.tool-btn{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:'Noto Sans JP',sans-serif;transition:filter .12s;}
+.tool-btn:hover{filter:brightness(1.1);}
+.tool-btn-open{background:#fff;border:1.5px solid #e2e8f0;color:#475569;}
+.tool-btn-open:hover{border-color:#94a3b8;color:#0f172a;}
+.tool-btn-search{color:#fff;}
+.kw-badge{font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;color:#fff;flex-shrink:0;align-self:flex-start;margin-top:1px;}
+.trend-kw-bar{background:#fff;border:1px solid #e8edf5;border-radius:12px;padding:16px 20px;box-shadow:0 1px 4px rgba(15,23,42,.04);}
+/* ── MISC ── */
+#toast{position:fixed;bottom:20px;right:20px;background:#0f172a;border-radius:10px;padding:11px 16px;font-size:13px;color:#fff;z-index:100;display:flex;align-items:center;gap:7px;transform:translateY(0);opacity:1;transition:all .3s;pointer-events:none;box-shadow:0 4px 16px rgba(15,23,42,.2);}
+#toast.hide{transform:translateY(14px);opacity:0;}
+::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:#f1f5f9;}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}::-webkit-scrollbar-thumb:hover{background:#94a3b8;}
+.gr{display:grid;gap:14px;}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.empty-st{text-align:center;padding:40px 16px;color:#94a3b8;font-size:13px;}
+@media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr;}.trend-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div style="background:#fff;border-bottom:1px solid #e8edf5;position:sticky;top:0;z-index:20;box-shadow:0 1px 4px rgba(15,23,42,.06);">
+  <div style="max-width:1040px;margin:0 auto;padding:0 16px;display:flex;align-items:center;gap:4px;">
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 16px 10px 0;border-right:1px solid #e8edf5;margin-right:4px;flex-shrink:0;">
+      <div style="width:28px;height:28px;background:linear-gradient(135deg,#1a73e8 0%,#0085ff 100%);border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(26,115,232,.25);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5 1.49-1.49-5-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      </div>
+      <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:#0f172a;letter-spacing:-.01em;">Search Hub</span>
+    </div>
+    <div style="display:flex;overflow-x:auto;">
+      <button class="tab-btn active" data-tab="google" onclick="switchTab('google')">🔍 Google</button>
+      <button class="tab-btn" data-tab="x" onclick="switchTab('x')">𝕏 X / Twitter</button>
+      <button class="tab-btn" data-tab="bluesky" onclick="switchTab('bluesky')">🦋 Bluesky</button>
+      <button class="tab-btn" data-tab="reddit" onclick="switchTab('reddit')">🟠 Reddit</button>
+      <button class="tab-btn" data-tab="trends" onclick="switchTab('trends')" style="font-weight:600;">🔥 トレンド</button>
+      <button class="tab-btn" data-tab="favorites" onclick="switchTab('favorites')">⭐ お気に入り</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div style="max-width:1040px;margin:0 auto;padding:20px 16px;">
+
+<!-- ═══ GOOGLE ═══ -->
+<div id="tab-google" class="tab-content active">
+  <div class="gr">
+    <div class="load-bar">
+      <span style="font-size:10px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-weight:600;flex-shrink:0;">LOAD →</span>
+      <div class="dd-wrap"><button class="btn-out" onclick="toggleDD('ddGW')">📝 ワード ▾</button><div id="ddGW" class="dd-menu" style="display:none;"></div></div>
+      <div class="dd-wrap"><button class="btn-out" onclick="toggleDD('ddGA')">👤 アカウント ▾</button><div id="ddGA" class="dd-menu" style="display:none;"></div></div>
+      <div class="dd-wrap"><button class="btn-out" onclick="toggleDD('ddGH')">🕐 履歴 ▾</button><div id="ddGH" class="dd-menu" style="display:none;min-width:300px;"></div></div>
+    </div>
+    <div class="card">
+      <div class="sec-title">🔍 検索条件</div>
+      <div class="gr">
+        <div><label class="fl">すべてのキーワードを含む</label>
+          <input id="gAll" class="fi" placeholder="例: AI 生成技術 2024　→ 複数ワードはスペース区切り"></div>
+        <div><label class="fl">完全一致フレーズ（自動で " " が付きます）</label>
+          <input id="gExact" class="fi" placeholder='例: リモートワーク 生産性向上　→ このフレーズそのものを含む結果'></div>
+        <div class="grid2">
+          <div><label class="fl">除外するキーワード（スペース区切り）</label>
+            <input id="gExcl" class="fi" placeholder="例: スポンサー 広告 PR　→ これらを含む結果を除外"></div>
+          <div><label class="fl">いずれかを含む（OR 検索・スペース区切り）</label>
+            <input id="gOr" class="fi" placeholder="例: 2024 2025　→ どちらかを含む"></div>
+        </div>
+        <div class="grid2">
+          <div><label class="fl">特定のサイトを指定 (site:)</label>
+            <input id="gSite" class="fi" placeholder="例: techcrunch.com　※ 下のチェックと併用不可"></div>
+          <div><label class="fl">ファイルタイプ</label>
+            <select id="gFtype" class="fi">
+              <option value="">指定なし</option><option value="pdf">PDF</option><option value="doc">Word (.doc)</option><option value="xls">Excel (.xls)</option><option value="ppt">PowerPoint (.ppt)</option>
+            </select></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">🌐 特定 SNS・サイトで絞り込む（複数選択 → OR 検索）</div>
+      <div class="row" style="margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #f1f5f9;">
+        <button class="btn-out" onclick="selectAllCbs()" style="font-size:11.5px;padding:5px 10px;">✅ すべて選択</button>
+        <button class="btn-out" onclick="clearCbs()" style="font-size:11.5px;padding:5px 10px;">❌ すべて解除</button>
+        <span id="cbCount" style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:9999px;font-weight:500;"></span>
+      </div>
+      <div class="gr" style="gap:14px;">
+        <div><div style="font-size:9.5px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">🌏 グローバル / 米国</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">
+            <label class="site-cb"><input type="checkbox" value="instagram.com" onchange="cbChange(this)"> Instagram</label>
+            <label class="site-cb"><input type="checkbox" value="youtube.com" onchange="cbChange(this)"> YouTube</label>
+            <label class="site-cb"><input type="checkbox" value="threads.net" onchange="cbChange(this)"> Threads</label>
+            <label class="site-cb"><input type="checkbox" value="tiktok.com" onchange="cbChange(this)"> TikTok</label>
+            <label class="site-cb"><input type="checkbox" value="t.me" onchange="cbChange(this)"> Telegram</label>
+            <label class="site-cb"><input type="checkbox" value="mastodon.social" onchange="cbChange(this)"> Mastodon</label>
+          </div>
+        </div>
+        <div><div style="font-size:9.5px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">🇨🇳 中国</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">
+            <label class="site-cb"><input type="checkbox" value="weibo.com" onchange="cbChange(this)"> Weibo</label>
+            <label class="site-cb"><input type="checkbox" value="xiaohongshu.com" onchange="cbChange(this)"> 小红书</label>
+            <label class="site-cb"><input type="checkbox" value="douyin.com" onchange="cbChange(this)"> Douyin</label>
+            <label class="site-cb"><input type="checkbox" value="bilibili.com" onchange="cbChange(this)"> bilibili</label>
+            <label class="site-cb"><input type="checkbox" value="kuaishou.com" onchange="cbChange(this)"> 快手</label>
+            <label class="site-cb"><input type="checkbox" value="haokan.baidu.com" onchange="cbChange(this)"> 好看視頻</label>
+            <label class="site-cb"><input type="checkbox" value="zhihu.com" onchange="cbChange(this)"> Zhihu</label>
+          </div>
+        </div>
+        <div style="display:flex;gap:40px;flex-wrap:wrap;">
+          <div><div style="font-size:9.5px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">🇯🇵 日本</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;">
+              <label class="site-cb"><input type="checkbox" value="note.com" onchange="cbChange(this)"> note</label>
+              <label class="site-cb"><input type="checkbox" value="hatenablog.com" onchange="cbChange(this)"> はてなブログ</label>
+            </div>
+          </div>
+          <div><div style="font-size:9.5px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">🇰🇷 韓国</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;">
+              <label class="site-cb"><input type="checkbox" value="blog.naver.com" onchange="cbChange(this)"> Naver Blog</label>
+              <label class="site-cb"><input type="checkbox" value="cafe.naver.com" onchange="cbChange(this)"> Naver Cafe</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="prev-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> リアルタイムプレビュー <span style="font-weight:400;font-family:'Noto Sans JP',sans-serif;text-transform:none;letter-spacing:0;font-size:10px;color:#b0bec5;">— 入力のたびに自動更新</span></div>
+      <div id="preview-google" class="rtprev empty">キーワードを入力すると、生成される検索クエリがここに自動表示されます</div>
+    </div>
+    <div class="row">
+      <button class="btn btn-g" onclick="doGoogle()">🔍 Google で検索</button>
+      <button class="btn-out" onclick="showSaveM('word','google',v('gAll'))">＋ ワードを保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ X ═══ -->
+<div id="tab-x" class="tab-content">
+  <div class="gr">
+    <div class="load-bar">
+      <span style="font-size:10px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-weight:600;flex-shrink:0;">LOAD →</span>
+      <div class="dd-wrap"><button class="btn-out" onclick="toggleDD('ddXW')">📝 ワード ▾</button><div id="ddXW" class="dd-menu" style="display:none;"></div></div>
+      <div class="dd-wrap"><button class="btn-out" onclick="toggleDD('ddXA')">👤 アカウント ▾</button><div id="ddXA" class="dd-menu" style="display:none;"></div></div>
+      <div class="dd-wrap"><button class="btn-out" onclick="toggleDD('ddXH')">🕐 履歴 ▾</button><div id="ddXH" class="dd-menu" style="display:none;min-width:300px;"></div></div>
+    </div>
+    <div class="card">
+      <div class="sec-title">𝕏 X / Twitter 高度な検索</div>
+      <div class="gr">
+        <div><label class="fl">キーワード（すべて含む）</label>
+          <input id="xWords" class="fi fi-x" placeholder="例: 生成AI ChatGPT 業務活用　→ 複数ワードはスペース区切り"></div>
+        <div class="grid2">
+          <div><label class="fl">完全一致フレーズ</label>
+            <input id="xExact" class="fi fi-x" placeholder='例: プロダクトマネージャー 採用'></div>
+          <div><label class="fl">除外キーワード（スペース区切り）</label>
+            <input id="xExcl" class="fi fi-x" placeholder="例: スパム bot フォロバ"></div>
+        </div>
+        <div class="grid2">
+          <div><label class="fl">このアカウントから (from:)</label>
+            <input id="xFrom" class="fi fi-x" placeholder="例: sundarpichai, satyanadella　（@ なし）"></div>
+          <div><label class="fl">このアカウントへのリプライ (to:)</label>
+            <input id="xTo" class="fi fi-x" placeholder="例: username　（@ なし）"></div>
+        </div>
+        <div class="grid2">
+          <div><label class="fl">メンション (@) を含む</label>
+            <input id="xMention" class="fi fi-x" placeholder="例: username　（@ なし）"></div>
+          <div><label class="fl">言語フィルター</label>
+            <select id="xLang" class="fi fi-x">
+              <option value="">すべての言語</option><option value="ja">🇯🇵 日本語</option><option value="en">🇺🇸 英語</option><option value="ko">🇰🇷 韓国語</option><option value="zh">🇨🇳 中国語</option>
+            </select></div>
+        </div>
+        <div>
+          <div class="grid2" style="margin-bottom:8px;">
+            <div><label class="fl">期間 開始日 (since:)</label><input id="xSince" type="date" class="fi fi-x"></div>
+            <div><label class="fl">期間 終了日 (until:)</label><input id="xUntil" type="date" class="fi fi-x"></div>
+          </div>
+          <div class="row">
+            <span style="font-size:10.5px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-weight:600;">期間 →</span>
+            <button class="date-sc" onclick="setDR('x','24h')">⏱ 24時間以内</button>
+            <button class="date-sc" onclick="setDR('x','1w')">📅 1週間以内</button>
+            <button class="date-sc" onclick="setDR('x','1m')">🗓 1ヶ月以内</button>
+            <button class="date-sc" onclick="setDR('x','ytd')">🔢 今年</button>
+            <button class="date-sc date-sc-clear" onclick="clearDR('x')">✕ クリア</button>
+          </div>
+        </div>
+        <div class="grid3">
+          <div><label class="fl">最低いいね数</label><input id="xFaves" type="number" class="fi fi-x" placeholder="例: 500" min="0"></div>
+          <div><label class="fl">最低リツイート数</label><input id="xRt" type="number" class="fi fi-x" placeholder="例: 50" min="0"></div>
+          <div><label class="fl">最低返信数</label><input id="xReplies" type="number" class="fi fi-x" placeholder="例: 10" min="0"></div>
+        </div>
+        <div class="grid2">
+          <div><label class="fl">コンテンツフィルター</label>
+            <select id="xFilter" class="fi fi-x">
+              <option value="">指定なし</option><option value="media">メディアあり</option><option value="images">画像あり</option><option value="videos">動画あり</option><option value="links">リンクあり</option><option value="native_video">ネイティブ動画</option>
+            </select></div>
+          <div><label class="fl">表示順</label>
+            <select id="xSort" class="fi fi-x"><option value="top">人気順 (Top)</option><option value="live">新着順 (Latest)</option></select></div>
+        </div>
+        <div class="row" style="gap:16px;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#475569;cursor:pointer;"><input type="checkbox" id="xNoRep" style="accent-color:#111;"> 返信（リプライ）を除外</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#475569;cursor:pointer;"><input type="checkbox" id="xVerified" style="accent-color:#111;"> 認証済みのみ</label>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="prev-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> リアルタイムプレビュー</div>
+      <div id="preview-x" class="rtprev empty">条件を入力すると、生成される検索クエリが自動表示されます</div>
+    </div>
+    <div class="row">
+      <button class="btn btn-x" onclick="doX()">𝕏 X で検索</button>
+      <button class="btn-out" onclick="showSaveM('word','x',v('xWords'))">＋ ワードを保存</button>
+      <button class="btn-out" onclick="showSaveM('account','x',v('xFrom'))">＋ アカウントを保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BLUESKY ═══ -->
+<div id="tab-bluesky" class="tab-content">
+  <div class="gr">
+    <div class="load-bar">
+      <span style="font-size:10px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-weight:600;flex-shrink:0;">LOAD →</span>
+      <div class="dd-wrap"><button class="btn-out" onclick="toggleDD('ddBW')">📝 ワード ▾</button><div id="ddBW" class="dd-menu" style="display:none;"></div></div>
+      <div class="dd-wrap"><button class="btn-out" onclick="toggleDD('ddBA')">👤 アカウント ▾</button><div id="ddBA" class="dd-menu" style="display:none;"></div></div>
+      <div class="dd-wrap"><button class="btn-out" onclick="toggleDD('ddBH')">🕐 履歴 ▾</button><div id="ddBH" class="dd-menu" style="display:none;min-width:300px;"></div></div>
+    </div>
+    <div class="card">
+      <div class="sec-title">🦋 Bluesky 高度な検索</div>
+      <div class="gr">
+        <div><label class="fl">キーワード</label>
+          <input id="bWords" class="fi fi-b" placeholder="例: fediverse decentralized tech　→ 複数ワードはスペース区切り"></div>
+        <div class="grid2">
+          <div><label class="fl">完全一致フレーズ</label>
+            <input id="bExact" class="fi fi-b" placeholder="例: open source software"></div>
+          <div><label class="fl">除外キーワード</label>
+            <input id="bExcl" class="fi fi-b" placeholder="例: spam nsfw bot"></div>
+        </div>
+        <div class="grid2">
+          <div><label class="fl">アカウント指定 (from:)</label>
+            <input id="bFrom" class="fi fi-b" placeholder="例: jay.bsky.social　（フルハンドル）"></div>
+          <div><label class="fl">メンション (mentions:)</label>
+            <input id="bMention" class="fi fi-b" placeholder="例: user.bsky.social　（フルハンドル）"></div>
+        </div>
+        <div>
+          <div class="grid2" style="margin-bottom:8px;">
+            <div><label class="fl">期間 開始日 (since:)</label><input id="bSince" type="date" class="fi fi-b"></div>
+            <div><label class="fl">期間 終了日 (until:)</label><input id="bUntil" type="date" class="fi fi-b"></div>
+          </div>
+          <div class="row">
+            <span style="font-size:10.5px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-weight:600;">期間 →</span>
+            <button class="date-sc" onclick="setDR('bluesky','24h')">⏱ 24時間以内</button>
+            <button class="date-sc" onclick="setDR('bluesky','1w')">📅 1週間以内</button>
+            <button class="date-sc" onclick="setDR('bluesky','1m')">🗓 1ヶ月以内</button>
+            <button class="date-sc" onclick="setDR('bluesky','ytd')">🔢 今年</button>
+            <button class="date-sc date-sc-clear" onclick="clearDR('bluesky')">✕ クリア</button>
+          </div>
+        </div>
+        <div class="grid2">
+          <div><label class="fl">言語フィルター (lang:)</label>
+            <select id="bLang" class="fi fi-b">
+              <option value="">指定なし</option><option value="ja">🇯🇵 日本語</option><option value="en">🇺🇸 英語</option><option value="ko">🇰🇷 韓国語</option><option value="zh">🇨🇳 中国語</option>
+            </select></div>
+          <div><label class="fl">メディア (has:)</label>
+            <select id="bHas" class="fi fi-b">
+              <option value="">指定なし</option><option value="has:images">🖼 画像あり</option><option value="has:videos">🎬 動画あり</option><option value="has:links">🔗 リンクあり</option>
+            </select></div>
+        </div>
+        <div><label class="fl">ドメイン指定 (domain:)</label>
+          <input id="bDomain" class="fi fi-b" placeholder="例: github.com　→ このドメインへのリンクを含む投稿"></div>
+      </div>
+    </div>
+    <div>
+      <div class="prev-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> リアルタイムプレビュー</div>
+      <div id="preview-bluesky" class="rtprev empty">条件を入力すると、生成される検索クエリが自動表示されます</div>
+    </div>
+    <div class="row">
+      <button class="btn btn-b" onclick="doBluesky()">🦋 Bluesky で検索</button>
+      <button class="btn-out" onclick="showSaveM('word','bluesky',v('bWords'))">＋ ワードを保存</button>
+      <button class="btn-out" onclick="showSaveM('account','bluesky',v('bFrom'))">＋ アカウントを保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ REDDIT ═══ -->
+<div id="tab-reddit" class="tab-content">
+  <div class="gr">
+    <div class="load-bar">
+      <span style="font-size:10px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-weight:600;flex-shrink:0;">LOAD →</span>
+      <div class="dd-wrap"><button class="btn-out" onclick="toggleDD('ddRW')">📝 ワード ▾</button><div id="ddRW" class="dd-menu" style="display:none;"></div></div>
+      <div class="dd-wrap"><button class="btn-out" onclick="toggleDD('ddRA')">👤 アカウント ▾</button><div id="ddRA" class="dd-menu" style="display:none;"></div></div>
+      <div class="dd-wrap"><button class="btn-out" onclick="toggleDD('ddRH')">🕐 履歴 ▾</button><div id="ddRH" class="dd-menu" style="display:none;min-width:300px;"></div></div>
+    </div>
+    <div class="card">
+      <div class="sec-title">🟠 Reddit 高度な検索</div>
+      <div class="gr">
+        <div><label class="fl">キーワード</label>
+          <input id="rWords" class="fi fi-r" placeholder="例: machine learning productivity tools　→ 複数ワードはスペース区切り"></div>
+        <div class="grid2">
+          <div><label class="fl">タイトルに含む (title:)</label>
+            <input id="rTitle" class="fi fi-r" placeholder="例: tutorial guide comparison"></div>
+          <div><label class="fl">本文に含む (selftext:)</label>
+            <input id="rSelf" class="fi fi-r" placeholder="例: workflow automation tips"></div>
+        </div>
+        <div class="grid2">
+          <div><label class="fl">サブレディット（r/ 不要）</label>
+            <input id="rSub" class="fi fi-r" placeholder="例: MachineLearning, datascience, programming"></div>
+          <div><label class="fl">投稿者 (author:)</label>
+            <input id="rAuthor" class="fi fi-r" placeholder="例: username"></div>
+        </div>
+        <div class="grid2">
+          <div><label class="fl">フレア (flair:)</label>
+            <input id="rFlair" class="fi fi-r" placeholder="例: Discussion, Research, Showcase"></div>
+          <div><label class="fl">URL に含む (url:)</label>
+            <input id="rUrl" class="fi fi-r" placeholder="例: github arxiv paperswithcode"></div>
+        </div>
+        <div><label class="fl">リンク先サイト (site:)</label>
+          <input id="rSite" class="fi fi-r" placeholder="例: github.com arxiv.org　→ このサイトへのリンクを含む投稿"></div>
+        <div class="grid2">
+          <div><label class="fl">ソート順</label>
+            <select id="rSort" class="fi fi-r">
+              <option value="relevance">🎯 関連度順</option><option value="new">🆕 新着順</option><option value="top">🏆 トップ</option><option value="comments">💬 コメント数順</option><option value="hot">🔥 ホット</option>
+            </select></div>
+          <div>
+            <label class="fl">期間フィルター</label>
+            <select id="rTime" class="fi fi-r">
+              <option value="all">すべての期間</option><option value="year">過去1年</option><option value="month">過去1ヶ月</option><option value="week">過去1週間</option><option value="day">過去24時間</option><option value="hour">過去1時間</option>
+            </select>
+            <div class="row" style="margin-top:6px;">
+              <span style="font-size:10.5px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-weight:600;">期間 →</span>
+              <button class="date-sc" onclick="setDR('reddit','24h')">⏱ 24h</button>
+              <button class="date-sc" onclick="setDR('reddit','1w')">📅 1週間</button>
+              <button class="date-sc" onclick="setDR('reddit','1m')">🗓 1ヶ月</button>
+              <button class="date-sc" onclick="setDR('reddit','ytd')">🔢 今年</button>
+            </div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div><label class="fl">投稿タイプ</label>
+            <select id="rType" class="fi fi-r"><option value="">すべてのタイプ</option><option value="link">🔗 リンク投稿</option><option value="self">📝 テキスト投稿</option></select></div>
+          <div style="display:flex;align-items:center;padding-top:18px;">
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#475569;cursor:pointer;"><input type="checkbox" id="rRestrict" style="accent-color:#e84118;"> サブレディット内のみで検索</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="prev-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> リアルタイムプレビュー</div>
+      <div id="preview-reddit" class="rtprev empty">条件を入力すると、生成される検索クエリが自動表示されます</div>
+    </div>
+    <div class="row">
+      <button class="btn btn-r" onclick="doReddit()">🟠 Reddit で検索</button>
+      <button class="btn-out" onclick="showSaveM('word','reddit',v('rWords'))">＋ ワードを保存</button>
+      <button class="btn-out" onclick="showSaveM('account','reddit',v('rAuthor'))">＋ アカウントを保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TRENDS HUB ═══ -->
+<div id="tab-trends" class="tab-content">
+  <div class="gr">
+    <!-- Keyword bar -->
+    <div class="trend-kw-bar">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:220px;">
+          <label class="fl" style="color:#e67e00;">共通キーワード — 検索対応サイトにまとめて適用</label>
+          <input id="trendKw" class="fi" placeholder="例: 生成AI、ChatGPT、SaaS など　（空欄のままでも各サイトを開けます）" oninput="renderTrendHub()" style="font-size:13px;">
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:flex-end;padding-bottom:1px;">
+          <button class="btn btn-tr" onclick="openAllSearchable()" style="font-size:12px;padding:8px 14px;">🔍 KW検索対応を一括で開く</button>
+          <button class="btn-out" onclick="openAllTrends()" style="font-size:12px;">🚀 全サイト一括で開く</button>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:11px;color:#94a3b8;">⚠️ 「一括で開く」系は</span>
+        <span style="font-size:11px;color:#64748b;background:#fffbeb;border:1px solid #fde68a;padding:2px 8px;border-radius:5px;">ポップアップブロックを解除してからご使用ください</span>
+        <span style="font-size:11px;color:#94a3b8;margin-left:auto;" id="trendStats"></span>
+      </div>
+    </div>
+    <!-- Tool categories - rendered by JS -->
+    <div id="trendHub" class="gr"></div>
+  </div>
+</div>
+
+<!-- ═══ FAVORITES ═══ -->
+<div id="tab-favorites" class="tab-content">
+  <div class="gr">
+    <div style="display:flex;gap:3px;border-bottom:1px solid #e8edf5;padding-bottom:0;background:#f1f5f9;border-radius:10px 10px 0 0;padding:6px 6px 0 6px;">
+      <button class="stab on" data-stab="words" onclick="switchStab('words')">📝 ワード</button>
+      <button class="stab" data-stab="accounts" onclick="switchStab('accounts')">👤 アカウント</button>
+      <button class="stab" data-stab="history" onclick="switchStab('history')">🕐 検索履歴</button>
+      <button class="stab" data-stab="groups" onclick="switchStab('groups')">🏷 グループ</button>
+      <button class="stab" data-stab="data" onclick="switchStab('data')">💾 データ管理</button>
+    </div>
+    <div id="stab-words" class="stab-content">
+      <div class="row" style="margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;">
+          <select id="fwGrp" class="fi" style="width:auto;" onchange="renderFavs()"><option value="">全グループ</option></select>
+          <select id="fwPlat" class="fi" style="width:auto;" onchange="renderFavs()">
+            <option value="">全プラットフォーム</option><option value="google">Google</option><option value="x">X</option><option value="bluesky">Bluesky</option><option value="reddit">Reddit</option>
+          </select>
+        </div>
+        <button class="btn btn-a" style="font-size:12px;padding:7px 14px;" onclick="showSaveM('word','','')">＋ 新規追加</button>
+      </div>
+      <div id="favWordsList"></div>
+    </div>
+    <div id="stab-accounts" class="stab-content" style="display:none;">
+      <div class="row" style="margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;">
+          <select id="faGrp" class="fi" style="width:auto;" onchange="renderFavs()"><option value="">全グループ</option></select>
+          <select id="faPlat" class="fi" style="width:auto;" onchange="renderFavs()">
+            <option value="">全プラットフォーム</option><option value="google">Google</option><option value="x">X</option><option value="bluesky">Bluesky</option><option value="reddit">Reddit</option>
+          </select>
+        </div>
+        <button class="btn btn-a" style="font-size:12px;padding:7px 14px;" onclick="showSaveM('account','','')">＋ 新規追加</button>
+      </div>
+      <div id="favAccList"></div>
+    </div>
+    <div id="stab-history" class="stab-content" style="display:none;">
+      <div class="gr">
+        <div class="card-sm"><div class="sec-title">🔍 Google</div><div id="hGoogle"></div></div>
+        <div class="card-sm"><div class="sec-title">𝕏 X / Twitter</div><div id="hX"></div></div>
+        <div class="card-sm"><div class="sec-title">🦋 Bluesky</div><div id="hBsky"></div></div>
+        <div class="card-sm"><div class="sec-title">🟠 Reddit</div><div id="hReddit"></div></div>
+      </div>
+    </div>
+    <div id="stab-groups" class="stab-content" style="display:none;">
+      <div class="card">
+        <div class="sec-title">🏷 グループ管理</div>
+        <div class="row" style="margin-bottom:16px;">
+          <input id="newGrpName" class="fi" placeholder="新しいグループ名（例: 競合、公式、ウォッチ中、社内参照）" style="flex:1;">
+          <button class="btn btn-a" style="font-size:12px;padding:7px 14px;" onclick="addGroup()">＋ 追加</button>
+        </div>
+        <div id="groupsList"></div>
+      </div>
+    </div>
+    <div id="stab-data" class="stab-content" style="display:none;">
+      <div class="gr">
+        <div class="card-sm"><div class="sec-title">📊 データ統計</div><div id="dataStats"></div></div>
+        <div class="card-sm"><div class="sec-title">📤 エクスポート</div>
+          <p style="color:#64748b;font-size:13px;margin-bottom:14px;line-height:1.6;">保存データをJSONファイルとしてダウンロードします。キャッシュ削除後もこのファイルから完全復元できます。</p>
+          <button class="btn btn-a" onclick="doExport()">💾 JSON でダウンロード</button>
+        </div>
+        <div class="card-sm"><div class="sec-title">📥 インポート</div>
+          <p style="color:#d97706;font-size:12px;margin-bottom:14px;background:#fffbeb;border:1px solid #fde68a;padding:7px 10px;border-radius:6px;">⚠️ 現在のデータはすべて上書きされます。先にエクスポートを推奨します。</p>
+          <label style="cursor:pointer;"><span class="btn-out">📂 JSONファイルを選択してインポート</span>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="doImport(this)"></label>
+        </div>
+        <div class="card-sm" style="border-color:#fee2e2;"><div class="sec-title" style="color:#ef4444;">⚠️ データクリア</div>
+          <p style="color:#64748b;font-size:13px;margin-bottom:14px;">すべての保存データを削除します。元に戻せません。</p>
+          <button onclick="clearAll()" style="background:#fff1f2;border:1.5px solid #fecaca;color:#ef4444;padding:7px 14px;border-radius:7px;font-size:13px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-weight:500;">🗑 すべて削除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+<div id="saveModal" class="modal-bg" style="display:none;" onclick="if(event.target===this)closeSaveM()">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h3 id="saveModalTitle" style="font-size:15px;font-weight:700;color:#0f172a;font-family:'Plus Jakarta Sans',sans-serif;"></h3>
+      <button onclick="closeSaveM()" style="background:none;border:none;color:#94a3b8;font-size:22px;cursor:pointer;">×</button>
+    </div>
+    <div class="gr">
+      <div><label class="fl">タイプ</label><select id="mType" class="fi"><option value="word">📝 検索ワード</option><option value="account">👤 アカウント</option></select></div>
+      <div><label class="fl">値 <span style="color:#ef4444;">*</span></label><input id="mVal" class="fi" placeholder="ワードまたはアカウント名"></div>
+      <div><label class="fl">プラットフォーム</label>
+        <select id="mPlat" class="fi"><option value="">🌐 全般（全タブで表示）</option><option value="google">🔍 Google</option><option value="x">𝕏 X / Twitter</option><option value="bluesky">🦋 Bluesky</option><option value="reddit">🟠 Reddit</option></select></div>
+      <div><label class="fl">グループ</label><select id="mGrp" class="fi"></select></div>
+      <div><label class="fl">メモ（任意）</label><textarea id="mMemo" class="fi" rows="2" placeholder="例: 競合A社の公式アカウント、週次でポストを確認"></textarea></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px;">
+      <button class="btn-out" onclick="closeSaveM()">キャンセル</button>
+      <button class="btn btn-a" onclick="saveFav()">⭐ 保存する</button>
+    </div>
+  </div>
+</div>
+<div id="editModal" class="modal-bg" style="display:none;" onclick="if(event.target===this)closeEditM()">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h3 style="font-size:15px;font-weight:700;color:#0f172a;font-family:'Plus Jakarta Sans',sans-serif;">✏️ 編集</h3>
+      <button onclick="closeEditM()" style="background:none;border:none;color:#94a3b8;font-size:22px;cursor:pointer;">×</button>
+    </div>
+    <input type="hidden" id="eId">
+    <div class="gr">
+      <div><label class="fl">値</label><input id="eVal" class="fi"></div>
+      <div><label class="fl">プラットフォーム</label>
+        <select id="ePlat" class="fi"><option value="">🌐 全般</option><option value="google">🔍 Google</option><option value="x">𝕏 X</option><option value="bluesky">🦋 Bluesky</option><option value="reddit">🟠 Reddit</option></select></div>
+      <div><label class="fl">グループ</label><select id="eGrp" class="fi"></select></div>
+      <div><label class="fl">メモ</label><textarea id="eMemo" class="fi" rows="2" style="resize:vertical;"></textarea></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px;">
+      <button class="btn-out" onclick="closeEditM()">キャンセル</button>
+      <button class="btn btn-a" onclick="updateFav()">💾 更新する</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="hide"></div>
+
+<!-- ═══ SCRIPT ═══ -->
+<script>
+// ─── TREND DATA ────────────────────────────────────────────
+const TRENDS = [
+  { cat:'x', label:'𝕏 X / Twitter', color:'#111', bg:'#f9f9f9', border:'#e8e8e8', tools:[
+    { name:'trends24.in', desc:'世界のXトレンドをリアルタイム表示。日本を含む国別・時間別ランキング。', url:'https://trends24.in/japan/' },
+    { name:'Yahoo! リアルタイム検索', desc:'日本のXで今話題のキーワードを検索・感情分析。現在の空気を即把握。', url:'https://search.yahoo.co.jp/realtime', searchUrl:'https://search.yahoo.co.jp/realtime?p=' },
+    { name:'Twittrend', desc:'日本の地域別Xトレンド。都道府県単位で今何が盛り上がっているか確認できる。', url:'https://twittrend.jp/' },
+    { name:'GetDayTrends', desc:'ハッシュタグの推移グラフ。特定タグがどの時間帯に盛り上がったか時系列で把握。', url:'https://getdaytrends.com/ja/' },
+    { name:'Togetter', desc:'バズったXまとめ・議論を可視化。日本のX上のバズ把握・ネタ仕込みに最適。', url:'https://togetter.com/', searchUrl:'https://togetter.com/li/search?q=' },
+    { name:'meyou.jp', desc:'日本のXアカウント・ポストランキング。分野別の影響力ユーザーを発見できる。', url:'https://meyou.jp/' },
+  ]},
+  { cat:'ig', label:'📸 Instagram', color:'#c13584', bg:'#fdf4f8', border:'#f5c8e2', tools:[
+    { name:'makitani スポット検索', desc:'Instagramの地域・スポットからハッシュタグを発見。地名→タグ展開のリサーチに。', url:'https://makitani.net/igspotsearch/' },
+    { name:'makitani ユーザー検索', desc:'ユーザー名・自己紹介文からInstagramアカウントを検索。競合調査・パートナー発見に。', url:'https://makitani.net/igusersearch/' },
+    { name:'makitani ハッシュタグ', desc:'ハッシュタグの投稿数・関連タグを詳細調査。競合タグの規模感を掴む。', url:'https://makitani.net/ighashtagsearch/' },
+    { name:'top-hashtags.com', desc:'グローバルな人気ハッシュタグランキング。カテゴリ・国別絞り込み対応。', url:'https://top-hashtags.com' },
+    { name:'hashreco AI', desc:'AIによるハッシュタグ推薦。コンテンツ内容を入力すると最適なタグセットを提案。', url:'https://hashreco-ai.slooooth.com' },
+    { name:'instatool.nu', desc:'タグのいいね数・人気度・推薦など4種の分析ツール群。タグ戦略設計のハブ。', url:'https://instatool.nu/taglike/' },
+    { name:'instagram.userlocal', desc:'ユーザーローカルのInstagram分析ツール。インフルエンサーランキングや投稿傾向。', url:'https://instagram.userlocal.jp' },
+    { name:'StarNgage JP', desc:'日本のInstagramインフルエンサーランキング。フォロワー数・エンゲージメント率で比較。', url:'https://starngage.com/app/global/influencer/ranking/japan' },
+  ]},
+  { cat:'yt', label:'🎬 YouTube・動画', color:'#FF0000', bg:'#fff5f5', border:'#ffd4d4', tools:[
+    { name:'ユーチュラ', desc:'日本のYouTuberランキング。登録者数・月間再生数・成長率の詳細データ付き。', url:'https://yutura.net' },
+    { name:'YouTube ランキング (UL)', desc:'ユーザーローカルのYouTubeランキング。国内チャンネルの動向把握に。', url:'https://youtube-ranking.userlocal.jp' },
+    { name:'PLAYBOARD', desc:'スパチャランキング・VTuberに強い世界最大級の無料YouTube DB。収益データも。', url:'https://playboard.co/' },
+    { name:'Social Blade', desc:'世界で最も有名な登録者・再生数トラッカー。競合チャンネルの成長推移を確認。', url:'https://socialblade.com/youtube/' },
+    { name:'NoxInfluencer', desc:'急上昇チャンネルやランキング。国別・カテゴリ別絞り込みで競合発見。', url:'https://jp.noxinfluencer.com/youtube-channel-ranking' },
+    { name:'YouTube 急上昇（公式）', desc:'YouTube公式の急上昇ページ（日本）。今最も視聴されている動画をチェック。', url:'https://www.youtube.com/feed/trending?gl=JP' },
+  ]},
+  { cat:'tt', label:'🎵 TikTok', color:'#010101', bg:'#f7f7f7', border:'#e0e0e0', tools:[
+    { name:'TikTok ランキング (UL)', desc:'ユーザーローカルの日本TikTokランキング。急上昇クリエイターの早期発見に。', url:'https://tiktok-ranking.userlocal.jp/' },
+    { name:'TokBoard', desc:'TikTokで流行の楽曲・音源ランキング。バイラルサウンドをいち早くキャッチ。', url:'https://tokboard.net/' },
+    { name:'TikTok Creative Center', desc:'TikTok公式のトレンド把握ツール。ハッシュタグ・楽曲・動画の急上昇を公式データで確認。', url:'https://ads.tiktok.com/business/creativecenter/inspiration/popular/hashtag/pc/ja' },
+  ]},
+  { cat:'live', label:'🎮 Twitch・ライブ・VTuber', color:'#9147ff', bg:'#f7f4ff', border:'#ddd0ff', tools:[
+    { name:'TwitchTracker', desc:'Twitchのチャンネル・ゲームランキング。配信者の成長推移を詳細トラッキング。', url:'https://twitchtracker.com' },
+    { name:'SullyGnome', desc:'Twitchの視聴者数・トレンドの超詳細な無料DB。ゲーム別の視聴者推移も把握可。', url:'https://sullygnome.com/' },
+    { name:'HoloDex', desc:'VTuberの配信スケジュール・同接数を網羅。Holo以外の独立系VTuberにも完全対応。', url:'https://holodex.net/' },
+    { name:'VTuberランキング (UL)', desc:'ユーザーローカルのVTuberランキング。国内VTuberの勢い・チャンネル規模を比較。', url:'https://virtualyoutuber-ranking.userlocal.jp/' },
+  ]},
+  { cat:'web', label:'🔍 総合・Web検索トレンド', color:'#1a73e8', bg:'#f0f6ff', border:'#c8dcff', tools:[
+    { name:'Google トレンド', desc:'世の中の検索ボリューム推移。キーワードへの関心度を時系列・地域・関連ワードで確認。', url:'https://trends.google.co.jp/trends/', searchUrl:'https://trends.google.co.jp/trends/explore?q=' },
+  ]},
+];
+
+// ─── RENDER TREND HUB ──────────────────────────────────────
+function renderTrendHub() {
+  const el = document.getElementById('trendHub'); if (!el) return;
+  const kw = document.getElementById('trendKw')?.value.trim() || '';
+  const searchableCount = TRENDS.flatMap(c=>c.tools).filter(t=>t.searchUrl).length;
+  const totalCount = TRENDS.flatMap(c=>c.tools).length;
+  const statsEl = document.getElementById('trendStats');
+  if (statsEl) statsEl.textContent = `合計 ${totalCount} ツール / うち検索対応 ${searchableCount} ツール`;
+
+  el.innerHTML = TRENDS.map(cat => `
+    <div class="trend-cat" style="border-top:3px solid ${cat.color};">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:13.5px;font-weight:700;color:#0f172a;font-family:'Plus Jakarta Sans',sans-serif;">${cat.label}</span>
+          <span style="font-size:10px;color:#94a3b8;background:#f1f5f9;padding:1px 7px;border-radius:9999px;">${cat.tools.length} ツール</span>
+        </div>
+        <button onclick="openAllCat('${cat.cat}')" style="font-size:11px;padding:5px 10px;background:#fff;border:1.5px solid #e2e8f0;color:#475569;border-radius:6px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-weight:500;transition:all .12s;" onmouseover="this.style.borderColor='#94a3b8';this.style.color='#0f172a';" onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#475569';">
+          🚀 カテゴリ一括で開く (${cat.tools.length})
+        </button>
+      </div>
+      <div class="trend-grid">
+        ${cat.tools.map(tool => {
+          const hasKwSearch = !!tool.searchUrl;
+          return `<div class="tool-card" style="background:${cat.bg};border:1px solid ${cat.border};">
+            <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:8px;">
+              <div style="flex:1;">
+                <div class="tool-name">${tool.name}</div>
+                <div class="tool-desc">${tool.desc}</div>
+              </div>
+              ${hasKwSearch ? `<span class="kw-badge" style="background:${cat.color};">検索</span>` : ''}
+            </div>
+            <div class="tool-btns">
+              ${hasKwSearch ? `<button class="tool-btn tool-btn-search" style="background:${cat.color};" onclick="openWithKw('${tool.searchUrl}')">${kw ? `🔍 「${kw.slice(0,10)}${kw.length>10?'…':''}」で検索` : '🔍 KWで検索'}</button>` : ''}
+              <a href="${tool.url}" target="_blank" class="tool-btn tool-btn-open" style="text-decoration:none;">🚀 開く</a>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function openWithKw(searchUrl) {
+  const kw = document.getElementById('trendKw')?.value.trim();
+  if (!kw) {
+    const k = prompt('検索キーワードを入力してください（共通キーワード欄を使うと便利です）:');
+    if (!k) return;
+    window.open(searchUrl + encodeURIComponent(k), '_blank');
+  } else {
+    window.open(searchUrl + encodeURIComponent(kw), '_blank');
+  }
+}
+
+function openAllCat(catId) {
+  const cat = TRENDS.find(c => c.cat === catId); if (!cat) return;
+  if (!confirm(`「${cat.label}」の ${cat.tools.length} サイトをすべて新しいタブで開きます。\n\n※ ポップアップブロックが有効だと一部開かれない場合があります。`)) return;
+  cat.tools.forEach(t => window.open(t.url, '_blank'));
+}
+
+function openAllSearchable() {
+  const kw = document.getElementById('trendKw')?.value.trim();
+  const searchable = TRENDS.flatMap(c => c.tools).filter(t => t.searchUrl);
+  if (!kw) { toast('⚠️ 共通キーワード欄を入力してください'); return; }
+  if (!confirm(`「${kw}」で検索対応 ${searchable.length} サイトを一括で開きます。\n\n※ ポップアップブロックが有効だと一部開かれない場合があります。`)) return;
+  searchable.forEach(t => window.open(t.searchUrl + encodeURIComponent(kw), '_blank'));
+}
+
+function openAllTrends() {
+  const all = TRENDS.flatMap(c => c.tools);
+  if (!confirm(`全 ${all.length} サイトをすべて新しいタブで開きます。\n\n⚠️ ポップアップブロックを必ず解除してから実行してください。`)) return;
+  all.forEach(t => window.open(t.url, '_blank'));
+}
+
+// ─── STATE ─────────────────────────────────────────────────
+let S = { favs:[], groups:['競合','公式','推し','リサーチ','その他'], hist:{google:[],x:[],bluesky:[],reddit:[]} };
+const $ = id => document.getElementById(id);
+const v = id => ($( id)?.value.trim()) ?? '';
+const setV = (id,val) => { if($(id)) $(id).value=val; };
+const esc = t => t?String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';
+const escA = t => t?String(t).replace(/'/g,"\\'"):'';
+const fmtDate = iso => { if(!iso) return ''; const d=new Date(iso); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`; };
+const save = () => localStorage.setItem('shub_v3',JSON.stringify(S));
+function load() {
+  try { const raw=localStorage.getItem('shub_v3')||localStorage.getItem('shub_v2'); if(raw){const p=JSON.parse(raw);S={...S,...p};S.hist=S.hist||{google:[],x:[],bluesky:[],reddit:[]};} } catch(e){}
+}
+
+// ─── TABS ──────────────────────────────────────────────────
+function switchTab(t) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.querySelector(`.tab-btn[data-tab="${t}"]`).classList.add('active');
+  $(`tab-${t}`).classList.add('active');
+  if(t==='favorites') renderAll();
+  else if(t==='trends') renderTrendHub();
+  else updatePreview(t);
+}
+function switchStab(s) {
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.stab-content').forEach(c=>c.style.display='none');
+  document.querySelector(`.stab[data-stab="${s}"]`).classList.add('on');
+  $(`stab-${s}`).style.display='block';
+  renderAll();
+}
+const getCurrentTab = () => document.querySelector('.tab-btn.active')?.dataset.tab||'google';
+
+// ─── QUERY BUILDERS ────────────────────────────────────────
+function buildGoogle() {
+  const all=v('gAll'),exact=v('gExact'),excl=v('gExcl'),or=v('gOr'),site=v('gSite'),ft=v('gFtype');
+  const p=[];
+  if(all) p.push(all);
+  if(exact) p.push(`"${exact}"`);
+  if(excl) excl.split(/\s+/).filter(Boolean).forEach(w=>p.push(`-${w}`));
+  if(or){const op=or.split(/\s+/).filter(Boolean);p.push(op.length>1?`(${op.join(' OR ')})`:or);}
+  if(site) p.push(`site:${site}`);
+  if(ft) p.push(`filetype:${ft}`);
+  const cbs=[...document.querySelectorAll('.site-cb input:checked')].map(c=>c.value);
+  if(cbs.length&&!site) p.push(cbs.length===1?`site:${cbs[0]}`:`(${cbs.map(s=>`site:${s}`).join(' OR ')})`);
+  return p.join(' ');
+}
+function buildX() {
+  const p=[]; const words=v('xWords'),exact=v('xExact'),excl=v('xExcl'),from=v('xFrom'),to=v('xTo'),mention=v('xMention');
+  const lang=v('xLang'),since=v('xSince'),until=v('xUntil'),faves=v('xFaves'),rt=v('xRt'),replies=v('xReplies'),filter=v('xFilter');
+  const noRep=$('xNoRep')?.checked,verified=$('xVerified')?.checked;
+  if(words) p.push(words); if(exact) p.push(`"${exact}"`);
+  if(excl) excl.split(/\s+/).filter(Boolean).forEach(w=>p.push(`-${w}`));
+  if(from) p.push(`from:${from.replace('@','')}`); if(to) p.push(`to:${to.replace('@','')}`);
+  if(mention) p.push(`@${mention.replace('@','')}`); if(lang) p.push(`lang:${lang}`);
+  if(since) p.push(`since:${since}`); if(until) p.push(`until:${until}`);
+  if(faves) p.push(`min_faves:${faves}`); if(rt) p.push(`min_retweets:${rt}`);
+  if(replies) p.push(`min_replies:${replies}`); if(filter) p.push(`filter:${filter}`);
+  if(noRep) p.push('-filter:replies'); if(verified) p.push('filter:blue_verified');
+  return p.join(' ');
+}
+function buildBluesky() {
+  const p=[]; const words=v('bWords'),exact=v('bExact'),excl=v('bExcl'),from=v('bFrom'),mention=v('bMention');
+  const since=v('bSince'),until=v('bUntil'),lang=v('bLang'),has=v('bHas'),domain=v('bDomain');
+  if(words) p.push(words); if(exact) p.push(`"${exact}"`);
+  if(excl) excl.split(/\s+/).filter(Boolean).forEach(w=>p.push(`-${w}`));
+  if(from) p.push(`from:${from}`); if(mention) p.push(`mentions:${mention}`);
+  if(since) p.push(`since:${since}`); if(until) p.push(`until:${until}`);
+  if(lang) p.push(`lang:${lang}`); if(has) p.push(has); if(domain) p.push(`domain:${domain}`);
+  return p.join(' ');
+}
+function buildReddit() {
+  const p=[]; const words=v('rWords'),title=v('rTitle'),self=v('rSelf'),sub=v('rSub'),author=v('rAuthor'),flair=v('rFlair'),url=v('rUrl'),site=v('rSite');
+  if(words) p.push(words); if(title) p.push(`title:${title}`); if(self) p.push(`selftext:${self}`);
+  if(sub&&!$('rRestrict')?.checked) p.push(`subreddit:${sub}`);
+  if(author) p.push(`author:${author}`); if(flair) p.push(`flair:"${flair}"`);
+  if(url) p.push(`url:${url}`); if(site) p.push(`site:${site}`);
+  return p.join(' ');
+}
+
+// ─── REAL-TIME PREVIEW (Enter key does NOT trigger search) ──
+const BUILDERS={google:buildGoogle,x:buildX,bluesky:buildBluesky,reddit:buildReddit};
+const PCLS={google:'has-q',x:'has-q-x',bluesky:'has-q-b',reddit:'has-q-r'};
+const EMPTY='キーワードを入力すると、生成される検索クエリが自動表示されます';
+function updatePreview(tab) {
+  const fn=BUILDERS[tab]; if(!fn) return;
+  const q=fn(); const el=$(`preview-${tab}`); if(!el) return;
+  el.classList.remove('empty','has-q','has-q-x','has-q-b','has-q-r');
+  if(q){el.textContent=q;el.classList.add(PCLS[tab]||'has-q');}
+  else{el.textContent=EMPTY;el.classList.add('empty');}
+}
+function setupRealTimePreview() {
+  ['google','x','bluesky','reddit'].forEach(tab=>{
+    const c=$(`tab-${tab}`); if(!c) return;
+    c.querySelectorAll('input,select,textarea').forEach(el=>{
+      el.addEventListener('input',()=>updatePreview(tab));
+      el.addEventListener('change',()=>updatePreview(tab));
+    });
+  });
+}
+// Enter key: prevent default ONLY — no search triggered
+function setupEnterKeyPreventDefault() {
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='Enter') return;
+    if(e.target.tagName==='TEXTAREA') return;
+    if(e.target.tagName==='INPUT'){
+      const tab=getCurrentTab();
+      if(['google','x','bluesky','reddit'].includes(tab)){
+        e.preventDefault(); // ← 画面遷移なし。プレビューはinputイベントで更新済み
+      }
+    }
+  });
+}
+
+// ─── SEARCH FUNCTIONS (button clicks only) ─────────────────
+function doGoogle(){const q=buildGoogle();if(!q){toast('⚠️ キーワードを入力してください');return;}addHist('google',{query:q,all:v('gAll'),exact:v('gExact'),excl:v('gExcl')});window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`,'_blank');}
+function doX(){const q=buildX();if(!q){toast('⚠️ 検索条件を入力してください');return;}addHist('x',{query:q,from:v('xFrom'),since:v('xSince'),until:v('xUntil')});window.open(`https://twitter.com/search?q=${encodeURIComponent(q)}&src=typed_query&f=${v('xSort')||'top'}`,'_blank');}
+function doBluesky(){const q=buildBluesky();if(!q){toast('⚠️ 検索条件を入力してください');return;}addHist('bluesky',{query:q,from:v('bFrom'),since:v('bSince'),until:v('bUntil')});window.open(`https://bsky.app/search?q=${encodeURIComponent(q)}`,'_blank');}
+function doReddit(){const q=buildReddit();if(!q){toast('⚠️ 検索条件を入力してください');return;}const sort=v('rSort'),time=v('rTime'),type=v('rType'),sub=v('rSub'),restrict=$('rRestrict')?.checked;addHist('reddit',{query:q,sub,sort,time});const base=sub&&restrict?`https://www.reddit.com/r/${sub}/search/?q=${encodeURIComponent(q)}&restrict_sr=1`:`https://www.reddit.com/search/?q=${encodeURIComponent(q)}`;window.open(`${base}&sort=${sort}&t=${time}${type?`&type=${type}`:'`'}`,'_blank');}
+
+// ─── DATE SHORTCUTS ────────────────────────────────────────
+function setDR(plat,range){
+  if(plat==='reddit'){const map={'24h':'day','1w':'week','1m':'month','ytd':'year'};if($('rTime')){$('rTime').value=map[range]||'all';updatePreview('reddit');}return;}
+  const today=new Date(),fmt=d=>d.toISOString().split('T')[0],d=new Date(today);
+  let since;
+  if(range==='24h'){d.setDate(d.getDate()-1);since=fmt(d);}
+  else if(range==='1w'){d.setDate(d.getDate()-7);since=fmt(d);}
+  else if(range==='1m'){d.setMonth(d.getMonth()-1);since=fmt(d);}
+  else if(range==='ytd'){since=`${today.getFullYear()}-01-01`;}
+  const pfx=plat==='bluesky'?'b':plat[0];
+  setV(`${pfx}Since`,since||'');setV(`${pfx}Until`,fmt(today));updatePreview(plat);
+}
+function clearDR(plat){const pfx=plat==='bluesky'?'b':plat[0];setV(`${pfx}Since`,'');setV(`${pfx}Until`,'');updatePreview(plat);}
+
+// ─── CHECKBOXES ────────────────────────────────────────────
+const cbChange=inp=>{inp.closest('.site-cb').classList.toggle('on',inp.checked);updateCbCount();updatePreview('google');};
+const clearCbs=()=>{document.querySelectorAll('.site-cb input').forEach(c=>{c.checked=false;c.closest('.site-cb').classList.remove('on');});updateCbCount();updatePreview('google');};
+const selectAllCbs=()=>{document.querySelectorAll('.site-cb input').forEach(c=>{c.checked=true;c.closest('.site-cb').classList.add('on');});updateCbCount();updatePreview('google');};
+function updateCbCount(){const n=document.querySelectorAll('.site-cb input:checked').length;$('cbCount').textContent=n>0?`${n} サイト選択中`:'`';}
+
+// ─── HISTORY ───────────────────────────────────────────────
+function addHist(plat,data){if(!S.hist[plat])S.hist[plat]=[];S.hist[plat].unshift({...data,ts:new Date().toISOString()});S.hist[plat]=S.hist[plat].slice(0,10);save();renderHistories();refreshDDs(plat);}
+function loadHist(plat,idx){const item=(S.hist[plat]||[])[idx];if(!item)return;
+  if(plat==='google'){setV('gAll',item.all||item.query||'');setV('gExact',item.exact||'');setV('gExcl',item.excl||'');switchTab('google');}
+  else if(plat==='x'){setV('xWords',item.query||'');setV('xFrom',item.from||'');setV('xSince',item.since||'');setV('xUntil',item.until||'');switchTab('x');}
+  else if(plat==='bluesky'){setV('bWords',item.query||'');setV('bFrom',item.from||'');setV('bSince',item.since||'');setV('bUntil',item.until||'');switchTab('bluesky');}
+  else if(plat==='reddit'){setV('rWords',item.query||'');setV('rSub',item.sub||'');if($('rSort'))$('rSort').value=item.sort||'relevance';if($('rTime'))$('rTime').value=item.time||'all';switchTab('reddit');}
+  updatePreview(plat);toast('✅ 履歴を読み込みました');}
+
+// ─── FAVORITES ─────────────────────────────────────────────
+function showSaveM(type,plat,val){$('mType').value=type;$('mVal').value=val||'';$('mPlat').value=plat||'';$('mMemo').value='';$('mGrp').innerHTML=S.groups.map(g=>`<option value="${g}">${g}</option>`).join('');$('saveModalTitle').textContent=type==='word'?'📝 ワードを保存':'👤 アカウントを保存';$('saveModal').style.display='flex';}
+const closeSaveM=()=>$('saveModal').style.display='none';
+function saveFav(){const val=v('mVal');if(!val){toast('⚠️ 値を入力してください');return;}S.favs.push({id:Date.now()+'',type:v('mType'),value:val,platform:v('mPlat'),group:v('mGrp'),memo:v('mMemo'),createdAt:new Date().toISOString()});save();closeSaveM();renderAll();toast('⭐ 保存しました！');}
+function removeFav(id){if(!confirm('このアイテムを削除しますか？'))return;S.favs=S.favs.filter(f=>f.id!==id);save();renderAll();toast('🗑 削除しました');}
+function showEditM(id){const f=S.favs.find(x=>x.id===id);if(!f)return;$('eId').value=id;$('eVal').value=f.value;$('ePlat').value=f.platform||'';$('eMemo').value=f.memo||'';$('eGrp').innerHTML=S.groups.map(g=>`<option value="${g}" ${g===f.group?'selected':''}>${g}</option>`).join('');$('editModal').style.display='flex';}
+const closeEditM=()=>$('editModal').style.display='none';
+function updateFav(){const f=S.favs.find(x=>x.id===$('eId').value);if(!f)return;f.value=v('eVal');f.platform=v('ePlat');f.group=v('eGrp');f.memo=v('eMemo');save();closeEditM();renderAll();toast('✅ 更新しました');}
+
+// ─── GROUPS ────────────────────────────────────────────────
+function addGroup(){const n=v('newGrpName');if(!n){toast('⚠️ グループ名を入力してください');return;}if(S.groups.includes(n)){toast('⚠️ 同名のグループが存在します');return;}S.groups.push(n);save();setV('newGrpName','');renderAll();toast('🏷 グループを追加しました');}
+function removeGroup(g){if(S.groups.length<=1){toast('⚠️ グループは最低1つ必要です');return;}if(!confirm(`グループ「${g}」を削除しますか？`))return;const fb=S.groups.find(x=>x!==g)||'その他';S.favs.forEach(f=>{if(f.group===g)f.group=fb;});S.groups=S.groups.filter(x=>x!==g);save();renderAll();toast('🗑 削除しました');}
+
+// ─── EXPORT/IMPORT ─────────────────────────────────────────
+function doExport(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}));a.download=`searchhub_${new Date().toISOString().slice(0,10)}.json`;a.click();toast('📥 エクスポート完了');}
+function doImport(inp){const file=inp.files[0];if(!file)return;const fr=new FileReader();fr.onload=e=>{try{const p=JSON.parse(e.target.result);if(!p.favs||!p.groups){toast('⚠️ 無効なファイル形式です');return;}S=p;S.hist=S.hist||{google:[],x:[],bluesky:[],reddit:[]};save();renderAll();toast('✅ インポート完了！');}catch{toast('⚠️ JSONの解析に失敗しました');}inp.value='';};fr.readAsText(file);}
+function clearAll(){if(!confirm('すべての保存データを削除します。よろしいですか？'))return;S.favs=[];S.hist={google:[],x:[],bluesky:[],reddit:[]};save();renderAll();toast('🗑 データをクリアしました');}
+
+// ─── LOAD TO FORM ──────────────────────────────────────────
+function loadToForm(val,plat,type){if(plat&&['google','x','bluesky','reddit'].includes(plat))switchTab(plat);applyVal(val,plat,type);}
+function applyVal(val,plat,type){const p=plat||getCurrentTab();
+  if(p==='google')type==='word'?setV('gAll',val):setV('gSite',val);
+  else if(p==='x')type==='word'?setV('xWords',val):setV('xFrom',val);
+  else if(p==='bluesky')type==='word'?setV('bWords',val):setV('bFrom',val);
+  else if(p==='reddit')type==='word'?setV('rWords',val):setV('rAuthor',val);
+  updatePreview(p);toast('✅ フォームに読み込みました');}
+
+// ─── DROPDOWNS ─────────────────────────────────────────────
+const DD_MAP={ddGW:['word','google'],ddGA:['account','google'],ddGH:['hist','google'],ddXW:['word','x'],ddXA:['account','x'],ddXH:['hist','x'],ddBW:['word','bluesky'],ddBA:['account','bluesky'],ddBH:['hist','bluesky'],ddRW:['word','reddit'],ddRA:['account','reddit'],ddRH:['hist','reddit']};
+function toggleDD(id){const el=$(id);const vis=el.style.display!=='none';document.querySelectorAll('.dd-menu').forEach(d=>d.style.display='none');if(!vis){fillDD(id);el.style.display='block';}}
+const GC_C=['#ef4444','#1a73e8','#f59e0b','#10b981','#8b5cf6','#f97316','#ec4899','#0ea5e9'];
+function fillDD(id){const el=$(id);if(!el)return;const[type,plat]=DD_MAP[id]||['word','google'];
+  if(type==='hist'){const items=S.hist[plat]||[];if(!items.length){el.innerHTML=`<div class="dd-item" style="cursor:default;color:#94a3b8;">履歴がありません</div>`;return;}el.innerHTML=items.map((item,i)=>`<div class="dd-item" onclick="loadHist('${plat}',${i});document.querySelectorAll('.dd-menu').forEach(d=>d.style.display='none');"><span style="color:#cbd5e1;font-family:'JetBrains Mono',monospace;font-size:10px;min-width:16px;">${i+1}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;">${esc(item.query)}</span><span style="color:#94a3b8;font-size:10px;margin-left:auto;">${fmtDate(item.ts)}</span></div>`).join('');return;}
+  const items=S.favs.filter(f=>f.type===type&&(!plat||!f.platform||f.platform===plat));if(!items.length){el.innerHTML=`<div class="dd-item" style="cursor:default;color:#94a3b8;">保存データがありません</div>`;return;}
+  const grped={};items.forEach(f=>{if(!grped[f.group])grped[f.group]=[];grped[f.group].push(f);});
+  let html='';Object.entries(grped).forEach(([g,arr])=>{const ci=S.groups.indexOf(g)%GC_C.length;html+=`<div class="dd-grp-label" style="color:${GC_C[ci>=0?ci:0]};">🏷 ${esc(g)}</div>`;arr.forEach(f=>{html+=`<div class="dd-item" onclick="applyVal('${escA(f.value)}','${plat}','${type}');document.querySelectorAll('.dd-menu').forEach(d=>d.style.display='none');"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(f.value)}</span>${f.memo?`<span title="${esc(f.memo)}" style="color:#94a3b8;font-size:11px;">💬</span>`:''}</div>`;});});
+  el.innerHTML=html;}
+function refreshDDs(plat){const map={google:['ddGW','ddGA','ddGH'],x:['ddXW','ddXA','ddXH'],bluesky:['ddBW','ddBA','ddBH'],reddit:['ddRW','ddRA','ddRH']};(map[plat]||[]).forEach(id=>{const el=$(id);if(el&&el.style.display!=='none')fillDD(id);});}
+
+// ─── RENDER ────────────────────────────────────────────────
+const PLAT={google:'🔍 Google',x:'𝕏 X',bluesky:'🦋 Bluesky',reddit:'🟠 Reddit','':`🌐 全般`};
+const GC=[{bg:'#fff1f2',c:'#ef4444',br:'#fecaca'},{bg:'#eff6ff',c:'#1a73e8',br:'#bfdbfe'},{bg:'#fffbeb',c:'#d97706',br:'#fde68a'},{bg:'#f0fdf4',c:'#059669',br:'#bbf7d0'},{bg:'#f5f3ff',c:'#7c3aed',br:'#ddd6fe'},{bg:'#fff7ed',c:'#ea580c',br:'#fed7aa'},{bg:'#fdf2f8',c:'#db2777',br:'#fbcfe8'},{bg:'#f0f9ff',c:'#0284c7',br:'#bae6fd'}];
+const gc=g=>{const i=S.groups.indexOf(g)%GC.length;return GC[i>=0?i:0];};
+function renderAll(){renderFavs();renderHistories();renderGroups();updateGroupSelects();updateDataStats();}
+function renderFavs(){
+  const wGrp=v('fwGrp'),wPlat=v('fwPlat'),aGrp=v('faGrp'),aPlat=v('faPlat');
+  const words=S.favs.filter(f=>f.type==='word'&&(!wGrp||f.group===wGrp)&&(!wPlat||f.platform===wPlat));
+  const accs=S.favs.filter(f=>f.type==='account'&&(!aGrp||f.group===aGrp)&&(!aPlat||f.platform===aPlat));
+  const uGrpSel=(selId,type)=>{const sel=$(selId);if(!sel)return;const cur=sel.value;const used=[...new Set(S.favs.filter(f=>f.type===type).map(f=>f.group))];sel.innerHTML=`<option value="">全グループ</option>`+used.map(g=>`<option value="${g}" ${g===cur?'selected':''}>${g}</option>`).join('');};
+  uGrpSel('fwGrp','word');uGrpSel('faGrp','account');
+  const renderList=(items,cid)=>{const el=$(cid);if(!el)return;if(!items.length){el.innerHTML=`<div class="empty-st">📭 保存されたアイテムがありません</div>`;return;}const grped={};items.forEach(f=>{if(!grped[f.group])grped[f.group]=[];grped[f.group].push(f);});
+    el.innerHTML=Object.entries(grped).map(([g,arr])=>{const c=gc(g);return `<div style="margin-bottom:16px;"><div style="font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${c.c};text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;background:${c.bg};border:1px solid ${c.br};border-radius:5px;display:inline-block;margin-bottom:7px;">🏷 ${esc(g)}</div><div style="display:grid;gap:6px;">${arr.map(f=>`<div class="fav-item"><div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;"><span style="font-size:13px;color:#0f172a;font-weight:500;word-break:break-all;">${esc(f.value)}</span><span style="font-size:10px;color:#64748b;background:#f1f5f9;border:1px solid #e2e8f0;padding:1px 6px;border-radius:4px;flex-shrink:0;">${esc(PLAT[f.platform]||'🌐 全般')}</span></div>${f.memo?`<div style="font-size:11px;color:#64748b;margin-top:2px;">💬 ${esc(f.memo)}</div>`:''}<div style="font-size:10px;color:#94a3b8;margin-top:3px;">${fmtDate(f.createdAt)}</div></div><div style="display:flex;gap:4px;flex-shrink:0;"><button onclick="loadToForm('${escA(f.value)}','${f.platform}','${f.type}')" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;padding:4px 8px;border-radius:5px;font-size:11px;cursor:pointer;white-space:nowrap;font-weight:500;">↗ 読み込み</button><button onclick="showEditM('${f.id}')" style="background:#f8fafc;border:1px solid #e2e8f0;color:#64748b;padding:4px 8px;border-radius:5px;font-size:11px;cursor:pointer;">✏️</button><button onclick="removeFav('${f.id}')" style="background:#fff1f2;border:1px solid #fecaca;color:#ef4444;padding:4px 8px;border-radius:5px;font-size:11px;cursor:pointer;">🗑</button></div></div>`).join('')}</div></div>`;}).join('');};
+  renderList(words,'favWordsList');renderList(accs,'favAccList');}
+function renderHistories(){[['hGoogle','google'],['hX','x'],['hBsky','bluesky'],['hReddit','reddit']].forEach(([elId,key])=>{const el=$(elId);if(!el)return;const items=S.hist[key]||[];if(!items.length){el.innerHTML=`<div style="color:#94a3b8;font-size:12px;padding:8px 0;">履歴なし</div>`;return;}el.innerHTML=items.map((item,i)=>`<div class="hist-item" onclick="loadHist('${key}',${i})"><span style="color:#cbd5e1;font-family:'JetBrains Mono',monospace;font-size:10px;min-width:18px;">${i+1}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.query)}</span><span style="font-size:10px;color:#94a3b8;flex-shrink:0;">${fmtDate(item.ts)}</span></div>`).join('');});}
+function renderGroups(){const el=$('groupsList');if(!el)return;el.innerHTML=`<div style="display:grid;gap:6px;">${S.groups.map(g=>{const c=gc(g);const cnt=S.favs.filter(f=>f.group===g).length;return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fafbfc;border:1px solid #f1f5f9;border-radius:8px;"><div style="width:9px;height:9px;border-radius:50%;background:${c.c};flex-shrink:0;"></div><span style="font-size:13px;color:#0f172a;flex:1;">${esc(g)}</span><span style="font-size:11px;color:#64748b;background:#f1f5f9;border:1px solid #e2e8f0;padding:2px 8px;border-radius:9999px;">${cnt} 件</span><button onclick="removeGroup('${escA(g)}')" style="background:#fff1f2;border:1px solid #fecaca;color:#ef4444;padding:4px 9px;border-radius:5px;font-size:11px;cursor:pointer;">削除</button></div>`;}).join('')}</div>`;}
+function updateGroupSelects(){const opts=S.groups.map(g=>`<option value="${g}">${g}</option>`).join('');['mGrp','eGrp'].forEach(id=>{const el=$(id);if(el){const cur=el.value;el.innerHTML=opts;if(S.groups.includes(cur))el.value=cur;}});}
+function updateDataStats(){const el=$('dataStats');if(!el)return;const words=S.favs.filter(f=>f.type==='word').length,accs=S.favs.filter(f=>f.type==='account').length,totalHist=Object.values(S.hist).reduce((a,b)=>a+b.length,0);el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:24px;font-weight:700;color:#0369a1;font-family:'Plus Jakarta Sans',sans-serif;">${words}</div><div style="font-size:11px;color:#0369a1;margin-top:2px;">📝 保存ワード</div></div><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:24px;font-weight:700;color:#15803d;font-family:'Plus Jakarta Sans',sans-serif;">${accs}</div><div style="font-size:11px;color:#15803d;margin-top:2px;">👤 保存アカウント</div></div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:24px;font-weight:700;color:#92400e;font-family:'Plus Jakarta Sans',sans-serif;">${S.groups.length}</div><div style="font-size:11px;color:#92400e;margin-top:2px;">🏷 グループ</div></div><div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:24px;font-weight:700;color:#6d28d9;font-family:'Plus Jakarta Sans',sans-serif;">${totalHist}</div><div style="font-size:11px;color:#6d28d9;margin-top:2px;">🕐 検索履歴</div></div></div>`;}
+
+// ─── TOAST ─────────────────────────────────────────────────
+let toastTimer;
+function toast(msg){const el=$('toast');el.textContent=msg;el.classList.remove('hide');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.add('hide'),2700);}
+
+// ─── INIT ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  load();renderAll();renderTrendHub();
+  setupRealTimePreview();
+  setupEnterKeyPreventDefault(); // Enter = プレビュー更新のみ（検索は実行しない）
+  updatePreview('google');
+  document.addEventListener('click',e=>{if(!e.target.closest('.dd-wrap'))document.querySelectorAll('.dd-menu').forEach(d=>d.style.display='none');});
+});
+</script>
+</body>
+</html>
