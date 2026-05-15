@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="ja" class="no-touch">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GemHub</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"><style>
+:root{
+  --bg:#eaeef7;--bg-panel:#f4f6fb;--bg-white:#ffffff;
+  --sidebar-bg:#dde3f0;--border:rgba(0,0,0,0.08);--border-mid:rgba(0,0,0,0.13);
+  --accent:#1a73e8;--accent-bg:rgba(26,115,232,0.10);--accent-bg2:rgba(26,115,232,0.06);
+  --danger:#e53935;--danger-bg:rgba(229,57,53,0.09);
+  --green:#34a853;--green-bg:rgba(52,168,83,0.1);
+  --orange:#f59e0b;--orange-bg:rgba(245,158,11,0.1);
+  --purple:#7c3aed;--purple-bg:rgba(124,58,237,0.09);
+  --text:#1f2937;--text2:#4b5563;--text3:#9ca3af;
+  --hover-bg:rgba(26,115,232,0.07);--active-bg:rgba(26,115,232,0.12);
+  --shadow:0 1px 4px rgba(0,0,0,0.08);--shadow-md:0 2px 12px rgba(0,0,0,0.10);
+  --sidebar-w:280px;--radius:10px;--radius-sm:8px;
+  --font:'Noto Sans JP',sans-serif;--font-mono:'DM Mono',monospace;
+  --sop-accent:#d97706;--sop-bg:rgba(217,119,6,0.055);--sop-border:rgba(217,119,6,0.22);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-weight:400;line-height:1.6;min-height:100vh;display:flex}
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);height:100vh;background:var(--sidebar-bg);border-right:1px solid var(--border-mid);display:flex;flex-direction:column;overflow:hidden;position:fixed;left:0;top:0;z-index:100;transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.sidebar-header{padding:18px 16px 12px;border-bottom:1px solid var(--border-mid);flex-shrink:0}
+.logo{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.logo-gem{width:24px;height:24px;background:linear-gradient(135deg,#1a73e8,#34a853);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;color:#fff;font-weight:700}
+.logo-sub{font-size:10.5px;color:var(--text3);font-family:var(--font-mono);letter-spacing:.03em}
+.search-wrap{padding:9px 11px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative}
+.search-icon{position:absolute;left:21px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;font-size:12px}
+.search-input{width:100%;background:var(--bg-white);border:1px solid var(--border-mid);border-radius:20px;padding:7px 10px 7px 28px;font-size:13px;font-family:var(--font);color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
+.search-input::placeholder{color:var(--text3)}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,115,232,.12)}
+.stat-bar{display:flex;padding:9px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.stat{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0}
+.stat:first-child{align-items:flex-start}.stat:last-child{align-items:flex-end}
+.stat-num{font-family:var(--font-mono);font-size:19px;font-weight:500;color:var(--accent);line-height:1}
+.stat-label{font-size:9px;color:var(--text3);font-family:var(--font-mono);letter-spacing:.05em;text-transform:uppercase}
+.cat-list{overflow-y:auto;flex:1;padding:5px 7px;scrollbar-width:thin;scrollbar-color:var(--border-mid) transparent}
+.cat-list::-webkit-scrollbar{width:4px}.cat-list::-webkit-scrollbar-track{background:transparent}.cat-list::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px}
+.cat-btn{display:flex;align-items:center;gap:7px;width:100%;padding:7px 10px;border-radius:var(--radius-sm);border:none;background:transparent;color:var(--text2);font-family:var(--font);font-size:12px;font-weight:400;cursor:pointer;text-align:left;transition:background .15s,color .15s;line-height:1.35}
+.cat-btn:hover{background:var(--hover-bg);color:var(--text)}.cat-btn.active{background:var(--active-bg);color:var(--accent);font-weight:500}
+.cat-icon{font-size:12px;flex-shrink:0;width:16px;text-align:center}.cat-label{flex:1}
+.cat-count{font-family:var(--font-mono);font-size:10px;color:var(--text3);background:rgba(0,0,0,0.06);border-radius:8px;padding:1px 5px;flex-shrink:0}
+.cat-btn.active .cat-count{background:var(--accent-bg);color:var(--accent)}
+.sop-separator{height:1px;background:var(--border-mid);margin:7px 3px 6px;opacity:.65}
+.cat-btn.sop-cat-btn{border-left:2.5px solid var(--sop-accent);padding-left:8px}
+.cat-btn.sop-cat-btn:hover{background:rgba(217,119,6,0.08);color:#92400e}
+.cat-btn.sop-cat-btn.active{background:rgba(217,119,6,0.12);color:var(--sop-accent);font-weight:500}
+.cat-btn.sop-cat-btn.active .cat-count{background:rgba(217,119,6,0.14);color:var(--sop-accent)}
+.cat-sop-tag{font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--sop-accent);flex-shrink:0;width:24px;letter-spacing:.02em}
+.main{margin-left:var(--sidebar-w);flex:1;height:100vh;overflow-y:auto;display:flex;flex-direction:column;background:var(--bg);scrollbar-width:thin;scrollbar-color:var(--border-mid) transparent}
+.main::-webkit-scrollbar{width:6px}.main::-webkit-scrollbar-track{background:transparent}.main::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:3px}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(234,238,247,0.93);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border-mid);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px}
+.topbar-left{display:flex;flex-direction:column;gap:1px;min-width:0}
+.topbar-title{font-size:14px;font-weight:600;color:var(--text)}
+.topbar-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--text3)}
+.topbar-actions{display:flex;gap:5px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:20px;border:1.5px solid var(--border-mid);background:var(--bg-white);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--bg-panel);border-color:var(--accent);color:var(--accent)}
+.btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.active:hover{background:#1557b0;border-color:#1557b0}
+.btn.danger{border-color:var(--danger);color:var(--danger)}.btn.danger:hover{background:var(--danger-bg)}
+.btn.save-html{background:var(--purple);border-color:var(--purple);color:#fff;font-weight:600}
+.btn.save-html:hover{background:#6d28d9;border-color:#6d28d9}
+.edit-banner{display:none;background:rgba(26,115,232,.09);border-bottom:1px solid rgba(26,115,232,.18);padding:6px 18px;font-size:11px;color:var(--accent);font-weight:500;text-align:center;flex-shrink:0}
+body.edit-mode .edit-banner{display:block}
+.content{padding:16px 18px 60px;flex:1}
+.section{margin-bottom:7px;animation:fadeUp .28s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.sop-section{margin-bottom:5px}
+.sop-section + .section:not(.sop-section){margin-top:14px;padding-top:6px;border-top:1.5px dashed var(--border-mid)}
+.section-toggle{display:flex;align-items:center;gap:9px;width:100%;padding:10px 13px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-white);box-shadow:var(--shadow);cursor:pointer;text-align:left;transition:background .15s,border-color .15s,border-radius .15s;font-family:var(--font);user-select:none}
+.section-toggle:hover{background:var(--bg-panel);border-color:var(--border-mid);box-shadow:var(--shadow-md)}
+.section-toggle.open{border-radius:var(--radius) var(--radius) 0 0;border-color:rgba(26,115,232,.28);border-bottom-color:transparent;box-shadow:none}
+.section-toggle.sop-cat{background:var(--sop-bg);border-left:3px solid var(--sop-accent);border-color:var(--sop-border)}
+.section-toggle.sop-cat:hover{background:rgba(217,119,6,0.10);border-left-color:var(--sop-accent)}
+.section-toggle.sop-cat.open{border-color:rgba(217,119,6,.35);border-left-color:var(--sop-accent);border-bottom-color:transparent}
+.section-icon{font-size:14px;flex-shrink:0}
+.section-title{flex:1;font-size:13px;font-weight:600;color:var(--text);line-height:1.3}
+.section-count{font-family:var(--font-mono);font-size:10px;color:var(--text3);background:rgba(0,0,0,0.06);border-radius:8px;padding:1px 6px;flex-shrink:0;transition:background .15s,color .15s}
+.section-toggle.open .section-count{background:var(--accent-bg);color:var(--accent)}
+.section-toggle.sop-cat.open .section-count{background:rgba(217,119,6,0.12);color:var(--sop-accent)}
+.cat-edit-btn,.cat-del-btn{background:none;border:none;cursor:pointer;font-size:12px;padding:3px 5px;border-radius:5px;color:var(--text3);opacity:0;transition:opacity .15s,background .15s;flex-shrink:0}
+.section-toggle:hover .cat-edit-btn,.section-toggle:hover .cat-del-btn{opacity:1}
+.cat-edit-btn:hover{background:var(--accent-bg);color:var(--accent)}
+.cat-del-btn:hover{background:var(--danger-bg);color:var(--danger)}
+.chevron{font-size:9px;color:var(--text3);transition:transform .25s cubic-bezier(.4,0,.2,1);flex-shrink:0}
+.section-toggle.open .chevron{transform:rotate(180deg)}
+.section-body{height:0;overflow:hidden;transition:height .35s cubic-bezier(.4,0,.2,1),opacity .3s ease;opacity:0;background:var(--bg-white);border:1px solid rgba(26,115,232,.28);border-top:none;border-radius:0 0 var(--radius) var(--radius)}
+.section-body.open{opacity:1}
+.section-body.sop-body{border-color:rgba(217,119,6,.25)}
+.section-body-inner{padding:7px 9px 11px}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:5px}
+.card{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:var(--radius-sm);border:1.5px solid transparent;background:var(--bg);text-decoration:none;color:inherit;cursor:pointer;transition:background .14s,border-color .14s,box-shadow .14s,opacity .2s;position:relative;user-select:none}
+.card:hover{background:var(--bg-panel);border-color:var(--border-mid);box-shadow:var(--shadow)}
+.card.linked:hover{background:rgba(26,115,232,.06);border-color:rgba(26,115,232,.28)}
+.card.sop-card.linked:hover{background:rgba(217,119,6,0.06);border-color:rgba(217,119,6,.3)}
+.card.drag-over{border-color:var(--accent);background:var(--accent-bg2);box-shadow:0 0 0 2px rgba(26,115,232,.25)}
+.card.dragging{opacity:.35;cursor:grabbing}
+.drag-handle{display:none;flex-shrink:0;cursor:grab;color:var(--text3);font-size:13px;padding:0 2px;line-height:1}
+body.edit-mode .drag-handle{display:flex;align-items:center}
+body.edit-mode .card{cursor:default}
+.card-dot{width:6px;height:6px;border-radius:50%;background:var(--border-mid);flex-shrink:0}
+.card.linked .card-dot{background:var(--green)}
+.card-step{width:16px;height:16px;border-radius:50%;background:var(--sop-accent);color:#fff;font-size:9px;font-family:var(--font-mono);font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
+.card-name{font-size:12px;color:var(--text);flex:1;line-height:1.4;word-break:break-all;min-width:0}
+.card-arrow{font-size:10px;color:var(--text3);flex-shrink:0;opacity:0;transform:translateX(-3px);transition:opacity .12s,transform .12s}
+.card:hover .card-arrow{opacity:1;transform:translateX(0)}
+.card-actions{display:none;gap:2px;flex-shrink:0}
+body.edit-mode .card-actions{display:flex}
+body.edit-mode .card-arrow{display:none}
+.card-act-btn{background:none;border:none;cursor:pointer;padding:3px 4px;border-radius:4px;font-size:11px;color:var(--text3);transition:background .12s,color .12s;line-height:1}
+.card-act-btn.edit:hover{background:var(--accent-bg);color:var(--accent)}
+.card-act-btn.del:hover{background:var(--danger-bg);color:var(--danger)}
+.add-gem-row{display:none;margin-top:5px}
+body.edit-mode .add-gem-row{display:block}
+.add-gem-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:var(--radius-sm);border:1.5px dashed var(--border-mid);background:transparent;color:var(--text3);font-family:var(--font);font-size:12px;cursor:pointer;width:100%;transition:border-color .15s,color .15s,background .15s}
+.add-gem-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg2)}
+.add-cat-row{display:none;margin-bottom:7px}
+body.edit-mode .add-cat-row{display:block}
+.add-cat-btn{display:flex;align-items:center;gap:6px;padding:10px 13px;border-radius:var(--radius);border:1.5px dashed var(--border-mid);background:transparent;color:var(--text3);font-family:var(--font);font-size:12.5px;cursor:pointer;width:100%;transition:border-color .15s,color .15s,background .15s}
+.add-cat-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg2)}
+.hl{background:rgba(26,115,232,.18);border-radius:2px;color:var(--accent);font-weight:600}
+.empty-state{text-align:center;padding:50px 20px;color:var(--text3)}
+.empty-icon{font-size:30px;margin-bottom:8px}.empty-msg{font-size:13.5px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:300;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg-white);border-radius:14px;padding:22px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,0.18);animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px}
+.modal-field{margin-bottom:12px}
+.modal-label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:4px;display:block}
+.modal-input{width:100%;border:1.5px solid var(--border-mid);border-radius:var(--radius-sm);padding:8px 11px;font-size:13px;font-family:var(--font);color:var(--text);outline:none;background:var(--bg);transition:border-color .2s,box-shadow .2s}
+.modal-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,115,232,.12);background:var(--bg-white)}
+.modal-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:18px}
+.cat-type-toggle{display:flex;gap:6px;margin-bottom:2px}
+.cat-type-btn{flex:1;padding:7px 10px;border-radius:var(--radius-sm);border:1.5px solid var(--border-mid);background:var(--bg);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center;line-height:1.4}
+.cat-type-btn.sel-normal{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.cat-type-btn.sel-sop{background:rgba(217,119,6,0.12);border-color:var(--sop-accent);color:var(--sop-accent)}
+.sop-inset{background:rgba(217,119,6,0.05);border:1px solid var(--sop-border);border-radius:var(--radius-sm);padding:10px 12px;margin-top:2px}
+.sop-inset-label{font-size:9.5px;font-family:var(--font-mono);color:var(--sop-accent);font-weight:700;letter-spacing:.07em;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.icon-btn{width:30px;height:30px;border-radius:6px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .12s,background .12s;line-height:1}
+.icon-btn:hover{border-color:var(--accent);background:var(--accent-bg2)}
+.icon-picker{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.cat-drag-handle{display:none;flex-shrink:0;cursor:grab;color:var(--text3);font-size:15px;padding:0 4px 0 0;line-height:1;user-select:none}
+body.edit-mode .cat-drag-handle{display:flex;align-items:center}
+.cat-drag-handle:active{cursor:grabbing}
+.section.cat-dragging{opacity:.3}
+.section.cat-drag-over > .section-toggle{border-top:2.5px solid var(--accent) !important}
+.section.sop-section.cat-drag-over > .section-toggle{border-top-color:var(--sop-accent) !important}
+.cat-sort-btn{display:none;background:none;border:none;cursor:pointer;font-size:9px;padding:2px 3px;border-radius:4px;color:var(--text3);line-height:1;flex-shrink:0;transition:background .12s,color .12s}
+body.edit-mode .cat-sort-btn{display:flex;align-items:center}
+.cat-sort-btn:hover{background:var(--accent-bg);color:var(--accent)}
+.cat-sort-btn:disabled{opacity:.25;cursor:default;pointer-events:none}
+.tool-badge{font-family:var(--font-mono);font-size:8px;font-weight:700;border-radius:3px;padding:1px 5px;flex-shrink:0;letter-spacing:.04em;line-height:1.6;white-space:nowrap;align-self:flex-start;margin-top:1px}
+.tb-gem{background:rgba(52,168,83,0.13);color:#27743a;border:1px solid rgba(52,168,83,0.32)}
+.tb-skill{background:var(--accent-bg);color:#1557b0;border:1px solid rgba(26,115,232,0.28)}
+.card-inner{display:flex;flex-direction:column;flex:1;min-width:0}
+.card-note{font-size:10px;color:var(--text3);line-height:1.4;margin-top:2px;word-break:break-all}
+.card.sop-card .card-note{color:rgba(146,64,14,0.65)}
+#modalGemTypeRow{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+.gmt-btn{padding:4px 10px;border-radius:var(--radius-sm);border:1.5px solid var(--border-mid);background:var(--bg);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;line-height:1.4}
+.gmt-btn.gmt-active-gem{background:rgba(52,168,83,0.12);border-color:rgba(52,168,83,0.5);color:#27743a}
+.gmt-btn.gmt-active-skill{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.rm-phase-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.rm-phase-tab{display:flex;flex-direction:column;align-items:flex-start;padding:9px 14px;border-radius:var(--radius);border:1.5px solid var(--border-mid);background:var(--bg-white);cursor:pointer;font-family:var(--font);flex:1;min-width:130px;transition:all .15s;box-shadow:var(--shadow);text-align:left}
+.rm-phase-num{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.07em;opacity:.65;line-height:1}
+.rm-phase-name{font-size:13px;font-weight:600;color:var(--text);margin-top:3px;line-height:1.2}
+.rm-phase-time{font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:4px}
+.rm-phase-tab.rp1.active{background:rgba(124,58,237,.07);border-color:rgba(124,58,237,.45);color:#6d28d9}
+.rm-phase-tab.rp2.active{background:rgba(26,115,232,.07);border-color:rgba(26,115,232,.45);color:#1557b0}
+.rm-phase-tab.rp3.active{background:rgba(52,168,83,.07);border-color:rgba(52,168,83,.45);color:#1e7a3a}
+.rm-phase-tab.rp4.active{background:rgba(217,119,6,.07);border-color:rgba(217,119,6,.45);color:#92400e}
+.rm-groups{display:flex;flex-direction:column;gap:6px}
+.rm-group{border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-white);overflow:hidden;box-shadow:var(--shadow)}
+.rm-group-hd{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;user-select:none;transition:background .13s}
+.rm-group-hd:hover{background:var(--bg-panel)}
+.rm-group-id{font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.06em;width:36px;flex-shrink:0}
+.rm-group-name{font-size:12.5px;font-weight:600;color:var(--text);flex:1}
+.rm-group-time{font-family:var(--font-mono);font-size:9.5px;color:var(--text3);margin-right:4px}
+.rm-chevron{font-size:9px;color:var(--text3);transition:transform .22s;flex-shrink:0}
+.rm-group.open .rm-chevron{transform:rotate(180deg)}
+.rm-step-wrap{display:none;flex-direction:column;gap:3px;padding:4px 12px 10px 48px}
+.rm-group.open .rm-step-wrap{display:flex}
+.rm-step{display:flex;align-items:flex-start;gap:7px;padding:4px 7px;border-radius:var(--radius-sm);border:1px solid transparent;transition:background .12s,border-color .12s}
+.rm-step.rm-linked:hover{background:var(--bg-panel);border-color:var(--border-mid)}
+.rm-badge{font-family:var(--font-mono);font-size:8px;font-weight:700;border-radius:3px;padding:2px 5px;flex-shrink:0;line-height:1.5;margin-top:1px;white-space:nowrap}
+.rm-b-gem{background:rgba(52,168,83,.13);color:#1e7a3a;border:1px solid rgba(52,168,83,.3)}
+.rm-b-skill{background:var(--accent-bg);color:#1557b0;border:1px solid rgba(26,115,232,.28)}
+.rm-b-manual{background:rgba(0,0,0,.06);color:var(--text3);border:1px solid var(--border)}
+.rm-step-body{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
+.rm-step-name{font-size:11.5px;color:var(--text);font-weight:500;line-height:1.4;word-break:break-all}
+.rm-step-name a{color:inherit;text-decoration:none}
+.rm-step-name a:hover{color:var(--accent);text-decoration:underline}
+.rm-step-note{font-size:10px;color:var(--text3);line-height:1.35}
+.rm-arr{font-size:10px;color:var(--text3);flex-shrink:0;align-self:center;opacity:0;transition:opacity .12s}
+.rm-step.rm-linked:hover .rm-arr{opacity:1}
+.rm-output{margin-top:10px;padding:9px 12px;border-radius:var(--radius-sm);border:1px dashed rgba(26,115,232,.22);background:rgba(26,115,232,.04);font-size:10.5px;color:var(--text2);line-height:1.7}
+.rm-output-lbl{font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--accent);display:block;margin-bottom:4px;letter-spacing:.05em}
+.rm-output-ph4{border-color:rgba(217,119,6,.28);background:rgba(217,119,6,.04)}
+.rm-output-ph4 .rm-output-lbl{color:var(--sop-accent)}
+.btn-sources{background:#0891b2;border-color:#0891b2;color:#fff;font-weight:600}
+.btn-sources:hover{background:#0e7490;border-color:#0e7490;color:#fff}
+.btn-sources.active{background:#155e75;border-color:#155e75;color:#fff}
+.btn-dmagazine{background:#e91e63;border-color:#e91e63;color:#fff;font-weight:600}
+.btn-dmagazine:hover{background:#c2185b;border-color:#c2185b;color:#fff}
+.btn-dmagazine.active{background:#880e4f;border-color:#880e4f;color:#fff}
+.btn-advisor{background:#f59e0b;border-color:#f59e0b;color:#fff;font-weight:600}
+.btn-advisor:hover{background:#d97706;border-color:#d97706;color:#fff}
+.btn-advisor.active{background:#92400e;border-color:#92400e}
+.btn-memo{background:#059669;border-color:#059669;color:#fff;font-weight:600}
+.btn-memo:hover{background:#047857;border-color:#047857;color:#fff}
+.btn-memo.active{background:#065f46;border-color:#065f46;color:#fff}
+.dm-header{background:linear-gradient(135deg,#e91e63,#c2185b);color:#fff;border-radius:var(--radius);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.dm-header-icon{font-size:26px;flex-shrink:0}
+.dm-header-title{font-size:15px;font-weight:700;line-height:1.2}
+.dm-header-sub{font-size:10.5px;opacity:.82;font-family:var(--font-mono);margin-top:2px}
+.dm-cat{border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-white);overflow:hidden;box-shadow:var(--shadow);margin-bottom:8px}
+.dm-cat-hd{display:flex;align-items:center;gap:9px;padding:10px 14px;cursor:pointer;user-select:none;transition:background .13s}
+.dm-cat-hd:hover{background:var(--bg-panel)}
+.dm-cat-icon{font-size:16px;flex-shrink:0}
+.dm-cat-name{font-size:13px;font-weight:600;color:var(--text);flex:1}
+.dm-cat-count{font-family:var(--font-mono);font-size:10px;color:var(--text3);background:rgba(0,0,0,.06);border-radius:8px;padding:1px 6px;flex-shrink:0}
+.dm-chevron{font-size:9px;color:var(--text3);transition:transform .25s cubic-bezier(.4,0,.2,1);flex-shrink:0}
+.dm-cat.open .dm-chevron{transform:rotate(180deg)}
+.dm-cat.open .dm-cat-count{background:rgba(233,30,99,.1);color:#c2185b}
+.dm-body{height:0;overflow:hidden;transition:height .35s cubic-bezier(.4,0,.2,1),opacity .3s ease}
+.dm-cat:not(.open) .dm-body{opacity:0}
+.dm-cat.open .dm-body{opacity:1}
+.dm-body-inner{padding:8px 12px 14px 14px}
+.dm-grid{display:flex;flex-wrap:wrap;gap:6px}
+.dm-grid-col{display:flex;flex-direction:column;gap:4px}
+.dm-grid-col .dm-mag-btn{border-radius:8px;width:100%;box-sizing:border-box}
+.dm-site-note{font-size:10px;color:var(--text3);font-style:italic;margin-left:3px}
+.dm-mag-btn{display:inline-flex;align-items:flex-start;gap:5px;padding:5px 11px;border-radius:16px;border:1.5px solid var(--border-mid);background:var(--bg);color:var(--text2);font-family:var(--font);font-size:11.5px;font-weight:500;cursor:pointer;transition:all .14s;text-decoration:none;white-space:normal;max-width:100%;line-height:1.4}
+.dm-mag-btn:hover{border-color:#e91e63;background:rgba(233,30,99,.07);color:#c2185b}
+.dm-mag-btn.linked{border-color:rgba(233,30,99,.35);background:rgba(233,30,99,.05);color:#ad1457}
+.dm-mag-dot{width:5px;height:5px;border-radius:50%;background:var(--border-mid);flex-shrink:0;margin-top:5px}
+.dm-mag-btn.linked .dm-mag-dot{background:#e91e63}
+.advisor-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:200}
+.advisor-overlay.show{display:block}
+.advisor-panel{position:fixed;right:0;top:0;height:100vh;width:430px;max-width:100vw;background:var(--bg-white);box-shadow:-4px 0 28px rgba(0,0,0,.13);z-index:210;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1)}
+.advisor-panel.open{transform:translateX(0)}
+.advisor-hd{display:flex;align-items:center;gap:9px;padding:13px 15px 11px;border-bottom:1px solid var(--border-mid);flex-shrink:0;background:var(--bg-white)}
+.advisor-hd-icon{font-size:18px;flex-shrink:0}
+.advisor-hd-text{flex:1;min-width:0}
+.advisor-hd-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.2}
+.advisor-hd-sub{font-size:10px;color:var(--text3);font-family:var(--font-mono);margin-top:2px}
+.advisor-close{background:none;border:none;cursor:pointer;font-size:15px;color:var(--text3);padding:4px 6px;border-radius:5px;line-height:1;flex-shrink:0}
+.advisor-close:hover{background:var(--danger-bg);color:var(--danger)}
+.advisor-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;scrollbar-width:thin;scrollbar-color:var(--border-mid) transparent}
+.advisor-body::-webkit-scrollbar{width:4px}.advisor-body::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px}
+.advisor-welcome{text-align:center;padding:24px 12px;color:var(--text3)}
+.advisor-welcome-icon{font-size:32px;margin-bottom:8px}
+.advisor-welcome-msg{font-size:12.5px;line-height:1.7;color:var(--text2);margin-bottom:16px}
+.advisor-examples{display:flex;flex-direction:column;gap:6px}
+.advisor-example{background:var(--bg);border:1.5px solid var(--border-mid);border-radius:var(--radius-sm);padding:7px 10px;font-size:11.5px;color:var(--text2);cursor:pointer;text-align:left;font-family:var(--font);transition:all .13s;line-height:1.5}
+.advisor-example:hover{border-color:var(--accent);background:var(--accent-bg2);color:var(--accent)}
+.advisor-example::before{content:'💬 ';opacity:.6}
+.advisor-goal-badge{background:rgba(245,158,11,0.1);color:#92400e;border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);padding:7px 10px;font-size:11.5px;font-weight:600;line-height:1.5;word-break:break-all}
+.advisor-goal-badge::before{content:'🎯 '}
+.advisor-response{font-size:12px;line-height:1.85;color:var(--text)}
+.advisor-response p{margin:0 0 8px}
+.advisor-gem-link{color:var(--accent);text-decoration:none;font-weight:600;border-bottom:1px dotted rgba(26,115,232,.45)}
+.advisor-gem-link:hover{background:var(--accent-bg);border-bottom-color:var(--accent);border-radius:2px}
+.advisor-loading{text-align:center;padding:28px 16px;color:var(--text3);font-size:12px}
+.advisor-error{background:var(--danger-bg);color:var(--danger);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;line-height:1.5}
+.advisor-new-btn{display:flex;align-items:center;justify-content:center;gap:5px;background:none;border:1.5px dashed var(--border-mid);color:var(--text3);font-family:var(--font);font-size:11.5px;padding:7px;border-radius:var(--radius-sm);cursor:pointer;transition:all .14s;width:100%}
+.advisor-new-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg2)}
+.advisor-input-area{padding:11px 13px;border-top:1px solid var(--border-mid);flex-shrink:0;display:flex;flex-direction:column;gap:7px;background:var(--bg-panel)}
+.advisor-textarea{width:100%;border:1.5px solid var(--border-mid);border-radius:var(--radius-sm);padding:8px 10px;font-size:12.5px;font-family:var(--font);color:var(--text);outline:none;resize:none;background:var(--bg-white);transition:border-color .2s,box-shadow .2s;line-height:1.55}
+.advisor-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
+.advisor-textarea::placeholder{color:var(--text3)}
+.advisor-input-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.advisor-hint{font-size:9.5px;color:var(--text3);font-family:var(--font-mono)}
+.advisor-submit{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--radius-sm);border:none;background:#f59e0b;color:#fff;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;white-space:nowrap;flex-shrink:0}
+.advisor-submit:hover{background:#d97706}
+.advisor-submit:disabled{background:var(--border-mid);cursor:default}
+.advisor-shuffle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.advisor-shuffle-label{font-size:10px;color:var(--text3);font-family:var(--font-mono)}
+.advisor-shuffle-btn{display:flex;align-items:center;gap:4px;background:none;border:1.5px solid var(--border-mid);color:var(--text3);font-family:var(--font);font-size:11px;padding:4px 9px;border-radius:12px;cursor:pointer;transition:all .14s}
+.advisor-shuffle-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg2)}
+@keyframes spin-once{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.advisor-shuffle-btn.spin .shuffle-icon{display:inline-block;animation:spin-once .35s ease}
+.advisor-random-btn{display:flex;align-items:center;gap:5px;background:none;border:1.5px solid var(--sop-accent);color:var(--sop-accent);font-family:var(--font);font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:all .14s;width:100%;justify-content:center}
+.advisor-random-btn:hover{background:rgba(217,119,6,.09);border-color:#92400e;color:#92400e}
+.advisor-divider{display:flex;align-items:center;gap:8px;margin:6px 0;color:var(--text3);font-size:10px}
+.advisor-divider::before,.advisor-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(60px);background:#1f2937;color:#fff;padding:9px 18px;border-radius:20px;font-size:12.5px;font-weight:500;z-index:400;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.mob-toggle{display:none;position:fixed;bottom:20px;right:20px;z-index:200;width:44px;height:44px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:17px;cursor:pointer;box-shadow:0 4px 14px rgba(26,115,232,.4);align-items:center;justify-content:center}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:90}
+@media(max-width:768px){
+  .sidebar{transform:translateX(calc(-1 * var(--sidebar-w)))}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .mob-toggle{display:flex}
+  .overlay.show{display:block}
+  .content{padding:12px 12px 80px}
+  .topbar{padding:9px 12px;flex-wrap:wrap;gap:8px}
+  .card-grid{grid-template-columns:1fr}
+  .topbar-actions{width:100%;justify-content:flex-start}
+  .rm-phase-tab{min-width:calc(50% - 3px)}
+  .advisor-panel{width:100%}
+}
+.card-pin-btn { background:none; border:none; cursor:pointer; font-size:14px; opacity:0.2; transition:opacity 0.2s; padding:0 4px; }
+.card-pin-btn.pinned { opacity:1; }
+.card-pin-btn:hover { opacity:1; }
+.card-copy-btn { background:none; border:none; cursor:pointer; font-size:13px; color:var(--text3); padding:2px 4px; border-radius:4px; transition:all 0.2s; }
+.card-copy-btn:hover { background:var(--accent-bg); color:var(--accent); }
+.pf-tag { font-family:var(--font-mono); font-size:9px; font-weight:600; padding:2px 5px; border-radius:4px; background:var(--bg-panel); color:var(--text2); border:1px solid var(--border-mid); margin-right:5px; vertical-align:middle; }
+</style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo"><span class="logo-gem">G</span>Gem Hub</div>
+    <div class="logo-sub">Gemini Workspace · <span id="catCountLabel">0</span> Categories</div>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" class="search-input" id="searchInput" placeholder="Gemを検索..." autocomplete="off">
+  </div>
+  <div class="stat-bar">
+    <div class="stat"><span class="stat-num" id="totalCount">0</span><span class="stat-label">TOTAL</span></div>
+    <div class="stat" style="align-items:center"><span class="stat-num" id="catCount">0</span><span class="stat-label">CATS</span></div>
+    <div class="stat"><span class="stat-num" id="linkedCount">0</span><span class="stat-label">LINKED</span></div>
+  </div>
+  <nav class="cat-list" id="catList"></nav>
+</aside>
+<div class="overlay" id="overlay"></div>
+<main class="main" id="main">
+  <div class="edit-banner" id="editBanner">✏️ 編集モード — Gemの追加・編集・削除・並び替えができます&nbsp;&nbsp;&nbsp;💾 編集後は「HTMLとして保存」で1ファイルに書き出してください</div>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="topbarTitle">すべてのGem</div>
+      <div class="topbar-meta" id="topbarMeta"></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-sources"   id="sourcesBtn"   onclick="toggleSources()"   title="情報源・口コミ抽出サイト一覧">📡 情報源</button>
+      <button class="btn btn-dmagazine" id="dmagazineBtn"  onclick="toggleDmagazine()" title="dマガジン掲載誌をカテゴリ別に表示">📚 dマガジン</button>
+      <button class="btn btn-advisor"   id="advisorBtn"    onclick="toggleAdvisor()"   title="「〜したい」を入力すると最適なGem使用順をAIが提案します">🤖 コンシェルジュ</button>
+      <button class="btn"               id="roadmapBtn"    onclick="toggleRoadmap()"   title="SNS企画→予約投稿の全工程ロードマップを表示">🗺 ロードマップ</button>
+      <button class="btn btn-memo"      id="memoBtn"       onclick="toggleMemo()"      title="メモ帳（note.ms / aNotepad）">📝 メモ</button>
+      <button class="btn"               id="editToggleBtn" onclick="toggleEditMode()">✏️ 編集</button>
+      <button class="btn save-html"     id="saveHtmlBtn"   onclick="saveAsHtml()"      title="編集内容をHTMLファイルに保存">💾 HTMLとして保存</button>
+    </div>
+  </div>
+  <div class="content" id="content"></div>
+</main>
+<button class="mob-toggle" id="mobToggle">☰</button>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBox">
+    <div class="modal-title" id="modalTitle">Gemを追加</div>
+    <div class="modal-field">
+      <label class="modal-label" id="modalNameLabel" for="modalName">Gem名</label>
+      <input type="text" class="modal-input" id="modalName" placeholder="Gem名を入力...">
+    </div>
+    <div class="modal-field" id="modalUrlField">
+      <label class="modal-label" for="modalUrl">URL（任意）</label>
+      <input type="text" class="modal-input" id="modalUrl" placeholder="https://gemini.google.com/gem/...">
+    </div>
+    <div class="modal-field" id="modalGemTypeField">
+      <label class="modal-label">ツール種別（SOPパイプライン用）</label>
+      <div id="modalGemTypeRow">
+        <button type="button" class="gmt-btn gmt-active-gem" id="gmtBtnNone" onclick="Modal.setToolType('')">— 未設定</button>
+        <button type="button" class="gmt-btn" id="gmtBtnGem" onclick="Modal.setToolType('gem')">🟢 Gemini Gem</button>
+        <button type="button" class="gmt-btn" id="gmtBtnSkill" onclick="Modal.setToolType('skill')">🔵 Claude Skill</button>
+      </div>
+    </div>
+    <div class="modal-field" id="modalNoteField">
+      <label class="modal-label" id="modalNoteLabel" for="modalNote">ステップメモ（任意）</label>
+      <textarea class="modal-input" id="modalNote" placeholder="このステップの役割・入出力を簡単に..." rows="2" style="resize:none;line-height:1.5;font-size:12px"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="Modal.close()">キャンセル</button>
+      <button class="btn active" onclick="Modal.save()">💾 保存</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="catModalOverlay">
+  <div class="modal" id="catModalBox" style="max-width:440px">
+    <div class="modal-title" id="catModalTitle">カテゴリを追加</div>
+    <div class="modal-field">
+      <label class="modal-label">カテゴリタイプ</label>
+      <div class="cat-type-toggle">
+        <button type="button" class="cat-type-btn" id="ctBtnNormal" onclick="CatModal.setType('normal')">📁 通常カテゴリ</button>
+        <button type="button" class="cat-type-btn sel-sop" id="ctBtnSop" onclick="CatModal.setType('sop')">▶ SOP ライン</button>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="catModalName">カテゴリ名</label>
+      <input type="text" class="modal-input" id="catModalName" placeholder="カテゴリ名を入力...">
+    </div>
+    <div class="modal-field" id="cmIconField" style="display:none">
+      <label class="modal-label" for="catModalIcon">アイコン</label>
+      <input type="text" class="modal-input" id="catModalIcon" placeholder="例: 🚀" maxlength="4" style="width:72px;text-align:center;font-size:18px;display:inline-block">
+      <div class="icon-picker">
+        <button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'🤖')">🤖</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'📰')">📰</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'🎨')">🎨</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'🎬')">🎬</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'🔬')">🔬</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'💡')">💡</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'📅')">📅</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'✍️')">✍️</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'💭')">💭</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'🛠️')">🛠️</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'✅')">✅</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'📄')">📄</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'💰')">💰</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'🌏')">🌏</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'🔗')">🔗</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'🕵️')">🕵️</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'📌')">📌</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'🚀')">🚀</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'⭐')">⭐</button><button type="button" class="icon-btn" onclick="CatModal.pickIcon(this,'🔥')">🔥</button>
+      </div>
+    </div>
+    <div class="modal-field" id="cmSopField">
+      <div class="sop-inset">
+        <span class="sop-inset-label"><span style="font-size:10px">▶</span> SOP 設定</span>
+        <label class="modal-label" for="catModalSopTag" style="font-size:11px;margin-bottom:4px;display:block">SOPタグ（例: W05）</label>
+        <input type="text" class="modal-input" id="catModalSopTag" placeholder="W05" maxlength="8" style="font-family:var(--font-mono);font-weight:700;font-size:14px;letter-spacing:.08em;width:120px">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="CatModal.close()">キャンセル</button>
+      <button class="btn active" id="catModalSaveBtn" onclick="CatModal.save()" style="background:var(--sop-accent);border-color:var(--sop-accent);">💾 保存</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">💾 保存しました — 「HTMLとして保存」で書き出すとどこでも使えます</div>
+<script id="mainScript">
+// ═══════════════════════════════════════════════════════════════
+// ★ EMBEDDED DATA — このブロックはsaveAsHtml()が自動更新します
+// ═══════════════════════════════════════════════════════════════
+/*DATA_START*/
+const SAVED_DATA = [{"id":100,"sop":true,"sopTag":"W00","icon":"▶","name":"【SOP】ゴール設定・導線設計","gems":[{"id":"g_w00_1","name":"Xゴール＆導線設計｜0-conductor","url":"https://gemini.google.com/gem/8fea9c05b758","toolType":"skill","note":"KGI/KPI・対象媒体・導線マップを確定（所要5分）"},{"id":"g_w00_2","name":"ビジネスモデル相談用Gem","url":"https://gemini.google.com/gem/e2c8e6667c50","toolType":"gem","note":"マネタイズ全体像を俯瞰・事業構造を確認"},{"id":"g154","name":"SiteMap作成Gem","url":"https://gemini.google.com/gem/82867b75bd75","note":"対象サイトをWeb検索で解析し、推測を含まない「実在する主要ページ」と「クチコミ・レビューページ」をバランスよく抽出してサイトマップ風のリストを作成します。"},{"id":"g155","name":"情報源ダッシュボード検索","url":"https://gemini.google.com/gem/e85c97023669","note":"入力されたキーワードに基づき、登録された84サイトのデータベースから最適な情報源を自動選定。読者の深い悩み（Pain）と解決策をWeb検索し、コンテンツの核となるインサイトを抽出します。"},{"id":"g156","name":"#️⃣Webコンテンツ・解析アナリスト","url":"https://gemini.google.com/gem/fad67646a280","note":"複数のURLを読み込み、要約・情報抽出・トーン＆マナー分析など、目的に合わせた解析を対話形式でサポートするプロのアシスタントです。"},{"id":"g157","name":"#️⃣Web解析ナビゲーター","url":"https://gemini.google.com/gem/e7273a69f7d5","note":"URLを入力するだけで、記事の要約からユーザー心理の深掘り、複数サイトの横断比較まで、多角的な視点でWebページを解析・提案してくれる専属アシスタント。"},{"id":"g158","name":"ペルソナ＆ジャーニー設計アシスタント","url":"https://gemini.google.com/gem/626b4268050c","toolType":"gem","note":"商品情報（名前・特徴）に加え、雑誌のスクショ、PDF、口コミ、SNS投稿などのあらゆる形式のデータを横断的に分析し、解像度の高い「顧客ペルソナ2パターン」と「カスタマージャーニー」を自動生成します。"}]},{"id":101,"sop":true,"sopTag":"W01","icon":"▶","name":"【SOP】YouTube多媒体アセット化","gems":[{"id":"g_w01_1","name":"YTナレッジベース抽出ジェネレーターMAX","url":"https://gemini.google.com/gem/309e1fb749a5","toolType":"gem","note":"YT動画からナレッジDB・台本素材を一括抽出"},{"id":"g_w01_2","name":"YouTubeレポート変換","url":"https://gemini.google.com/gem/b80530e48f8d","toolType":"gem","note":"動画URLをレポート形式に変換"},{"id":"g_w01_3","name":"⑩コンテンツ資産化GPT","url":"https://gemini.google.com/gem/7f5ddcdd1fa5","toolType":"gem","note":"1本の動画を複数媒体コンテンツへ資産化"}]},{"id":102,"sop":true,"sopTag":"W02","icon":"▶","name":"【SOP】UGC・ペイン発掘＆アフィリ設計","gems":[{"id":"g_w02_1","name":"全方位UGC・ディープインサイトOSINT","url":"https://gemini.google.com/gem/a96da76bd79f","toolType":"gem","note":"UGCから深層インサイトを収集・整理"},{"id":"g_w02_2","name":"❶ペイン抽出＆共感ライター","url":"https://gemini.google.com/gem/59dd7dee23ac","toolType":"gem","note":"ペインを言語化し共感フック文を生成"},{"id":"g_w02_3","name":"❷原因解決＆CTAジェネレーター","url":"https://gemini.google.com/gem/d9367ed17f76","toolType":"gem","note":"原因提示→ベネフィット→CTA文を生成"},{"id":"g_w02_4","name":"SNS・ビジネス設計・アフィリエイト設計Gem","url":"https://gemini.google.com/gem/c4f60f0d7f60","toolType":"gem","note":"マネタイズ構造・アフィリ設計を確定"}]},{"id":103,"sop":true,"sopTag":"W03","icon":"▶","name":"【SOP】Veo/Imagenクリエイティブ開発","gems":[{"id":"g_w03_1","name":"❺クリエイティブ生成＆プロンプト開発GPT（【ジャンル名】特化型）","url":"https://gemini.google.com/gem/7c8eb955e50b","toolType":"gem","note":"ジャンル特化の画像・動画プロンプトを開発"},{"id":"g_w03_2","name":"🎬 Gemini動画プロンプト・ディレクター","url":"https://gemini.google.com/gem/e64805517f70","toolType":"gem","note":"Veo用の高品質動画プロンプトを設計"},{"id":"g_w03_3","name":"🍌NanoBanana2 Prompt Lab🍌","url":"https://gemini.google.com/gem/260302e79b36","toolType":"gem","note":"実験的プロンプトラボ・品質の最終調整"}]},{"id":104,"sop":true,"sopTag":"W04","icon":"▶","name":"【SOP】SNSコンテンツ量産・クリエイティブ・予約連携ライン","gems":[{"id":"g147","name":"✴️dマガジン: トレンド抽出＆クリエイティブ設計AI","url":"https://gemini.google.com/gem/41007cdd7b0c","note":"マガジンの誌面データから、SNSで刺さる「トレンドテーマ」を抽出し、Xでの需要検証、アフィリエイト設計、さらに生成AI（Veo等）や動画編集ツールを活用したクリエイティブ制作指針までを一気通貫で提案するプロフェッショナルAI。"},{"id":"g_w04_1","name":"❸dマガジン:投稿ネタ構成AI","url":"https://gemini.google.com/gem/b5ec0582c00a","toolType":"gem","note":"荒いメモを元に投稿構成案を生成"},{"id":"g_w04_2","name":"エンゲージメント・ビルダー ｜ 共感特化型コピーライター","url":"https://gemini.google.com/gem/8b2ae0467fe7","toolType":"gem","note":"深い共感を生むテキストを作成"},{"id":"g_w04_3","name":"⑦ SNS投稿作成GPT","url":"https://gemini.google.com/gem/c050b50729e0","toolType":"gem","note":"各SNS媒体向けにテキストを最適化"},{"id":"g_w04_4","name":"⑨ CanvaデザインGPT","url":"https://gemini.google.com/gem/fb8a0740ae53","toolType":"gem","note":"画像・スライド構成案を作成"},{"id":"g_w04_5","name":"❾キャンバ Pro｜SNS編集手順書・仕様書メーカー","url":"https://gemini.google.com/gem/ad91ece9d7dd","toolType":"gem","note":"Canva操作用SOPを出力"},{"id":"g_w04_6","name":"✴️Filmora15 SNSディレクター（台本＆仕様書自動生成）","url":"https://gemini.google.com/gem/f3f1ef982b3a","toolType":"gem","note":"動画台本とFilmora編集SOPを出力"},{"id":"g_w04_7","name":"CraftTwix SNS Marketing_Console_2026用SNS予約シート・フォーマッター","url":"https://gemini.google.com/gem/9b408d54dcac","toolType":"skill","note":"専用スプレッドシート用データを成形"},{"id":"g_w04_8","name":"Buffer投稿クリエイター","url":"https://gemini.google.com/gem/7c6da89abfd2","toolType":"skill","note":"Buffer CSVインポート用データを成形"}]},{"id":106,"sop":true,"sopTag":"W05","icon":"▶","name":"【SOP】SNSプロフィール・看板設計","gems":[{"id":"g145","name":"SNSプロフィール設計士","url":"https://gemini.google.com/gem/4a1b51840d00","toolType":"gem","note":"プロフィール文・固定ポスト・CTA導線を設計"},{"id":"g146","name":"設計：Xアカウント骨格 {Bio/固定/UTM} [X]","url":"https://gemini.google.com/gem/deec721890e9","toolType":"gem","note":"Bio/固定ポスト/UTMリンクを一括設計"}]},{"id":107,"sop":true,"sopTag":"W06","icon":"▶","name":"dマガジン特化：トレンド抽出＆クリエイティブ統合ディレクター","gems":[{"id":"g149","name":"✴️dマガジン: トレンド抽出＆クリエイティブ設計AI","url":"https://gemini.google.com/gem/41007cdd7b0c","note":"dマガジンの誌面データから、SNSで刺さる「トレンドテーマ」の抽出、Xでの需要検証、アフィリエイト設計、クリエイティブ制作指針までを一気通貫で提案するプロフェッショナルAI。"},{"id":"g150","name":"❎Canva Pro 統合ディレクター（SOP＆AIプロンプト生成）","url":"https://gemini.google.com/gem/3d8d41454fc3","note":"カレンダーデータやアイデアを入力するだけで、Canva Proの最適機能を選定し、投稿別の操作手順書（SOP）の出力、またはMagic Design/Media用の高精度AIプロンプトを自動生成します。"},{"id":"g151","name":"✴️Filmora15 SNSディレクター（台本＆仕様書自動生成）","url":"https://gemini.google.com/gem/f3f1ef982b3a","note":"箇条書きのアイデアメモを入力するだけで、エンゲージメント特化のSNS台本（スレッド展開用）と、Filmora 15の機能をフル活用した具体的な動画編集仕様書を即時出力します。"}]},{"id":1,"icon":"🤖","name":"AIエージェント・システム構築","gems":[{"name":"Gem Architect","url":"https://gemini.google.com/gem/56f4b5ad7e5d","id":"g4"},{"name":"Gem設計コンシェルジュ（即出力版）","url":"https://gemini.google.com/gem/1430f06ff56d","id":"g5"},{"name":"GPTs設計コンシェルジュ（即出力版）","url":"https://gemini.google.com/gem/84dae1a779ed","id":"g6"},{"name":"Antigravity❸アーキテクチャ設計顧問Gem","url":"https://gemini.google.com/gem/641cf3422e75","id":"g7"},{"name":"Antigravity❷スキル&エージェントファイル（MD）構築Gem","url":"https://gemini.google.com/gem/048624e4e157","id":"g8"},{"name":"Antigravity❶要件定義&初期プロンプト生成Gem","url":"https://gemini.google.com/gem/ebe356255a97","id":"g9"},{"name":"①AI司令塔GPT","url":"https://gemini.google.com/gem/1j4t8QvzqdL2PpQr4tgAa8KbgY-S4ilX6?usp=sharing","id":"g10"},{"name":"クリエイティブ生成&プロンプト開発GPT（【ジャンル名】特化型）","url":"https://gemini.google.com/gem/7c8eb955e50b","id":"g11"},{"name":"コーディングパートナー","url":"https://gemini.google.com/gem/coding-partner","id":"g12"}]},{"id":2,"icon":"🔗","name":"プロンプト最適化・外部連携ノード","gems":[{"name":"文体解析&憑依プロンプト生成職人","url":"https://gemini.google.com/gem/ba2bc881da0d","id":"g_new_6"},{"name":"Opal②提案資料オートメーションノード用（Gumma/Slides連携）","url":"https://gemini.google.com/gem/24a9575f5f64","id":"g13"},{"name":"Opal①アフィリエイト自動生成ノード用（X投稿・スレ展開特化）","url":"https://gemini.google.com/gem/71dbf4b2073e","id":"g14"},{"name":"Notebook用解説系分析プロンプトメーカー","url":"https://gemini.google.com/gem/612dcf3776fc","id":"g15"},{"name":"Notebook用指示プロンプト作成メーカー","url":"https://gemini.google.com/gem/4a57e85887b4","id":"g16"},{"name":"🎥NotebookLM風・資料構築AI","url":"https://gemini.google.com/gem/7becdf06b90b","id":"g17"},{"name":"📄NotebookLM風・資料構造化","url":"https://gemini.google.com/gem/7d7a586b6618","id":"g18"},{"name":"Claude Skill Formatter","url":"https://gemini.google.com/gem/6abd14afbec3","id":"g19"}]},{"id":3,"icon":"🎨","name":"生成AIクリエイティブ・プロンプト","gems":[{"name":"クリエーター登録用インフルエンサープロンプト作成Gem","url":"https://gemini.google.com/gem/b081d561bf88","id":"g_new_4"},{"name":"Opal❸クリエイティブ生成最適化ノード用（Veo/Imagen連携）","url":"https://gemini.google.com/gem/036665146805","id":"g20"},{"name":"🎬 Gemini動画プロンプト・ディレクター","url":"https://gemini.google.com/gem/e64805517f70","id":"g21"},{"name":"🎵Gemini音楽プロンプト・プロデューサー","url":"https://gemini.google.com/gem/0a6d0bd02ec8","id":"g22"},{"name":"🖼️ Gemini画像プロンプト・ディレクター","url":"https://gemini.google.com/gem/8a8747a849e7","id":"g23"},{"name":"🍌NanoBanana2 Prompt Lab🍌","url":"https://gemini.google.com/gem/260302e79b36","id":"g24"},{"name":"Veo Prompt Engineer","url":"https://gemini.google.com/gem/95d46ef2a3c9","id":"g25"},{"name":"Filmora AI Video Prompt Studio","url":"https://gemini.google.com/gem/8e0afb22cb1d","id":"g26"},{"name":"⑨ CanvaデザインGPT","url":"https://gemini.google.com/gem/fb8a0740ae53","id":"g27"},{"name":"Canva Design Prompt Generator","url":"https://gemini.google.com/gem/a4356b9e0722","id":"g28"}]},{"id":4,"icon":"🌏","name":"グローバルトレンド・一次情報リサーチ","gems":[{"name":"ベトナム深層ニュース・アナリスト","url":"https://gemini.google.com/gem/6850d27a89c6","id":"g29"},{"name":"韓国深層ニュース・アナリスト","url":"https://gemini.google.com/gem/b587265efb6a","id":"g30"},{"name":"中国・深層ニュースアナリスト","url":"https://gemini.google.com/gem/6dff8bab7c60","id":"g31"},{"name":"インド深層ニュース・アナリスト","url":"https://gemini.google.com/gem/838edc45cd79","id":"g32"},{"name":"ぐーぐるトレンド・ディスカバラー","url":"https://gemini.google.com/gem/670ec9d1e6f0","id":"g33"},{"name":"Viral Content Researcher-SNS競合分析 → バズパターン抽出 → ネタ生成材料作成","url":"https://gemini.google.com/gem/e099604bcb3c","id":"g34"}]},{"id":5,"icon":"📰","name":"メディア・UGC・コミュニティ抽出","gems":[{"name":"🌳媒体トンマナ・アナライザー🌳","url":"https://gemini.google.com/gem/be1644e50d3b","id":"g_new_7"},{"name":"はてなブログ・リサーチャー（記事→ブログ/著者集約）","url":"https://gemini.google.com/gem/7370f1743fe2","id":"g35"},{"name":"ライブドアブログ・リサーチャー（記事→ブログ/著者集約）","url":"https://gemini.google.com/gem/2cdf98922570","id":"g36"},{"name":"Amebaブログ・リサーチャー（記事→ブログ/著者集約）","url":"https://gemini.google.com/gem/0891ddb56b25","id":"g37"},{"name":"Mediumライバル抽出アシスタント（記事→著者/パブ集約）","url":"https://gemini.google.com/gem/f1fdc64ea87e","id":"g38"},{"name":"はてブ・ネタ掘り＆発信源リサーチャー（エントリ→発信源集約）","url":"https://gemini.google.com/gem/acc978c6cdc5","id":"g39"},{"name":"Togetterネタ＆発信者リサーチャー（まとめ→フック／Xアカ集約）","url":"https://gemini.google.com/gem/342858fd6a3e","id":"g40"},{"name":"インスタ・スレッズ・ライバルリサーチャー","url":"https://gemini.google.com/gem/3c7f0b0ed3ac","id":"g41"},{"name":"れでぃっとコミュニティ・リサーチャー（投稿→コミュニティ集約）","url":"https://gemini.google.com/gem/fa32c3d5fbe1","id":"g42"},{"name":"❹Knowledge生成GPT（全方位UGC・ディープ本音発掘型）","url":"https://gemini.google.com/gem/58cbedb1ca25","id":"g43"},{"name":"⓿ dマガジン: ネタ収集・トレンド抽出AI","url":"https://gemini.google.com/gem/dfc8abec6b27","id":"g44"},{"name":"❺ dマガジン: 悩みデータベース生成AI","url":"https://gemini.google.com/gem/8882d370418c","id":"g45"},{"name":"❹ dマガジン: ネタ評価AI","url":"https://gemini.google.com/gem/85c5ee7f8fd9","id":"g46"},{"name":"❸ dマガジン: 投稿ネタ構成AI","url":"https://gemini.google.com/gem/b5ec0582c00a","id":"g47"},{"name":"❷ dマガジン: SNSネタ生成AI","url":"https://gemini.google.com/gem/9f47b094d1b3","id":"g48"},{"name":"❶ dマガジン: テーマ・悩み抽出AI","url":"https://gemini.google.com/gem/f4c62a43a109","id":"g49"},{"name":"抽出：雑誌語彙→見出し母集団 {見出し/タグ候補} [Multi]","url":"https://gemini.google.com/gem/1286c344a135","id":"g50"},{"name":"YTナレッジベース抽出ジェネレーターMAX","url":"https://gemini.google.com/gem/309e1fb749a5","id":"g51"},{"name":"YTナレッジベース抽出エンジン","url":"https://gemini.google.com/gem/9d486139160e","id":"g52"},{"id":"g148","name":"✴️dマガジン: トレンド抽出＆クリエイティブ設計AI","url":"https://gemini.google.com/gem/41007cdd7b0c"}]},{"id":6,"icon":"🔬","name":"SNS競合アカウント・深層分析","gems":[{"name":"YouTubeチャンネル深掘りアナリスト","url":"https://gemini.google.com/gem/7e3506ea7448","id":"g_new_5"},{"id":"g_new_1","name":"SNSアカウント採点官（全SNS・動画・グローバル対応）","url":"https://gemini.google.com/gem/97b5202b89b0","note":"X、Instagram、YouTube、TikTokから、中華系SNS（RED、Douyin等）まで、あらゆるSNSアカウントをビジネス・収益化視点で100点満点で辛口採点します。"},{"name":"Mediumアカウント競合アナライザー","url":"https://gemini.google.com/gem/79c674215d98","id":"g53"},{"name":"はてなブックマーク アカウント競合アナライザー","url":"https://gemini.google.com/gem/68a39a36f183","id":"g54"},{"name":"ようつべアカウント競合アナライザー","url":"https://gemini.google.com/gem/fc4f70a162e8","id":"g55"},{"name":"れでぃっとアカウント競合アナライザー","url":"https://gemini.google.com/gem/a10aba74ff33","id":"g56"},{"name":"インスタアカウント競合アナライザー","url":"https://gemini.google.com/gem/775a57355668","id":"g57"},{"name":"Threads アカウント競合アナライザー","url":"https://gemini.google.com/gem/580e50fdf459","id":"g58"},{"name":"【解析眼】アカウント・マルチアングル分析AI","url":"https://gemini.google.com/gem/571b07cc4ec8","id":"g59"},{"name":"④ バズ構造解析GPT","url":"https://gemini.google.com/gem/950cd1946516","id":"g60"},{"name":"⑫ SNS分析GPT","url":"https://gemini.google.com/gem/f7a45e2b56b7","id":"g61"},{"name":"SNS Trend Analyzer","url":"https://gemini.google.com/gem/220e1b71c9f8","id":"g62"},{"name":"③ SNS競合分析GPT","url":"https://gemini.google.com/gem/7b92caeb91d1","id":"g63"},{"name":"② SNSトレンド分析GPT","url":"https://gemini.google.com/gem/efd0a7c71d71","id":"g64"},{"name":"SNSトレンド・ペルソナ解剖AI","url":"https://gemini.google.com/gem/092307234f43","id":"g65"},{"name":"Instagram Strategy Analyzer","url":"https://gemini.google.com/gem/023a96dae5ea","id":"g66"},{"name":"YouTube-Storagetic-Analyzer","url":"https://gemini.google.com/gem/76105cc47954","id":"g67"},{"name":"YT戦略ノートジェネレーターMAX","url":"https://gemini.google.com/gem/5c63df5e16bf","id":"g68"},{"name":"YouTubeレポート変換","url":"https://gemini.google.com/gem/b80530e48f8d","id":"g69"},{"name":"抽出：競合＆セグメント等高帯 {ライバル5/読者像} [X]","url":"https://gemini.google.com/gem/d9808b4de808","id":"g70"},{"name":"抽出：ようつべライバル論点 {比較軸/台本の種}","url":"https://gemini.google.com/gem/07a10234c28c","id":"g71"},{"name":"⌘対話式Xアカウント戦略・モデリングアナリスト","url":"https://gemini.google.com/gem/8e2cdbc21691","id":"g72"},{"name":"⌘Xアカウント戦略・モデリングアナリスト","url":"https://gemini.google.com/gem/6ac823010875","id":"g73"},{"name":"YouTubeトレンド＆マーケティング戦術アナライザー","url":"https://gemini.google.com/gem/71cf0a3c386d","id":"g74"}]},{"id":7,"icon":"🕵️","name":"OSINT・高度検索コマンド","gems":[{"name":"X深層プロファイラー","url":"https://gemini.google.com/gem/28b56ba34409","id":"g75"},{"name":"Xライバル抽出アシスタント（投稿→アカウント集約）","url":"https://gemini.google.com/gem/634ae03f0ebf","id":"g76"},{"name":"Xライバルリサーチ","url":"https://gemini.google.com/gem/94e6ea555e99","id":"g77"},{"name":"X高度検索コマンド設計AI","url":"https://gemini.google.com/gem/f80607e12e3a","id":"g78"},{"name":"X市場調査&キーワード抽出エンジン","url":"https://gemini.google.com/gem/4caa9e77db15","id":"g79"},{"name":"Xトレンド市場調査・アフィリエイト設計AI","url":"https://gemini.google.com/gem/bbb0f58362aa","id":"g80"},{"name":"Twitter簡単検索を使ったベンチマークリサーチ用Gem","url":"https://gemini.google.com/gem/eea263395b9c","id":"g81"},{"name":"いいね&リプPostスナイパー","url":"https://gemini.google.com/gem/2a6fb4358dd0","id":"g82"}]},{"id":8,"icon":"💰","name":"ビジネスモデル・マネタイズ設計","gems":[{"name":"SNS・ビジネス設計・アフィリエイト設計Gem","url":"https://gemini.google.com/gem/c4f60f0d7f60","id":"g83"},{"name":"トレンド・マネタイズ・アナライザー","url":"https://gemini.google.com/gem/14999b778365","id":"g84"},{"name":"ビジネスモデル相談用Gem","url":"https://gemini.google.com/gem/e2c8e6667c50","id":"g85"},{"name":"⑶Webマネタイズ構造分析GPT","url":"https://gemini.google.com/gem/ff1174d6de6c","id":"g86"},{"name":"⑵SNS収益構造分析GPT","url":"https://gemini.google.com/gem/51dd65c99398","id":"g87"},{"name":"⑴SNS金脈ハンターGPT","url":"https://gemini.google.com/gem/51b770378762","id":"g88"},{"name":"Canva Creator Monetization Strategist","url":"https://gemini.google.com/gem/074e58e1bd03","id":"g89"},{"name":"Creator Monetization Strategist","url":"https://gemini.google.com/gem/0edab688198e","id":"g90"}]},{"id":9,"icon":"💡","name":"コンセプト・バリュープロップ・JTBD","gems":[{"name":"❸バリュープロップ・ピラミッド設計GPT txt コードをコピーする","url":"https://gemini.google.com/gem/d02057e5ab46","id":"g91"},{"name":"❷JTBDディガー：コメント/レビューから「やりたいこと」を掘り出すGPT","url":"https://gemini.google.com/gem/39a4cfc7dc7a","id":"g92"},{"name":"❶ホワイトスペース・マトリクス設計GPT","url":"https://gemini.google.com/gem/c01e5b6c8ce8","id":"g93"},{"name":"⑤ コンセプト設計GPT","url":"https://gemini.google.com/gem/564310d3debd","id":"g94"},{"name":"企画：HARM設計 {KGI→KPI/PF別仕様} [Multi]","url":"https://gemini.google.com/gem/28288c8bf453","id":"g95"}]},{"id":10,"icon":"📅","name":"アカウント骨格・投稿計画","gems":[{"id":"g_new_3","name":"SNSコンテンツ・プランナー（1ヶ月計画自動生成）","url":"https://gemini.google.com/gem/b726bc0ce215","note":"画像（雑誌のスクショ等）、PDF、Webニュース、ブログ記事、SNSの口コミなど、あらゆる形式の資料を読み込み、テーマがブレない「1ヶ月分のSNS投稿カレンダー」を段階的に作成するプロの編集長AIです。"},{"name":"設計：Xアカウント骨格 {Bio/固定/UTM} [X]","url":"https://gemini.google.com/gem/deec721890e9","id":"g96"},{"name":"設計：30日予約投稿カレンダー {媒体別/CSV出力} [Multi]","url":"https://gemini.google.com/gem/953ba6852f97","id":"g97"},{"name":"❹4週間コンテンツカレンダー＆制作バッチ設計GPT","url":"https://gemini.google.com/gem/dbaeab84fac8","id":"g98"},{"name":"⑪ 投稿計画GPT","url":"https://gemini.google.com/gem/5bfc583db05b","id":"g99"},{"name":"設計：ハッシュタグ戦略 {主軸/準軸/実験} [X]","url":"https://gemini.google.com/gem/2303e1b4f18f","id":"g100"}]},{"id":11,"icon":"✍️","name":"ペイン抽出・コピーライティング","gems":[{"name":"エンゲージメント・ビルダー ｜ 共感特化型コピーライター","url":"https://gemini.google.com/gem/8b2ae0467fe7","id":"g101"},{"name":"❶ペイン抽出＆共感ライター","url":"https://gemini.google.com/gem/59dd7dee23ac","id":"g102"},{"name":"❷原因解決＆CTAジェネレーター","url":"https://gemini.google.com/gem/d9367ed17f76","id":"g103"},{"name":"❼CTA＆誘導設計GPT：コメント→DM→オファーまで一気通貫","url":"https://gemini.google.com/gem/247516dae185","id":"g104"},{"name":"整形：口語化＆SNS-SEO一体 {見出し/本文/アンカー} [Multi]","url":"https://gemini.google.com/gem/42634167c981","id":"g105"},{"name":"2️⃣Threads教育・セールス投稿の自動生成モジュール","url":"https://gemini.google.com/gem/db6af04e0436","id":"g106"},{"name":"⑦ SNS投稿作成GPT","url":"https://gemini.google.com/gem/c050b50729e0","id":"g107"}]},{"id":12,"icon":"💭","name":"ネタ出し・アイデア量産","gems":[{"name":"❸ ネタガチャGPT（【ジャンル名】生成型）マスターテンプレート","url":"https://gemini.google.com/gem/42f93454cd59","id":"g108"},{"name":"❷ ネタ評価＆競合分析GPT（【ジャンル名】特化型）マスターテンプレート","url":"https://gemini.google.com/gem/356b7c455274","id":"g109"},{"name":"❶ ネタ採掘GPT（【ジャンル名】収集型）マスターテンプレート","url":"https://gemini.google.com/gem/26cb235c0627","id":"g110"},{"name":"❸ネタガチャGPT（【ジャンル名】生成型）","url":"https://gemini.google.com/gem/c0498fe7db47","id":"g111"},{"name":"❷ネタ評価＆競合分析GPT（【ジャンル名】特化型）","url":"https://gemini.google.com/gem/be88dbc4696b","id":"g112"},{"name":"❶ネタ採掘GPT（【ジャンル名】収集型）","url":"https://gemini.google.com/gem/08c82846289c","id":"g113"},{"name":"ネタ採掘GPT（恋愛相談収集型）","url":"https://gemini.google.com/gem/0b01255681cc","id":"g114"},{"name":"❺フック＆アングル・バンク50｜媒体適応ジェネレーター","url":"https://gemini.google.com/gem/13ecd9af5768","id":"g115"},{"name":"抽出：バズワード探索 {候補語} [Multi]","url":"https://gemini.google.com/gem/0dda96b6de5f","id":"g116"},{"name":"⑥ 投稿アイデアGPT","url":"https://gemini.google.com/gem/7fe7a0583bc5","id":"g117"},{"name":"アイデア出しのプロ","url":"https://gemini.google.com/gem/brainstormer","id":"g118"},{"name":"Veo3.1-Trend & Idea Generator GPT","url":"https://gemini.google.com/gem/2d35eae47ce5","id":"g119"},{"name":"Viral Video Idea Generator","url":"https://gemini.google.com/gem/fdb869f7adc1","id":"g120"}]},{"id":13,"icon":"🎬","name":"台本・構成構築（YouTube / note）","gems":[{"name":"YouTube台本＆演出生成アシスタント（汎用型）","url":"https://gemini.google.com/gem/056d46bb6773","id":"g121"},{"name":"汎用パロディ台本アーキテクト","url":"https://gemini.google.com/gem/0a199c0d33cb","id":"g122"},{"name":"YouTubeスタイルクローン","url":"https://gemini.google.com/gem/97f8b43f030e","id":"g123"},{"name":"⑧ ストーリー台本GPT","url":"https://gemini.google.com/gem/ea787014802a","id":"g124"},{"name":"1️⃣売れるnote構成案の自動生成モジュール","url":"https://gemini.google.com/gem/9edb21454680","id":"g125"},{"name":"note出版エンジン（Free→Paid一気通貫）","url":"https://gemini.google.com/gem/71fda0a37bed","id":"g126"},{"name":"【まじん式】音声&字幕付き動画生成","url":"https://gemini.google.com/gem/176bfc0725b4","id":"g127"},{"name":"台本：フック/導入テンプレ（Conversation Starters）{1投稿=1狙い}","url":"https://gemini.google.com/gem/f04a3deeb5be","id":"g128"}]},{"id":14,"icon":"🛠️","name":"クリエイティブ制作用SOP・仕様書","gems":[{"name":"❎Canva Pro 統合ディレクター（SOP＆AIプロンプト生成）","url":"https://gemini.google.com/gem/3d8d41454fc3","id":"g129"},{"name":"➓Filmora 14｜SNS編集手順書・仕様書メーカー","url":"https://gemini.google.com/gem/fb7d2561150b","id":"g130"},{"name":"✴️Filmora15 SNSディレクター（台本＆仕様書自動生成）","url":"https://gemini.google.com/gem/f3f1ef982b3a","id":"g131"},{"name":"⓫Pippit AI｜SNS編集手順書・仕様書メーカー","url":"https://gemini.google.com/gem/470ca3a7454f","id":"g132"},{"name":"❾キャンバ Pro｜SNS編集手順書・仕様書メーカー","url":"https://gemini.google.com/gem/ad91ece9d7dd","id":"g133"},{"name":"❻角度→媒体別クリエイティブ一括展開GPT","url":"https://gemini.google.com/gem/0f051cefc18b","id":"g134"},{"name":"⑩ コンテンツ資産化GPT","url":"https://gemini.google.com/gem/7f5ddcdd1fa5","id":"g135"},{"name":"Trend Video Idea Engine","url":"https://gemini.google.com/gem/44486eed80c1","id":"g136"},{"name":"AI Video Production System","url":"https://gemini.google.com/gem/29503b7298c6","id":"g137"}]},{"id":15,"icon":"✅","name":"コンプライアンス・監査・A/Bテスト","gems":[{"name":"守：EPPM×YMYL遵守 {注意書き/表現基準} [Multi]","url":"https://gemini.google.com/gem/bb6c56a1b384","id":"g138"},{"name":"守：表現リスク管理（Fear Fix）{NG/対応テンプレ} [Multi]","url":"https://gemini.google.com/gem/c6026917c8fb","id":"g139"},{"name":"監査：プロフィール/固定/OGP/CTA（Page Analyzer）{ToDo} [Multi]","url":"https://gemini.google.com/gem/08a4b6c371eb","id":"g140"},{"name":"❽A/Bテスト設計＆計測SSOT（Single Source of Truth）GPT","url":"https://gemini.google.com/gem/790d984df4b5","id":"g141"},{"name":"Togetter/posfie まとめ&アカウント監査官","url":"https://gemini.google.com/gem/1e9af6814c88","id":"g142"}]},{"id":16,"icon":"📄","name":"ドキュメント・資料化","gems":[{"id":"g_new_2","name":"Tube2Manual","url":"https://gemini.google.com/gem/7c8c7143b698","note":"YouTubeのURL、または文字起こしテキストから、誰でも再現できる完璧な「操作マニュアル・手順書」を自動生成します。"},{"name":"YouTubeレポート変換","url":"https://gemini.google.com/gem/b80530e48f8d","id":"g143"},{"name":"Storybook","url":"https://gemini.google.com/gem/storybook","id":"g144"}]}];
+/*DATA_END*/
+/*DMAG_START*/
+const SAVED_DMAG = [{"id":"dm1","icon":"💄","name":"ヘア・美容","mags":[{"name":"LDK the Beauty","url":"https://dmagazine.docomo.ne.jp/media/b54f74aee2883e390aa8074de84602c6793c293adaf77bf43fe7554f0083c3a2/"},{"name":"LDK the Beauty \"MAN\"","url":"https://dmagazine.docomo.ne.jp/item/8883ec7087665f9ea48b25178c00e3200d9ff0bac837a67c4b434827cd334389/1000/"},{"name":"LDK Ageless","url":"https://dmagazine.docomo.ne.jp/item/ced1c4bba3f439c42959e25c3cb233a02844d2ac5ad47f561c050881ed831c16/1000/"},{"name":"TEST the BEST Beauty","url":"https://dmagazine.docomo.ne.jp/item/5704dad831c0a2e5acc977d8926e1abef72e68562ef8d14fa8cd891c99068d73/1000/"},{"name":"MAQUIA","url":"https://dmagazine.docomo.ne.jp/media/9690ad7af9df847148312901a358d183c66a4dc34c608aad229d2d154d46f964/"},{"name":"VOCE","url":"https://dmagazine.docomo.ne.jp/media/4c8c51905b4e58c63225bbd614f5654f3220a4f8af1ffd11d766340de1c1cc91/"},{"name":"美ST (ビスト)","url":"https://dmagazine.docomo.ne.jp/media/51855ce0af895dedb0e6799986c4d93012dc29dce6786eee37e630cdabf71579/"},{"name":"美的","url":"https://dmagazine.docomo.ne.jp/media/596c2500d36d2b88c282a54ade36f9e220108628f3812465c0a56cb154e96211/"},{"name":"美的GRAND","url":"https://dmagazine.docomo.ne.jp/media/67af4851667c6d9882d0e4e2039f3b7e73d0245c8e2fbc63f94fd5f8226a3494/"},{"name":"ヨガジャーナル日本版","url":"https://dmagazine.docomo.ne.jp/media/ce9835654ce0775ebb473231562cf0475a3900b80fad895d33daecc6bf34207d/"},{"name":"FINEBOYS+plus FACE","url":"https://dmagazine.docomo.ne.jp/item/0e0272f33ba1095f49247ad76a9bc1d4d21a2cf2fd08e2097687a04850116b3f/1000/"},{"name":"FINEBOYS+plus BEAUTY","url":"https://dmagazine.docomo.ne.jp/item/5d012244fda44f1b96040ea4f11fc39d2675b9a716d63c2b18c1b4058d82b749/1000/"},{"name":"Woman's SHAPE & Sports","url":"https://dmagazine.docomo.ne.jp/item/16ae9b82814807a9d345d631f7d0874111be7e05377409ed59c8da4e683c7e37/1000/"},{"name":"リアルオーダーヘアブック","url":"https://dmagazine.docomo.ne.jp/item/bc358a3e4a7234ea1ec64791cfa99e6696fd5ffea16a3831d505f308d454e849/1000/"},{"name":"LDK老けない美容最強バイブル最新版","url":"https://dmagazine.docomo.ne.jp/item/26eaec08425044292d4d1e927f08b897e10a49468a1f124d5fc3562f6b7a2d02/1000/"},{"name":"LDK老けない美肌の便利帖","url":"https://dmagazine.docomo.ne.jp/item/331d1b1a122492d5003561b8b69a8eb6fe6b0cd6eaae1a36d5150b48def4633a/1000/"},{"name":"MONOQLO 老けない男の作り方 完全ガイド","url":"https://dmagazine.docomo.ne.jp/item/4672a219bee85055d14d5f3bf634b5a6fc47c1a60addea8fe4f56aced18a5023/1000/"}]},{"id":"dm2","icon":"🏠","name":"暮らし・健康・料理","mags":[{"name":"LDK","url":"https://dmagazine.docomo.ne.jp/media/7f6fcb33ca4ca882edca34f185270bc2776651f53a784535be280e7a5042085d/"},{"name":"3分クッキング","url":"https://dmagazine.docomo.ne.jp/media/04349e5c9d9acb987ccf9e698cfe9a1e4a3f1daf11669dba5d17c64e1f3ec921/"},{"name":"ESSE","url":"https://dmagazine.docomo.ne.jp/media/d11739e39f24f424d8df9a530211632f11c269011729cd728f4a279239582228/"},{"name":"NHK きょうの健康","url":"https://dmagazine.docomo.ne.jp/media/d9449191e6a184d5a1d900262db6b6a102c1a18868591069e07c0e14799c32b2/"},{"name":"NHK きょうの料理","url":"https://dmagazine.docomo.ne.jp/media/0e303c3f6069398c3fe666bf61afc0d7d074909882fdbe281c86923dab035b0c/"},{"name":"NHK きょうの料理ビギナーズ","url":"https://dmagazine.docomo.ne.jp/media/3fc2a2ac4408122a2f24900dadf70992b43f15a93f440c489bc524d9bec0cc70/"},{"name":"オレンジページ","url":"https://dmagazine.docomo.ne.jp/media/8602073c2e00ed4c5eea12abd61a616808f6c47f00a20b9c9e1ff2cbda521463/"},{"name":"オレンジページplus","url":"https://dmagazine.docomo.ne.jp/media/594cad98a50236861406aaa1f1666b0826d3d2dea202b283ed4adf4a180d0493/"},{"name":"からだにいいこと","url":"https://dmagazine.docomo.ne.jp/item/5fed6a88160af774aed991110e8cec1c34c3136ae94cbb826ff17efe9ebbefc9/1000/"},{"name":"クロワッサン","url":"https://dmagazine.docomo.ne.jp/media/2e8a2ab9d6238ff33975ea5cb93421d245c40bd68d1296de25e35f25a2e9c815/"},{"name":"サンキュ！","url":"https://dmagazine.docomo.ne.jp/media/39ff0dafce3f8145cc30e5b2a13f7326e9a3e128ad102305336589b54f57da47/"},{"name":"ハルメク","url":"https://dmagazine.docomo.ne.jp/media/50885db63371e2e0f0ad187b1610123c4a88aa8f2f90ff9437fb2377e3cc9e94/"},{"name":"ゆうゆう","url":"https://dmagazine.docomo.ne.jp/media/1b1a68ab3f54eb06d94931e79135333c76dd85157111e101fa7c53800c6fda76/"},{"name":"レタスクラブ","url":"https://dmagazine.docomo.ne.jp/media/bf977d3ae975ca230e75752d0625cbe19098850209102f010d7c8a0ee9441d07/"},{"name":"安心","url":"https://dmagazine.docomo.ne.jp/media/794677728e3ebaf14ad80a34a17b63d8b4cc86f6c593a58ed2a16612198ce8ca/"},{"name":"栄養と料理","url":"https://dmagazine.docomo.ne.jp/media/b1e99008be0182ba62e0a7958de17cb55f58b0a87a9c58f5df6d23a7a2068864/"},{"name":"壮快","url":"https://dmagazine.docomo.ne.jp/media/d6c27b59593ab3f53774935684ee0e2fcc988a93801a5ee98a43850cc0efa07f/"},{"name":"毎日が発見","url":"https://dmagazine.docomo.ne.jp/media/859e447ede54bf208f01652d3e402d275bdd78020f8e131e2435177d83ae95f6/"},{"name":"健康","url":"https://dmagazine.docomo.ne.jp/media/f4ac7101890de8ce2ae5df6794f4575b4d1b60e3205d2ba364cedc7882a4073e/"},{"name":"フーディストノートmagazine","url":"https://dmagazine.docomo.ne.jp/item/dca18513e7b72584cce4986abeba606947628d2768181c1eb98a14e2134ac05e/1000/"},{"name":"自律神経を整えるお得技ベストセレクション","url":"https://dmagazine.docomo.ne.jp/item/623b224db770b87c00b4b96fc8809843ceb34c341ebc5bffe524df72f50950c6/1000/"},{"name":"LDK 冷凍保存の便利帖","url":"https://dmagazine.docomo.ne.jp/item/501ce3ed09a9bc05953dbfaa2be5540a75d095ce83570cc4967e2548431910d5/1000/"},{"name":"名医が教える 血圧を下げる最高の方法","url":"https://dmagazine.docomo.ne.jp/item/d40f9f6ed42c54fed323d407f4252f1515d28984feb45e943c39f259575cf97e/1000/"},{"name":"名医が教える 脊柱管狭窄症がよくなるこれだけ1分体操","url":"https://dmagazine.docomo.ne.jp/item/d7072649e5a8fee624af41f6e9460f4df161b98fec8542248d7db57f98ba4fd2/1000/"},{"name":"血糖値を下げるお得技ベストセレクション","url":"https://dmagazine.docomo.ne.jp/item/7fb78d7789e1ad1ce37d5e59180d182d7e516f9f6827884f7550975c99130875/1000/"},{"name":"血糖値を下げる大百科","url":"https://dmagazine.docomo.ne.jp/item/f566ac5fbef726697f8bb2a0dc4528365a4ce12f9a9b5fa26e4b67483f6eaa80/1000/"},{"name":"LDK 100均 the Best","url":"https://dmagazine.docomo.ne.jp/item/f17e839a43862359f8c4786b79938777856ee3c2881bd5913a889ca187272af5/1000/"},{"name":"LDK 3COINS the BEST","url":"https://dmagazine.docomo.ne.jp/item/862db8795f715f5d03f6789502065ca0cc94196bf0e71cbeaddb7e2d0a475134/1000/"},{"name":"LDK 無印良品 the Best","url":"https://dmagazine.docomo.ne.jp/item/14ea67c22a1cbde8028846fa3bad62876d9a55e4881397b85639eb5dd76450bc/1000/"},{"name":"MONOQLO スゴい日用品 the BEST","url":"https://dmagazine.docomo.ne.jp/item/6e0a69a0c4ab33e5c71b03cd9dc3d7b07dc46af721b3e1047094ffb051152f51/1000/"},{"name":"カルディ the Best","url":"https://dmagazine.docomo.ne.jp/item/56bdad7f562af4a37c83b6f1a9467241c95452df6f4b4a8ed3a43ce7ba91bd52/1000/"},{"name":"コストコ the Best","url":"https://dmagazine.docomo.ne.jp/item/96a827b5ed0b4a7831dca55c40277e73e7d1de11e7702de4723297400e024c5c/1000/"},{"name":"LDK 業務スーパー the Best 2026","url":"https://dmagazine.docomo.ne.jp/item/a92afdf7b6981bc08d5e97b4b6758a6a83e170b776dbf535cf3c5e3ae906c81b/1000/"},{"name":"食べる漢方の便利帖","url":"https://dmagazine.docomo.ne.jp/item/8b82252d1fdf769f665d7071c7bb51c2239d5ff97635de853eb3651bd885b795/1000/"},{"name":"食べる漢方レシピの便利帖","url":"https://dmagazine.docomo.ne.jp/item/3e29961a837bd6198fe4bf4fb481b0690f6ee7d33cd877dbc43979e98db12555/1000/"},{"name":"LDK おそうじの超ベストアイディア","url":"https://dmagazine.docomo.ne.jp/item/dec18607533b2059a73963cb6fd87a1fecb0903e20c9a937b9a63f17edd37cd9/1000/"},{"name":"ひざ痛を治すお得技ベストセレクション","url":"https://dmagazine.docomo.ne.jp/item/4a471346c93ca7f94e11fe89e61745be871f51e7ffb459e3ab484228dbf1dde5/1000/"}]},{"id":"dm3","icon":"🌿","name":"ライフスタイル","mags":[{"name":"Tarzan (ターザン)","url":"https://dmagazine.docomo.ne.jp/media/4e985793bfa2bb3bec10f9c13ef346c630f61d691fc678572c73217bc0a53864/"},{"name":"日経ウーマン","url":"https://dmagazine.docomo.ne.jp/media/dfc82916fc8d98ed8632be3ee5bc092f0e21d1a83ab4f5a69bd63651f4094c62/"},{"name":"週刊MONODAS","url":"https://dmagazine.docomo.ne.jp/media/4a428b5a945a7f6967a75b7b92ef15a7a2c9ada44f15f21b425e6af295f929f3/"},{"name":"MonoMaster","url":"https://dmagazine.docomo.ne.jp/media/cc6780d7615aaeb6001f9a27c3b4d01268624ec0e0d62d865188539167a0c49e/"},{"name":"新NISA完全ガイド","url":"https://dmagazine.docomo.ne.jp/item/80dc5a653bf29205572a7eb74f198bf0a83cab054f1ccc4a41196dfe0bdbc489/1000/"},{"name":"NISA完全ガイド2025","url":"https://dmagazine.docomo.ne.jp/item/3e43e9a78a27bf10a73fa7f74313383f7f8aa73c66155ec2996b48febf4a4644/1000/"},{"name":"新NISAビギナーズガイド2024-25","url":"https://dmagazine.docomo.ne.jp/item/a58248c6f537bdd585df113400f4193a213da1131982fd7a19a45f73d1251c52/1000/"},{"name":"株主優待完全ガイド","url":"https://dmagazine.docomo.ne.jp/item/ee50aa1442b7f8d3c2eaa4523c4632595b373216e9c2163165c089526b516780/1000/"},{"name":"安くて良い株主優待ベストセレクション","url":"https://dmagazine.docomo.ne.jp/item/baddf56e882d1f534386f0a25ed6a4fb094d12860c988234b8244b061584069b/1000/"},{"name":"定年前後のお金と暮らしお得技ベストセレクション 2023最新版","url":"https://dmagazine.docomo.ne.jp/item/03834c19837eb49e78496f79969ca6758221d78be039cd94d5c93e09e1a63020/1000/"},{"name":"東京ディズニーランド＆シーお得技ベストセレクション","url":"https://dmagazine.docomo.ne.jp/item/e98cecf7e38fb6c47b62303ed36fcf5544d40e272e99c55c31b86eb3f1c99a1a/1000/"},{"name":"ユニバーサル・スタジオ・ジャパンお得技ベストセレクション","url":"https://dmagazine.docomo.ne.jp/item/36c0e8c72a5c44e73f96d5284c9ef258e25ab7765798fe8a437c6cd1c04bec23/1000/"},{"name":"日本一わかりやすい 一戸建ての選び方がわかる本 2025-26","url":"https://dmagazine.docomo.ne.jp/item/0a68a305efe8e7f05c52076f47844b55a5893c2e3decd02ab8e15daf18e19e00/1000/"},{"name":"はじめての家の買い方がまるごとわかる本","url":"https://dmagazine.docomo.ne.jp/item/d07f8441e716fec9fd66375711c9c03510f209cbb73880fc78cef97a7a1433a3/1000/"},{"name":"マイホーム大全 2026-27","url":"https://dmagazine.docomo.ne.jp/item/c32b689c9bd84ee3d52926c28e5099b65f0260b822ec988fbce614a739a183e5/1000/"},{"name":"MONOQLO 大人の趣味 the BEST 2026","url":"https://dmagazine.docomo.ne.jp/item/5a851718dd37d563ff08ae635301fccb3342611502f6c33f43a920f7d31ec792/1000/"},{"name":"ゴルフ for Beginners 2026-27","url":"https://dmagazine.docomo.ne.jp/item/74cdae44735f9c753f18a80156405f2ec099baa8dd3994ca714f83f44c88947d/1000/"}]},{"id":"dm4","icon":"💹","name":"ビジネス・経済","mags":[{"name":"ダイヤモンドZAi (ザイ)","url":"https://dmagazine.docomo.ne.jp/media/32fb84fc7a58ee2b93c8570f4e3aa1062100bcc8ac10cd2927ae24bbfd234ad9/"},{"name":"日経トレンディ","url":"https://dmagazine.docomo.ne.jp/media/42883883ecb9d1eae1ff10107d832b743b1c7b030baf61eb8cb586ff9ef8c6ec/"},{"name":"日経マネー","url":"https://dmagazine.docomo.ne.jp/media/cf1f45f14b898a1a0e67047b3f92c5bb1c2728d7db16a85d6c9fc2fb28a2c0ec/"},{"name":"LDK お金のきほん the Best","url":"https://dmagazine.docomo.ne.jp/item/06968dda3f81512b6be57bbff5f1261faa9e6da28b643bda174c64bbf42faea3/1000/"},{"name":"投資信託完全ガイド","url":"https://dmagazine.docomo.ne.jp/item/f59dc1b1e1f3d56a0a9e8347e6f475134881cf3d69413444a04a14202cd2d652/1000/"},{"name":"米国株完全ガイド","url":"https://dmagazine.docomo.ne.jp/item/0962d5f33306f60cd93937d08a415cae3a906532e28b12c8e10aeca262c048c7/1000/"}]},{"id":"dm5","icon":"💻","name":"IT・ガジェット","mags":[{"name":"DIME","url":"https://dmagazine.docomo.ne.jp/media/a586008ca21f1dd452b6b15bae31f31463a772cff765cfba1ba6d6b4d8651364/"},{"name":"GetNavi","url":"https://dmagazine.docomo.ne.jp/media/691507ef42f7eb796bb64c52279ba35da3c340ef344c666368992cb8ea18daac/"},{"name":"GoodsPress","url":"https://dmagazine.docomo.ne.jp/media/98de9d2cdfb7f84814babfb7841adc03ea246a1e7ad13c5ed63938d9f47127f1/"},{"name":"Mac Fan","url":"https://dmagazine.docomo.ne.jp/media/5f8372b89425461feb568e6614d1fe09dd7456cd8116fec60f2c8f9f15d9c279/"},{"name":"MONOQLO","url":"https://dmagazine.docomo.ne.jp/media/089c4c30ee8300d0889041d5aeaaa5e7e556bdb49d4b3a577aa86c60d382bac8/"},{"name":"Mr.PC","url":"https://dmagazine.docomo.ne.jp/media/631e61bef53ecceeaa8fd796ea9d3e2cfaa5c529d13cba6002bd12bdf88e7de5/"},{"name":"家電批評","url":"https://dmagazine.docomo.ne.jp/media/1ea1314e0f9ca5920f98103f58cfef2825259a09635aefe4caaffcb01b001ccc/"},{"name":"週刊アスキー","url":"https://dmagazine.docomo.ne.jp/media/8f1720c0d1b4ee95f68ba92c1f0b101be76aa1e4818f632362c13f7269e3422e/"},{"name":"日経PC21","url":"https://dmagazine.docomo.ne.jp/media/569fa4152012e61b3609d53f74babb07e530069d41289c040f3647141885f85c/"},{"name":"モノ・マガジン","url":"https://dmagazine.docomo.ne.jp/media/3befad4a3bf6ebcaf09b49dc587e16cbc653b861f68bdf296c721d59ad73edb4/"},{"name":"週刊GoodsPress DIGITAL","url":"https://dmagazine.docomo.ne.jp/media/78511999e035a9f4081ff16cc83f5500713eb60342c118a8656dfe3286f85496/"},{"name":"アマゾン大全","url":"https://dmagazine.docomo.ne.jp/item/85ac77f9ae1b93de230b900c11a563003d128f9ebef52cbd40deec0afa995400/1000/"},{"name":"家電批評 ランキング the Best","url":"https://dmagazine.docomo.ne.jp/item/15e2029c40137fdb253f74615b97e79dbe02c06e9654e0107dd8b12172c52f1c/1000/"},{"name":"Wi-Fiがまるごとわかる本 2026","url":"https://dmagazine.docomo.ne.jp/item/fb9dc31f23c63dcdbf862aba0ff6d6246853ff7738c2c8665015691137c1788f/1000/"},{"name":"家電批評 安くて良い家電 the BEST 2026","url":"https://dmagazine.docomo.ne.jp/item/d63385b1c0cb1166b1c6fc64b03afb40b285c36eb35746d28a63a218993908ed/1000/"},{"name":"自作PC最強バイブル 2025","url":"https://dmagazine.docomo.ne.jp/item/9e5e8c57cee1a73d159fc209f4ec77bddd8e43de06a3d02e3e0644d84bb4e578/1000/"},{"name":"家電批評 iPad for ビギナーズ 2025","url":"https://dmagazine.docomo.ne.jp/item/51c7bdd0e125aadecbe2b7a53e4b5d77e59dfe7220d598132b2a7d8ca5f057ce/1000/"},{"name":"生成AI お得技ベストセレクション","url":"https://dmagazine.docomo.ne.jp/item/6e1f21721e9a4e480860affb6b86bfc0304be01d1a293a4e6a85b2b2b37f94d4/1000/"},{"name":"MONOQLO ビジネスグッズ大全2026","url":"https://dmagazine.docomo.ne.jp/item/2824e47f37fbcbc8fea6b96eaca773990fc9970b07583ebbad09c855e80df33a/1000/"},{"name":"ミラーレス一眼カメラがまるごとわかる本 2025-2026","url":"https://dmagazine.docomo.ne.jp/item/45ffeffb777d1319459c61cfcb07fbde04300e11cf0cf2393d08395f2eb186dd/1000/"}]},{"id":"dm6","icon":"👨‍👩‍👧","name":"ファミリー・キッズ・ペット","mags":[{"name":"いぬのきもち","url":"https://dmagazine.docomo.ne.jp/media/a0d3395dec904c7e4e9db33621695218fa7c9fdb401e9dd3beca49c2984d98a5/"},{"name":"ねこのきもち","url":"https://dmagazine.docomo.ne.jp/media/5c475425ad3b14f27214ae940eecd2ec6cb9ba6c82a0fdd7648556a8ce6126df/"},{"name":"初めてのたまごクラブ","url":"https://dmagazine.docomo.ne.jp/media/0ed4f5b3c5a36abc6faffa111dd5a1599a5abdf9d9b8e01e991b7b565438fe8c/"},{"name":"中期のたまごクラブ","url":"https://dmagazine.docomo.ne.jp/media/d605f9288fbb84cdd064e4a4a6473623daad52cf9ec43568db1d7c40956173a5/"},{"name":"後期のたまごクラブ","url":"https://dmagazine.docomo.ne.jp/media/e247c3498b390a9a118ec590c3f482f703f5e87803c486c8c5890232a8239744/"},{"name":"初めてのひよこクラブ","url":"https://dmagazine.docomo.ne.jp/media/07972ddcd0ecabfee9bb12eebe706e6f366e8e0bf5a31ae164f4770680af3de2/"},{"name":"中期のひよこクラブ","url":"https://dmagazine.docomo.ne.jp/media/adddeb5b1199c262ba3c8367d0ec2af8ff28f27f77b09059bbd8e688d3e6fb16/"},{"name":"後期のひよこクラブ","url":"https://dmagazine.docomo.ne.jp/media/68af4e1feec8668657c76b1616b2a737784064614410d1b11b4b086616c93515/"},{"name":"プレジデントファミリー","url":"https://dmagazine.docomo.ne.jp/media/cc8bb315475e9799692f9c1786c60fb58186d5a30bbdb02e1b01c2ec66e14ee7/"},{"name":"LDK ベビー the Best","url":"https://dmagazine.docomo.ne.jp/item/156d2957e36bd5119fa323a77408871050226ffe9db04a98c9f73fa3bb24e5e6/1000/"},{"name":"ネコDK デラックス","url":"https://dmagazine.docomo.ne.jp/item/1c84ef46a35c5660d8ec3da1e09a003a9dd9da2663ac362b9d83a445e3823f4e/1000/"},{"name":"赤ちゃんが欲しい","url":"https://dmagazine.docomo.ne.jp/item/5a9bce0e526f8aa3a66964a91547580e4dffd11779579b1a0d63a8616bb45625/1000/"},{"name":"LDK ベビー用品完全ガイド 2026","url":"https://dmagazine.docomo.ne.jp/item/5e09735a7bf3d6738fa8987499f42911118678b405f2e3f08d8e6bae6594d2b6/1000/"},{"name":"10才までに算数が強くなる！マインクラフトで脱出迷路","url":"https://dmagazine.docomo.ne.jp/item/01c3d98f877a6f51f40c2342593d1ac55f8d681012ba12b189be2f86501e4998/1000/"},{"name":"ポケットサイズ マインクラフト最新データブック 2026年版","url":"https://dmagazine.docomo.ne.jp/item/025d974d02e83c45ecb79bd1715d4c29a0403eb4c56a9f7c624c9d51c4b73b76/1000/"},{"name":"ポケットサイズ マインクラフト最新コマンドブック","url":"https://dmagazine.docomo.ne.jp/item/c6de0142a709ad6e7337a2a6cb59d1a9acca92e2caecda0719aef9055c04a76c/1000/"},{"name":"キッズ英語教材完全ガイド","url":"https://dmagazine.docomo.ne.jp/item/0ca9eab336813c9cf437972ccf1815c28bfaec2904ff4fa5c83f708923f0db03/1000/"},{"name":"はじめてのネコの飼い方 for Beginners","url":"https://dmagazine.docomo.ne.jp/item/f9a1782a7b98616e70253e2524cbaf142162600af622cf804cb23f0bf4e7dcfe/1000/"},{"name":"ネコDK スペシャル・ベスト","url":"https://dmagazine.docomo.ne.jp/item/8bee15ebcce4d34a39dd61f9696b982eecd33a5df30c5481d8112124ee593a6e/1000/"},{"name":"わんこお得技ベストセレクション 2026","url":"https://dmagazine.docomo.ne.jp/item/120f4afd4136eeb442c562bfb1580dac22cc25cb821ca8d11c1bbcc51a60dd87/1000/"},{"name":"わんこの気持ちがもっとよくわかるお得技ベストセレクション","url":"https://dmagazine.docomo.ne.jp/item/0a53135ea24d774b55ded4d71fb5591c82b292d9d660b591764dad4a51befb14/1000/"}]}];
+/*DMAG_END*/
+
+/*SOURCES_START*/
+const SAVED_SOURCES = [{"id":"s1","icon":"💄","name":"ヘア・美容","sites":[{"name":"360LiFE（ビューティー）","note":"『LDK the Beauty』公式。コスメの検証結果と「ベストバイ」がわかりアフィリエイトに直結。","url":"https://360life.shinyusha.co.jp/"},{"name":"mybest（コスメ・化粧品）","note":"肌悩み別のランキングと、デメリット込みの徹底レビューが強み。","url":"https://my-best.com/"},{"name":"@cosme Q&A","note":"商品購入前の迷いや深いコンプレックス（肌荒れ等）を直接抽出。","url":"https://www.cosme.net/chieco/"},{"name":"LIPS","note":"一般ユーザーのコメント欄から「これって荒れませんか？」等のリアルな懸念点を拾う。","url":"https://lipscosme.com/"},{"name":"ガールズちゃんねる（総合トップ）","note":"サイト内検索で「〇〇 買って後悔」「ステマ」等と検索し、忖度ゼロの辛口評価や本物のデメリットを抽出。","url":"https://girlschannel.net/"},{"name":"@cosmeランキング","url":"https://www.cosme.net/ranking/category/items","note":""},{"name":"@cosmeベストコスメアワード","url":"https://www.cosme.net/bestcosme/","note":""},{"name":"カテゴリ一覧｜美容・化粧品情報はアットコスメ","url":"https://www.cosme.net/category/","note":""},{"name":"@cosmeまとめ（アットコスメまとめ）","url":"https://www.cosme.net/biche/","note":""},{"name":"アットコスメ Q&A（@cosme Q&A） - 美容のお悩みならアットコスメのQ&A","url":"https://www.cosme.net/chieco/","note":""},{"name":"美容のプロフェッショナルや美容感度の高い方たちの情報発信｜アットコスメブログ","url":"https://www.cosme.net/beautist/","note":""},{"name":"ビューティニュース｜美容・化粧品情報はアットコスメ","url":"https://www.cosme.net/news/","note":""},{"name":"新作コスメカレンダー｜美容・化粧品情報はアットコスメ","url":"https://www.cosme.net/calendar/","note":""},{"name":"最新クチコミ｜美容・化粧品情報はアットコスメ","url":"https://www.cosme.net/latest-reviews/","note":""},{"name":"LIPS｜コスメ・美容・メイクの口コミアプリ｜リップス","url":"https://lipscosme.com","note":""},{"name":"コスメ総合ランキング【2026年最新】化粧品の人気おすすめクチコミ | LIPS","url":"https://lipscosme.com/rankings","note":""},{"name":"カテゴリ一覧 | LIPS","url":"https://lipscosme.com/categories","note":""},{"name":"ブランドTOP | LIPS","url":"https://lipscosme.com/brands","note":""},{"name":"【本日更新】メイクアップのおすすめ人気ランキング200選。プロが選び方や使い方のコツを解説【2026年】 | LIPS","url":"https://lipscosme.com/rankings/62","note":""},{"name":"LIPSライター一覧","url":"https://lipscosme.com/articles/authors","note":""},{"name":"コスメ・美容・メイクのタグ一覧 | LIPS","url":"https://lipscosme.com/tags","note":""},{"name":"テーマ一覧 | LIPS","url":"https://lipscosme.com/themes","note":""},{"name":"LIPSのコスメ一覧 | LIPS","url":"https://lipscosme.com/products","note":""},{"name":"LDK the Beauty（エルディーケー ザ ビューティ） 総合アクセスランキング | 360LiFE(サンロクマル)","url":"https://360life.shinyusha.co.jp/list/ldkb/ranking","note":""},{"name":"LDK the Beauty 公式 - 美容とコスメのおすすめベストバイ | 360LiFE(サンロクマル)","url":"https://360life.shinyusha.co.jp/list/ldkb","note":""},{"name":"LDK 公式 - 暮らしのおすすめベストバイ | 360LiFE(サンロクマル)","url":"https://360life.shinyusha.co.jp/list/ldk","note":""},{"name":"「MONOQLO グルメ大賞」記事一覧 | 360LiFE(サンロクマル)","url":"https://360life.shinyusha.co.jp/list/monoqlo-gourmet-award","note":""},{"name":"ガールズちゃんねるキーワード一覧","url":"https://girlschannel.net/topics/keyword/","note":""}]},{"id":"s2","icon":"🏠","name":"暮らし・健康・料理","sites":[{"name":"360LiFE（日用品・キッチン・収納）","note":"『LDK』公式。洗剤の落ちやすさや100均グッズの検証結果が揃う。","url":"https://360life.shinyusha.co.jp/"},{"name":"ROOMIE","note":"日常の小さな不便を解決するアイテム特化。Amazon/楽天リンクへ誘導しやすい。","url":"https://www.roomie.jp/"},{"name":"サンキュ！STYLE（読者ブロガー）","note":"一般主婦の等身大の悩みと解決策。食費や収納のリアルな挫折体験を抽出。","url":"https://39mag.benesse.ne.jp/style/"},{"name":"RoomClip（ルームクリップ）","note":"タグ検索で部屋のリアルな写真から「収納がない」「狭い」などの空間のPainを視覚的にリサーチ。","url":"https://roomclip.jp/"},{"name":"Yahoo!知恵袋（ダイエット・フィットネス）","note":"「毎日の献立が苦痛」「ご近所トラブル」など、日常のリアルなストレスを抽出。","url":"https://chiebukuro.yahoo.co.jp/category/2080159616/question/list"},{"name":"360LiFE 新着記事一覧 | 360LiFE(サンロクマル)","url":"https://360life.shinyusha.co.jp/list/new","note":""},{"name":"NEW ARTICLE | ROOMIE（ルーミー）","url":"https://www.roomie.jp/articles/","note":""},{"name":"新製品 5行レビュー | ROOMIE（ルーミー）","url":"https://www.roomie.jp/feature/short-review/","note":""},{"name":"マイ定番スタイル | ROOMIE（ルーミー）","url":"https://www.roomie.jp/feature/classic-style/","note":""},{"name":"みんなの部屋 | ROOMIE（ルーミー）","url":"https://www.roomie.jp/feature/house-report/","note":""},{"name":"FEATURE | ROOMIE（ルーミー）","url":"https://www.roomie.jp/feature/","note":""},{"name":"SPECIAL | ROOMIE（ルーミー）","url":"https://www.roomie.jp/special/","note":""}]},{"id":"s3","icon":"🌿","name":"ライフスタイル","sites":[{"name":"Tarzan Web","note":"身体の不調やダイエットの悩みに答え、健康グッズ等の高単価案件へ繋げる。","url":"https://tarzanweb.jp/"},{"name":"日経xwoman（総合トップ）","note":"「マネー」「キャリア」カテゴリ等から、働く女性の「投資の失敗」「転職の迷い」「両立の限界」など赤裸々な本音を抽出。","url":"https://woman.nikkei.com/"},{"name":"Yahoo!知恵袋（生き方と恋愛、人間関係の悩み）","note":"漠然とした将来の不安や、メンタルヘルスに関する深いPainを抽出。","url":"https://chiebukuro.yahoo.co.jp/category/2079526977/question/list"},{"name":"発言小町（キャリア・職場）","note":"職場の人間関係や「このまま今の会社にいていいのか」という悩みが豊富。","url":"https://komachi.yomiuri.co.jp/topics/genre/work/ranking/"},{"name":"発言小町（生活・身近な話題）","note":"「夫が家事をしない」「食費が減らない」など、生活者の生々しい愚痴が集まる。","url":"https://komachi.yomiuri.co.jp/topics/genre/life/ranking/"},{"name":"Amazon（日用品・家電 ★1〜★2レビュー）","note":"既存の便利グッズに対する「惜しい点・不満」を抽出し、解決策フックに使う。","url":"https://www.amazon.co.jp/"},{"name":"特集一覧 | Tarzan Web（ターザンウェブ）","url":"https://tarzanweb.jp/features","note":""},{"name":"記事一覧 | Tarzan Web（ターザンウェブ）","url":"https://tarzanweb.jp/articles","note":""},{"name":"鍛える | Tarzan Web（ターザンウェブ）","url":"https://tarzanweb.jp/category/training","note":""},{"name":"食べる | Tarzan Web（ターザンウェブ）","url":"https://tarzanweb.jp/category/eat","note":""},{"name":"キャリア | 日経ウーマン","url":"https://woman.nikkei.com/career/?i_cid=nbpnxw_navi_com_career","note":""},{"name":"学び | 日経ウーマン","url":"https://woman.nikkei.com/life/learning/?i_cid=nbpnxw_navi_com_learning","note":""},{"name":"マネジメント | 日経ウーマン","url":"https://woman.nikkei.com/management/?i_cid=nbpnxw_navi_com_management","note":""},{"name":"ダイバーシティ | 日経ウーマン","url":"https://woman.nikkei.com/diversity/?i_cid=nbpnxw_navi_com_dei","note":""},{"name":"子育て・教育｜日経ウーマン","url":"https://woman.nikkei.com/kids/?i_cid=nbpnxw_navi_com_edu","note":""},{"name":"健康・美容｜日経ウーマン","url":"https://woman.nikkei.com/life/health/?i_cid=nbpnxw_navi_com_health","note":""}]},{"id":"s4","icon":"💹","name":"ビジネス・経済","sites":[{"name":"ザイ・オンライン","note":"NISA、クレカなどの明確なランキングがあり、金融アフィリエイトの「答え」が揃う。","url":"https://diamond.jp/zai"},{"name":"マネーポストWEB","note":"「老後破産」「投資失敗」などのルポルタージュで読者の恐怖（Pain）を煽る。","url":"https://www.moneypost.jp/"},{"name":"みんかぶ 掲示板","note":"新NISAや投資信託など、金融ジャンルで初心者が何に怯えているか、損をした時の悲鳴を抽出。","url":"https://minkabu.jp/"},{"name":"Yahoo!知恵袋（ビジネスと経済、お金）","note":"「貯金ゼロの50代」「新NISAで損した」など、お金に関する切迫したSOSが集まる。","url":"https://chiebukuro.yahoo.co.jp/category/2078297790/question/list"},{"name":"発言小町（夫婦関係・離婚）","note":"見栄を張った失敗談や、教育費貧乏など、リアルな家計の悲鳴が拾える。","url":"https://komachi.yomiuri.co.jp/topics/genre/couple/"},{"name":"X（旧Twitter）高度な検索","note":"「(貯金 OR 投資) (溶かした OR 失敗)」等で検索し、リアルタイムの悲痛な声を抽出。","url":"https://twitter.com/search-advanced"}]},{"id":"s5","icon":"💻","name":"IT・ガジェット","sites":[{"name":"360LiFE（家電・ガジェット）","note":"『MONOQLO』『家電批評』公式。ルーター等のベストバイがわかり、そのまま台本になる。","url":"https://360life.shinyusha.co.jp/"},{"name":"mybest（家電・PC）","note":"デメリット込みの徹底レビューで、信頼性の高い比較構成が作れる。","url":"https://my-best.com/"},{"name":"Yahoo!知恵袋（スマートデバイス・PC・家電）","note":"「Wi-Fiが繋がらない」「設定がわからない」等、初心者がつまずく悩みの宝庫。","url":"https://chiebukuro.yahoo.co.jp/category/2080401469/question/list"},{"name":"価格.com クチコミ掲示板","note":"マニアによる「買った後の後悔（デメリット）」が詳細に集まる。上位互換提案の軸に。","url":"https://bbs.kakaku.com/"},{"name":"Amazon カスタマーQ&A（売れ筋ランキング）","note":"商品ページ中段のQ&Aから、購入直前の「最後の壁（懸念点）」を言語化してカンペにする。","url":"https://www.amazon.co.jp/gp/bestsellers"}]},{"id":"s6","icon":"👨‍👩‍👧","name":"ファミリー・キッズ・ペット","sites":[{"name":"発言小町 トップ＆ランキング","note":"日本一ドロドロした長文の人間ドラマ。共感と怒りを煽る「ストーリー型台本」の最強カンペ。","url":"https://komachi.yomiuri.co.jp/ranking/"},{"name":"ママリ Q&A","note":"「夫への不満」「育児ノイローゼ」など感情的で生々しいPainの宝庫。時短家電の訴求等に。","url":"https://mamari.jp/qa"},{"name":"Yahoo!知恵袋（子育てと学校）","note":"「夜鳴き」「離乳食を食べない」など、切羽詰まった焦りや絶望がリアルタイムで拾える。","url":"https://chiebukuro.yahoo.co.jp/category/2078297878/question/list"},{"name":"Yahoo!知恵袋（ペット）","note":"ペットの病気・しつけ・飼い方に関するリアルな悩みが集まる。","url":"https://chiebukuro.yahoo.co.jp/category/2078297852/question/list"},{"name":"いぬのきもち WEB","note":"獣医師監修の解決策。知恵袋の悩みに対する「信頼できるエビデンス」として活用。","url":"https://dog.benesse.ne.jp/"},{"name":"ねこのきもち WEB","note":"獣医師監修の解決策。知恵袋の悩みに対する「信頼できるエビデンス」として活用。","url":"https://cat.benesse.ne.jp/"},{"name":"妊娠[ママリ]","url":"https://mamari.jp/pregnancy","note":""},{"name":"出産[ママリ]","url":"https://mamari.jp/birth","note":""},{"name":"子育て・家族[ママリ]","url":"https://mamari.jp/family","note":""},{"name":"マネー[ママリ]","url":"https://mamari.jp/money","note":""},{"name":"ママリ口コミ大賞2026 | ママリ","url":"https://award.mamari.jp","note":""},{"name":"トレンド・イベント[ママリ]","url":"https://mamari.jp/entertainment","note":""},{"name":"エンターテイメント[ママリ]","url":"https://mamari.jp/entertainment/590","note":""},{"name":"ブログ・SNS[ママリ]","url":"https://mamari.jp/entertainment/620","note":""},{"name":"コラム[ママリ]","url":"https://mamari.jp/entertainment/621","note":""}]}];
+/*SOURCES_END*/
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let categories    = [];
+let activeCategory = 'all';
+let searchQuery   = '';
+let editMode      = false;
+let dmagazineMode = false;
+let sourcesMode   = false;
+let roadmapMode   = false;
+let memoMode      = false;
+let dragSrcIndex  = null;
+let dragSrcCatId  = null;
+let catDragSrcIdx = null;
+let nextId        = 200;
+
+// ─── 新機能：コピー＆ピン留め ──────────────────────────────────
+function copyToClipboard(e, text) {
+  e.stopPropagation(); e.preventDefault();
+  navigator.clipboard.writeText(text).then(() => showToast('📋 URLをコピーしました'));
+}
+function togglePin(e, catId, gemId) {
+  e.stopPropagation(); e.preventDefault();
+  const cat = categories.find(c => c.id === catId);
+  if(!cat) return;
+  const gem = (cat.gems||[]).find(g => g.id === gemId);
+  if(!gem) return;
+  gem.pinned = !gem.pinned;
+  saveToLocalStorage();
+  renderContent();
+}
+
+// ─── ID 採番 ───────────────────────────────────────────────────
+function newId() { return 'g_' + (nextId++); }
+
+// ─── LocalStorage ─────────────────────────────────────────────
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem('gemhub_cats', JSON.stringify(categories));
+  } catch(e) { console.warn('localStorage save failed:', e); }
+}
+
+// ─── Toast ────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg || '💾 保存しました';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ─── migrateGemIds ────────────────────────────────────────────
+function migrateGemIds(cats) {
+  cats.forEach(cat => {
+    cat.gems = (cat.gems || []).map(g => {
+      if (!g.id) g.id = newId();
+      return g;
+    });
+  });
+  return cats;
+}
+
+// ─── saveAsHtml ───────────────────────────────────────────────
+function saveAsHtml() {
+  const el = document.getElementById('mainScript');
+  if (!el) { showToast('❌ スクリプト要素が見つかりません'); return; }
+  let src = el.textContent;
+
+  // DATA置換
+  src = src.replace(/\/\*DATA_START\*\/[\s\S]*?\/\*DATA_END\*\//,
+    '/*DATA_START*/\nconst SAVED_DATA = ' + JSON.stringify(categories, null, 0) + ';\n/*DATA_END*/');
+
+  const full = document.documentElement.outerHTML;
+  const scriptIdx = full.indexOf(el.textContent.substring(0, 80));
+  let output;
+  if (scriptIdx === -1) {
+    output = full;
+  } else {
+    output = full.replace(el.textContent, src);
+  }
+
+  // <script id="mainScript">内のデータだけ置換して書き出す
+  const blob = new Blob([output], {type: 'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const d = new Date();
+  const ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  a.download = 'GemHub_' + ds + '_.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('💾 HTMLファイルをダウンロードしました');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SIDEBAR & META
+// ═══════════════════════════════════════════════════════════════
+function renderSidebar() {
+  const nav = document.getElementById('catList');
+  if (!nav) return;
+  const q = searchQuery.toLowerCase();
+  const sopCats = categories.filter(c => c.sop);
+  const normCats = categories.filter(c => !c.sop);
+
+  let html = '';
+  // 全Gem ボタン
+  const allCount = categories.reduce((s, c) => s + (c.gems || []).length, 0);
+  html += `<button class="cat-btn${activeCategory==='all'?' active':''}" onclick="selectCategory('all')">
+    <span class="cat-icon">🏠</span><span class="cat-label">すべてのGem</span>
+    <span class="cat-count">${allCount}</span>
+  </button>`;
+
+  // 通常カテゴリ
+  normCats.forEach(cat => {
+    const cnt = (cat.gems || []).length;
+    const visible = !q || cat.name.toLowerCase().includes(q) ||
+      (cat.gems||[]).some(g => g.name.toLowerCase().includes(q));
+    if (!visible) return;
+    html += `<button class="cat-btn${activeCategory===cat.id?' active':''}" onclick="selectCategory(${cat.id})">
+      <span class="cat-icon">${cat.icon||'📁'}</span>
+      <span class="cat-label">${cat.name}</span>
+      <span class="cat-count">${cnt}</span>
+    </button>`;
+  });
+
+  // SOP セパレーター
+  if (sopCats.length) {
+    html += '<div class="sop-separator"></div>';
+    sopCats.forEach(cat => {
+      const cnt = (cat.gems || []).length;
+      const visible = !q || cat.name.toLowerCase().includes(q) ||
+        (cat.gems||[]).some(g => g.name.toLowerCase().includes(q));
+      if (!visible) return;
+      html += `<button class="cat-btn sop-cat-btn${activeCategory===cat.id?' active':''}" onclick="selectCategory(${cat.id})">
+        <span class="cat-sop-tag">${cat.sopTag||''}</span>
+        <span class="cat-label">${cat.name}</span>
+        <span class="cat-count">${cnt}</span>
+      </button>`;
+    });
+  }
+  nav.innerHTML = html;
+
+  // カウント更新
+  const linked = categories.flatMap(c => c.gems||[]).filter(g => g.url).length;
+  const el = n => document.getElementById(n);
+  if(el('totalCount'))  el('totalCount').textContent  = allCount;
+  if(el('catCount'))    el('catCount').textContent    = categories.length;
+  if(el('linkedCount')) el('linkedCount').textContent = linked;
+  if(el('catCountLabel')) el('catCountLabel').textContent = categories.length;
+}
+
+function updateSidebarActive(id) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  if (id === 'all') {
+    const first = document.querySelector('.cat-btn');
+    if (first) first.classList.add('active');
+  } else {
+    document.querySelectorAll('.cat-btn').forEach(b => {
+      if (b.onclick && b.onclick.toString().includes(String(id))) b.classList.add('active');
+    });
+  }
+}
+
+function updateMeta() {
+  const meta = document.getElementById('topbarMeta');
+  if (!meta) return;
+  if (activeCategory === 'all') {
+    const total = categories.reduce((s, c) => s + (c.gems||[]).length, 0);
+    const linked = categories.flatMap(c => c.gems||[]).filter(g => g.url).length;
+    meta.textContent = `${total} Gems · ${categories.length} Categories · ${linked} Linked`;
+  } else {
+    const cat = categories.find(c => c.id === activeCategory);
+    if (cat) {
+      const cnt = (cat.gems||[]).length;
+      const linked = (cat.gems||[]).filter(g => g.url).length;
+      meta.textContent = `${cnt} Gems · ${linked} Linked`;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CATEGORY SELECTION
+// ═══════════════════════════════════════════════════════════════
+function selectCategory(id) {
+  activeCategory = id;
+  // close sub-modes
+  if (memoMode)      { memoMode = false; const mb=document.getElementById('memoBtn'); if(mb) mb.classList.remove('active'); }
+  if (dmagazineMode) { dmagazineMode = false; const b=document.getElementById('dmagazineBtn'); if(b) b.classList.remove('active'); }
+  if (sourcesMode)   { sourcesMode   = false; const b=document.getElementById('sourcesBtn');   if(b) b.classList.remove('active'); }
+  if (roadmapMode)   { roadmapMode   = false; const b=document.getElementById('roadmapBtn');   if(b) b.classList.remove('active'); }
+
+  const tt = document.getElementById('topbarTitle');
+  if (tt) tt.textContent = id === 'all' ? 'すべてのGem' : (categories.find(c=>c.id===id)?.name || '');
+
+  renderContent();
+  updateMeta();
+  updateSidebarActive(id);
+
+  // モバイル: サイドバーを閉じる
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('overlay');
+  if (sb) sb.classList.remove('open');
+  if (ov) ov.classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SEARCH HIGHLIGHT
+// ═══════════════════════════════════════════════════════════════
+function hl(text, query) {
+  if (!query) return text;
+  const re = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+  return text.replace(re, '<mark class="hl">$1</mark>');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER CONTENT
+// ═══════════════════════════════════════════════════════════════
+function renderContent() {
+  const content = document.getElementById('content');
+  if (!content) return;
+  const q = searchQuery.toLowerCase();
+
+  let catsToRender = activeCategory === 'all'
+    ? categories
+    : categories.filter(c => c.id === activeCategory);
+
+  if (q) {
+    catsToRender = catsToRender
+      .map(cat => ({
+        ...cat,
+        gems: (cat.gems||[]).filter(g => g.name.toLowerCase().includes(q))
+      }))
+      .filter(cat => cat.gems.length || cat.name.toLowerCase().includes(q));
+  }
+
+  if (!catsToRender.length) {
+    content.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-msg">「${searchQuery}」に一致するGemが見つかりませんでした</div></div>`;
+    return;
+  }
+
+  const sopCats  = catsToRender.filter(c => c.sop);
+  const normCats = catsToRender.filter(c => !c.sop);
+  const ordered  = [...normCats, ...sopCats];
+
+  let html = '';
+  if (editMode) {
+    html += `<div class="add-cat-row">
+      <button class="add-cat-btn" onclick="openAddCat()">＋ カテゴリを追加</button>
+    </div>`;
+  }
+
+  ordered.forEach((cat, idx) => {
+    const isSop = cat.sop;
+    const sopClass = isSop ? ' sop-section' : '';
+    const toggleClass = isSop ? ' sop-cat' : '';
+    const bodyClass = isSop ? ' sop-body' : '';
+    const gems = cat.gems || [];
+    const catIdx = categories.findIndex(c => c.id === cat.id);
+
+    html += `<div class="section${sopClass}" id="sec_${cat.id}"
+      draggable="${editMode}"
+      ondragstart="onCatDragStart(event,${catIdx})"
+      ondragover="onCatDragOver(event)"
+      ondragleave="onCatDragLeave(event)"
+      ondrop="onCatDrop(event,${catIdx})"
+      ondragend="onCatDragEnd(event)">
+      <button class="section-toggle${toggleClass}" onclick="toggleSection(this)">
+        ${editMode ? `<span class="cat-drag-handle" title="ドラッグで並び替え">⠿</span>` : ''}
+        ${isSop ? `<span class="sop-pill">▶ ${cat.sopTag||'SOP'}</span>` : `<span class="section-icon">${cat.icon||'📁'}</span>`}
+        <span class="section-title">${hl(cat.name, q)}</span>
+        <span class="section-count">${gems.length}</span>
+        ${editMode ? `
+          <button class="cat-sort-btn" onclick="event.stopPropagation();moveCat(${catIdx},-1)" ${catIdx===0?'disabled':''} title="上へ">▲</button>
+          <button class="cat-sort-btn" onclick="event.stopPropagation();moveCat(${catIdx},1)"  ${catIdx===categories.length-1?'disabled':''} title="下へ">▼</button>
+          <button class="cat-edit-btn" onclick="event.stopPropagation();openEditCat(${cat.id})" title="カテゴリを編集">✏️</button>
+          <button class="cat-del-btn"  onclick="event.stopPropagation();deleteCat(${cat.id})"  title="カテゴリを削除">🗑️</button>
+        ` : ''}
+        <span class="chevron">▾</span>
+      </button>
+      <div class="section-body${bodyClass}">
+        <div class="section-body-inner">
+          <div class="card-grid" id="grid_${cat.id}">`;
+
+    gems.forEach((gem, gi) => {
+      const isLinked = !!gem.url;
+      const isSopCard = isSop;
+      const isPinned = gem.pinned;
+      const tagsHtml = gem.tags ? gem.tags.split(',').map(t => `<span class="pf-tag">${t.trim()}</span>`).join('') : '';
+      
+      const toolBadge = gem.toolType === 'gem' ? '<span class="tool-badge tb-gem">GEM</span>'
+        : gem.toolType === 'skill' ? '<span class="tool-badge tb-skill">SKILL</span>' : '';
+
+      html += `<div class="card${isLinked?' linked':''}${isSopCard?' sop-card':''}"
+        draggable="${editMode}"
+        ondragstart="onDragStart(event,${catIdx},${gi})"
+        ondragover="onDragOver(event)"
+        ondragleave="onDragLeave(event)"
+        ondrop="onDrop(event,${catIdx},${gi})"
+        ondragend="onDragEnd(event)"
+        onclick="${isLinked&&!editMode?`window.open('${gem.url}','_blank')`:''}">
+        
+        ${editMode ? '<span class="drag-handle" title="ドラッグで並び替え">⠿</span>' : ''}
+        
+        <button class="card-pin-btn ${isPinned?'pinned':''}" onclick="togglePin(event, ${cat.id}, '${gem.id}')" title="お気に入り">⭐</button>
+
+        ${isSopCard ? `<span class="card-step">${gi+1}</span>` : `<span class="card-dot"></span>`}
+        
+        <div class="card-inner">
+          <span class="card-name">${tagsHtml}${hl(gem.name, q)}</span>
+          ${gem.note ? `<span class="card-note">${hl(gem.note, q)}</span>` : ''}
+        </div>
+        
+        ${toolBadge}
+        
+        ${isLinked ? `<button class="card-copy-btn" onclick="copyToClipboard(event, '${gem.url}')" title="URLをコピー">📋</button>` : ''}
+        
+        ${!editMode && isLinked ? '<span class="card-arrow">↗</span>' : ''}
+        
+        ${editMode ? `<div class="card-actions">
+          <button class="card-act-btn edit" onclick="event.stopPropagation();openEditGem(${cat.id},'${gem.id}')" title="編集">✏️</button>
+          <button class="card-act-btn del"  onclick="event.stopPropagation();deleteGem(${cat.id},'${gem.id}')"  title="削除">🗑️</button>
+        </div>` : ''}
+      </div>`;
+    });
+
+    html += `</div>`;
+    if (editMode) {
+      html += `<div class="add-gem-row">
+        <button class="add-gem-btn" onclick="openAddGem(${cat.id})">＋ Gemを追加</button>
+      </div>`;
+    }
+    html += `</div></div></div>`;
+  });
+
+  content.innerHTML = html;
+}
+
+function toggleSection(btn) {
+  btn.classList.toggle('open');
+  const body = btn.nextElementSibling;
+  if (!body) return;
+  const isOpen = btn.classList.contains('open');
+  if (isOpen) {
+    body.classList.add('open');
+    body.style.height = body.scrollHeight + 'px';
+    body.addEventListener('transitionend', function h() {
+      body.style.height = 'auto';
+      body.removeEventListener('transitionend', h);
+    });
+  } else {
+    body.classList.remove('open');
+    body.style.height = body.scrollHeight + 'px';
+    body.offsetHeight; // force reflow
+    requestAnimationFrame(() => { body.style.height = '0'; });
+  }
+}
+
+function toggleDmCat(el) {
+  const cat = el.parentElement;
+  const body = cat.querySelector('.dm-body');
+  if (!body) { cat.classList.toggle('open'); return; }
+  const isOpen = cat.classList.toggle('open');
+  if (isOpen) {
+    body.style.height = body.scrollHeight + 'px';
+    body.addEventListener('transitionend', function h() {
+      body.style.height = 'auto';
+      body.removeEventListener('transitionend', h);
+    });
+  } else {
+    body.style.height = body.scrollHeight + 'px';
+    body.offsetHeight;
+    requestAnimationFrame(() => { body.style.height = '0'; });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EDIT MODE
+// ═══════════════════════════════════════════════════════════════
+function toggleEditMode() {
+  // close sub-modes
+  if (memoMode)      { memoMode = false; const mb=document.getElementById('memoBtn'); if(mb) mb.classList.remove('active'); }
+  if (dmagazineMode) { dmagazineMode = false; const b=document.getElementById('dmagazineBtn'); if(b) b.classList.remove('active'); }
+  if (sourcesMode)   { sourcesMode   = false; const b=document.getElementById('sourcesBtn');   if(b) b.classList.remove('active'); }
+  if (roadmapMode)   { roadmapMode   = false; const b=document.getElementById('roadmapBtn');   if(b) b.classList.remove('active'); }
+
+  editMode = !editMode;
+  document.body.classList.toggle('edit-mode', editMode);
+  const btn = document.getElementById('editToggleBtn');
+  if (btn) {
+    btn.textContent = editMode ? '✅ 編集完了' : '✏️ 編集';
+    btn.classList.toggle('active', editMode);
+  }
+  const banner = document.getElementById('editBanner');
+  if (banner) banner.style.display = editMode ? 'block' : 'none';
+
+  const tt = document.getElementById('topbarTitle');
+  if (tt) tt.textContent = editMode ? '✏️ 編集モード'
+    : activeCategory === 'all' ? 'すべてのGem'
+    : (categories.find(c=>c.id===activeCategory)?.name || '');
+  renderContent();
+  updateMeta();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GEM MODAL
+// ═══════════════════════════════════════════════════════════════
+const Modal = (() => {
+  let _catId = null, _gemId = null;
+
+  function open(catId, gemId) {
+    _catId = catId; _gemId = gemId;
+    const cat = categories.find(c => c.id === catId);
+    const gem = gemId ? (cat?.gems||[]).find(g => g.id === gemId) : null;
+    const isSop = cat?.sop;
+
+    document.getElementById('modalTitle').textContent    = gem ? 'Gemを編集' : 'Gemを追加';
+    document.getElementById('modalNameLabel').textContent = isSop ? 'ステップ名' : 'Gem名';
+    document.getElementById('modalName').value            = gem?.name || '';
+    document.getElementById('modalUrl').value             = gem?.url  || '';
+    document.getElementById('modalNote').value            = gem?.note || '';
+    document.getElementById('modalNoteLabel').textContent = isSop ? 'ステップメモ（任意）' : 'メモ（任意）';
+
+    // SOP fields
+    document.getElementById('modalGemTypeField').style.display = isSop ? 'block' : 'none';
+    document.getElementById('modalNoteField').style.display    = isSop ? 'block' : 'none';
+
+    setToolType(gem?.toolType || '');
+    document.getElementById('modalOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('modalName').focus(), 80);
+  }
+
+  function setToolType(t) {
+    ['gmtBtnNone','gmtBtnGem','gmtBtnSkill'].forEach(id => {
+      const b = document.getElementById(id);
+      if(b) { b.classList.remove('gmt-active-gem','gmt-active-skill','gmt-none'); }
+    });
+    if (t === 'gem') {
+      document.getElementById('gmtBtnGem').classList.add('gmt-active-gem');
+    } else if (t === 'skill') {
+      document.getElementById('gmtBtnSkill').classList.add('gmt-active-skill');
+    } else {
+      document.getElementById('gmtBtnNone').classList.add('gmt-active-gem');
+    }
+    Modal._toolType = t;
+  }
+
+  function close() {
+    document.getElementById('modalOverlay').classList.remove('show');
+    _catId = null; _gemId = null;
+  }
+
+  function save() {
+    const name = document.getElementById('modalName').value.trim();
+    if (!name) { document.getElementById('modalName').focus(); return; }
+    const url  = document.getElementById('modalUrl').value.trim();
+    const note = document.getElementById('modalNote').value.trim();
+    const toolType = Modal._toolType || '';
+
+    const cat = categories.find(c => c.id === _catId);
+    if (!cat) { close(); return; }
+
+    if (_gemId) {
+      const gem = (cat.gems||[]).find(g => g.id === _gemId);
+      if (gem) { gem.name = name; gem.url = url; gem.note = note; gem.toolType = toolType; }
+    } else {
+      cat.gems = cat.gems || [];
+      cat.gems.push({ id: newId(), name, url, note, toolType });
+    }
+    saveToLocalStorage();
+    close();
+    renderContent();
+    renderSidebar();
+    showToast(_gemId ? '✏️ Gemを更新しました' : '➕ Gemを追加しました');
+  }
+
+  return { open, close, save, setToolType, _toolType: '' };
+})();
+
+function openAddGem(catId) { Modal.open(catId, null); }
+function openEditGem(catId, gemId) { Modal.open(catId, gemId); }
+function deleteGem(catId, gemId) {
+  if (!confirm('このGemを削除しますか？')) return;
+  const cat = categories.find(c => c.id === catId);
+  if (cat) cat.gems = (cat.gems||[]).filter(g => g.id !== gemId);
+  saveToLocalStorage();
+  renderContent();
+  renderSidebar();
+  showToast('🗑️ Gemを削除しました');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CATEGORY MODAL
+// ═══════════════════════════════════════════════════════════════
+const CatModal = (() => {
+  let _editId = null, _type = 'sop';
+
+  function open(editId) {
+    _editId = editId;
+    const cat = editId ? categories.find(c => c.id === editId) : null;
+    document.getElementById('catModalTitle').textContent = cat ? 'カテゴリを編集' : 'カテゴリを追加';
+    document.getElementById('catModalName').value  = cat?.name  || '';
+    document.getElementById('catModalIcon').value  = cat?.icon  || '📁';
+    document.getElementById('catModalSopTag').value = cat?.sopTag || '';
+    setType(cat?.sop ? 'sop' : 'normal');
+    document.getElementById('catModalOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('catModalName').focus(), 80);
+  }
+
+  function setType(t) {
+    _type = t;
+    document.getElementById('ctBtnNormal').className = 'cat-type-btn' + (t==='normal'?' sel-normal':'');
+    document.getElementById('ctBtnSop').className    = 'cat-type-btn' + (t==='sop'?' sel-sop':'');
+    document.getElementById('cmIconField').style.display = t==='normal' ? 'block' : 'none';
+    document.getElementById('cmSopField').style.display  = t==='sop'    ? 'block' : 'none';
+    const sb = document.getElementById('catModalSaveBtn');
+    if (sb) sb.style.background = t==='sop' ? 'var(--sop-accent)' : 'var(--accent)';
+    if (sb) sb.style.borderColor = t==='sop' ? 'var(--sop-accent)' : 'var(--accent)';
+  }
+
+  function pickIcon(btn, icon) {
+    document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    document.getElementById('catModalIcon').value = icon;
+  }
+
+  function close() {
+    document.getElementById('catModalOverlay').classList.remove('show');
+    _editId = null;
+  }
+
+  function save() {
+    const name = document.getElementById('catModalName').value.trim();
+    if (!name) { document.getElementById('catModalName').focus(); return; }
+    const icon   = document.getElementById('catModalIcon').value.trim() || '📁';
+    const sopTag = document.getElementById('catModalSopTag').value.trim().toUpperCase();
+
+    if (_editId) {
+      const cat = categories.find(c => c.id === _editId);
+      if (cat) {
+        cat.name = name;
+        if (_type === 'sop') { cat.sop = true; cat.sopTag = sopTag; delete cat.icon; }
+        else { cat.sop = false; cat.icon = icon; delete cat.sopTag; }
+      }
+    } else {
+      const maxId = categories.reduce((m, c) => Math.max(m, typeof c.id==='number'?c.id:0), 0);
+      const newCat = { id: maxId+1, name, gems: [] };
+      if (_type === 'sop') { newCat.sop = true; newCat.sopTag = sopTag; }
+      else { newCat.icon = icon; }
+      categories.push(newCat);
+    }
+    saveToLocalStorage();
+    close();
+    renderContent();
+    renderSidebar();
+    showToast(_editId ? '✏️ カテゴリを更新しました' : '➕ カテゴリを追加しました');
+  }
+
+  return { open, close, save, setType, pickIcon };
+})();
+
+function openAddCat()     { CatModal.open(null); }
+function openEditCat(id)  { CatModal.open(id); }
+function deleteCat(id) {
+  const cat = categories.find(c => c.id === id);
+  if (!cat) return;
+  if (!confirm(`「${cat.name}」を削除しますか？\n（${(cat.gems||[]).length}件のGemも削除されます）`)) return;
+  categories = categories.filter(c => c.id !== id);
+  if (activeCategory === id) activeCategory = 'all';
+  saveToLocalStorage();
+  renderContent();
+  renderSidebar();
+  showToast('🗑️ カテゴリを削除しました');
+}
+function moveCat(idx, dir) {
+  const ni = idx + dir;
+  if (ni < 0 || ni >= categories.length) return;
+  [categories[idx], categories[ni]] = [categories[ni], categories[idx]];
+  saveToLocalStorage();
+  renderContent();
+  renderSidebar();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DRAG & DROP (Gem)
+// ═══════════════════════════════════════════════════════════════
+function onDragStart(e, catIdx, gemIdx) {
+  dragSrcIndex = gemIdx; dragSrcCatId = categories[catIdx]?.id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+function onDragOver(e) {
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function onDrop(e, catIdx, gemIdx) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const cat = categories[catIdx];
+  if (!cat || dragSrcCatId !== cat.id || dragSrcIndex === null || dragSrcIndex === gemIdx) return;
+  const gems = cat.gems;
+  const [moved] = gems.splice(dragSrcIndex, 1);
+  gems.splice(gemIdx, 0, moved);
+  saveToLocalStorage();
+  renderContent();
+}
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  dragSrcIndex = null; dragSrcCatId = null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DRAG & DROP (Category)
+// ═══════════════════════════════════════════════════════════════
+function onCatDragStart(e, idx) {
+  catDragSrcIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('cat-dragging');
+}
+function onCatDragOver(e) {
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('cat-drag-over');
+}
+function onCatDragLeave(e) { e.currentTarget.classList.remove('cat-drag-over'); }
+function onCatDrop(e, idx) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('cat-drag-over');
+  if (catDragSrcIdx === null || catDragSrcIdx === idx) return;
+  const [moved] = categories.splice(catDragSrcIdx, 1);
+  categories.splice(idx, 0, moved);
+  saveToLocalStorage();
+  renderContent();
+  renderSidebar();
+}
+function onCatDragEnd(e) {
+  e.currentTarget.classList.remove('cat-dragging');
+  catDragSrcIdx = null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// dMAGAZINE
+// ═══════════════════════════════════════════════════════════════
+function toggleDmagazine() {
+  dmagazineMode = !dmagazineMode;
+  const btn = document.getElementById('dmagazineBtn');
+  if (btn) btn.classList.toggle('active', dmagazineMode);
+  if (dmagazineMode) {
+    if (sourcesMode)   { sourcesMode   = false; const b=document.getElementById('sourcesBtn');   if(b) b.classList.remove('active'); }
+    if (roadmapMode)   { roadmapMode   = false; const b=document.getElementById('roadmapBtn');   if(b) b.classList.remove('active'); }
+    if (memoMode)      { memoMode      = false; const b=document.getElementById('memoBtn');        if(b) b.classList.remove('active'); }
+    if (editMode) toggleEditMode();
+    const tt = document.getElementById('topbarTitle');
+    const tm = document.getElementById('topbarMeta');
+    if (tt) tt.textContent = '📚 dマガジン';
+    if (tm) tm.textContent = `${SAVED_DMAG.reduce((s,c)=>s+(c.mags||[]).length,0)} 誌 · ${SAVED_DMAG.length} カテゴリ`;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    renderDmagazine();
+  } else {
+    const tt = document.getElementById('topbarTitle');
+    if (tt) tt.textContent = activeCategory === 'all' ? 'すべてのGem' : (categories.find(c=>c.id===activeCategory)?.name || '');
+    renderContent();
+    updateMeta();
+    updateSidebarActive(activeCategory);
+  }
+}
+
+function renderDmagazine() {
+  const content = document.getElementById('content');
+  if (!content) return;
+  const totalMags = SAVED_DMAG.reduce((s,c) => s + (c.mags||[]).length, 0);
+  let html = `
+    <div style="background:linear-gradient(135deg,#e91e63,#c2185b);color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:26px">📚</span>
+      <div>
+        <div style="font-size:15px;font-weight:700">dマガジン掲載誌</div>
+        <div style="font-size:10.5px;opacity:.82;font-family:var(--font-mono);margin-top:2px">${totalMags} 誌 · ${SAVED_DMAG.length} カテゴリ</div>
+      </div>
+    </div>
+    <div class="dm-cats">`;
+  SAVED_DMAG.forEach(cat => {
+    html += `<div class="dm-cat">
+      <div class="dm-cat-hd" onclick="toggleDmCat(this)">
+        <span class="dm-cat-icon">${cat.icon||'📰'}</span>
+        <span class="dm-cat-name">${cat.name}</span>
+        <span class="dm-cat-count">${(cat.mags||[]).length}</span>
+        <span class="dm-chevron">▾</span>
+      </div>
+      <div class="dm-body">
+        <div class="dm-body-inner">
+          <div class="dm-grid">`;
+    (cat.mags||[]).forEach(mag => {
+      const linked = mag.url && mag.url !== '#';
+      html += linked
+        ? `<a href="${mag.url}" target="_blank" class="dm-mag-btn linked"><span class="dm-mag-dot"></span>${mag.name}</a>`
+        : `<button class="dm-mag-btn"><span class="dm-mag-dot"></span>${mag.name}</button>`;
+    });
+    html += `</div></div></div></div>`;
+  });
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SOURCES
+// ═══════════════════════════════════════════════════════════════
+function toggleSources() {
+  sourcesMode = !sourcesMode;
+  const btn = document.getElementById('sourcesBtn');
+  if (btn) btn.classList.toggle('active', sourcesMode);
+  if (sourcesMode) {
+    if (dmagazineMode) { dmagazineMode = false; const b=document.getElementById('dmagazineBtn'); if(b) b.classList.remove('active'); }
+    if (roadmapMode)   { roadmapMode   = false; const b=document.getElementById('roadmapBtn');   if(b) b.classList.remove('active'); }
+    if (memoMode)      { memoMode      = false; const b=document.getElementById('memoBtn');        if(b) b.classList.remove('active'); }
+    if (editMode) toggleEditMode();
+    const tt = document.getElementById('topbarTitle');
+    const tm = document.getElementById('topbarMeta');
+    if (tt) tt.textContent = '📡 情報源';
+    if (tm) tm.textContent = `${SAVED_SOURCES.reduce((s,c)=>s+(c.sites||c.items||[]).length,0)} サイト · ${SAVED_SOURCES.length} カテゴリ`;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    renderSources();
+  } else {
+    const tt = document.getElementById('topbarTitle');
+    if (tt) tt.textContent = activeCategory === 'all' ? 'すべてのGem' : (categories.find(c=>c.id===activeCategory)?.name || '');
+    renderContent();
+    updateMeta();
+    updateSidebarActive(activeCategory);
+  }
+}
+
+function renderSources() {
+  const content = document.getElementById('content');
+  if (!content) return;
+  const totalSites = SAVED_SOURCES.reduce((s,c) => s + (c.sites||c.items||[]).length, 0);
+  let html = `
+    <div style="background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:26px">📡</span>
+      <div>
+        <div style="font-size:15px;font-weight:700">情報源・口コミ抽出サイト</div>
+        <div style="font-size:10.5px;opacity:.82;font-family:var(--font-mono);margin-top:2px">${totalSites} サイト · ${SAVED_SOURCES.length} カテゴリ</div>
+      </div>
+    </div>
+    <div class="dm-cats">`;
+  SAVED_SOURCES.forEach(cat => {
+    const items = cat.sites || cat.items || [];
+    html += `<div class="dm-cat">
+      <div class="dm-cat-hd" onclick="toggleDmCat(this)">
+        <span class="dm-cat-icon">${cat.icon||'🌐'}</span>
+        <span class="dm-cat-name">${cat.name}</span>
+        <span class="dm-cat-count">${items.length}</span>
+        <span class="dm-chevron">▾</span>
+      </div>
+      <div class="dm-body">
+        <div class="dm-body-inner">
+          <div class="dm-grid-col">`;
+    items.forEach(item => {
+      const linked = item.url && item.url !== '#';
+      const noteHtml = item.note ? `<span class="dm-site-note"> — ${item.note}</span>` : '';
+      html += linked
+        ? `<a href="${item.url}" target="_blank" class="dm-mag-btn linked"><span class="dm-mag-dot"></span>${item.name}${noteHtml}</a>`
+        : `<button class="dm-mag-btn"><span class="dm-mag-dot"></span>${item.name}${noteHtml}</button>`;
+    });
+    html += `</div></div></div></div>`;
+  });
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ROADMAP
+// ═══════════════════════════════════════════════════════════════
+const ROADMAP = {
+  phases: [
+    { id:'rp1', label:'企画・リサーチ', time:'~30 min', cls:'rp1' },
+    { id:'rp2', label:'コンテンツ生成', time:'~45 min', cls:'rp2' },
+    { id:'rp3', label:'推敲・最適化',   time:'~20 min', cls:'rp3' },
+    { id:'rp4', label:'最終調整・予約', time:'~15 min', cls:'rp4' }
+  ],
+  groups: [
+    { id:'G1', phase:'rp1', name:'ゴール & 導線設計', time:'5 min', steps:[
+      { name:'Xゴール＆導線設計｜0-conductor', gem:'Xゴール＆導線設計｜0-conductor', type:'skill', note:'KGI/KPI・対象媒体・導線マップを確定' },
+      { name:'ビジネスモデル相談用Gem', gem:'ビジネスモデル相談用Gem', type:'gem', note:'マネタイズ全体像の俯瞰' }
+    ]},
+    { id:'G2', phase:'rp1', name:'トレンド & ネタ採掘', time:'10 min', steps:[
+      { name:'dマガジン: ネタ収集・トレンド抽出AI', gem:'⓿ dマガジン: ネタ収集・トレンド抽出AI', type:'gem', note:'誌面からSNSネタを抽出' },
+      { name:'Googleトレンド確認', type:'manual', note:'需要・検索量を確認' },
+      { name:'❶ネタ採掘GPT', gem:'❶ネタ採掘GPT（【ジャンル名】収集型）', type:'gem', note:'ジャンル特化ネタ収集' }
+    ]},
+    { id:'G3', phase:'rp1', name:'競合 & ペルソナ分析', time:'15 min', steps:[
+      { name:'全方位UGC・ディープインサイトOSINT', gem:'全方位UGC・ディープ本音発掘型', type:'gem', note:'口コミからペインを抽出' },
+      { name:'❶ペイン抽出＆共感ライター', gem:'❶ペイン抽出＆共感ライター', type:'gem', note:'ペインを言語化' },
+      { name:'ペルソナ＆ジャーニー設計アシスタント', gem:'ペルソナ＆ジャーニー設計アシスタント', type:'gem', note:'ターゲット像を確定' }
+    ]},
+    { id:'G4', phase:'rp2', name:'SNS投稿テキスト生成', time:'15 min', steps:[
+      { name:'❸dマガジン:投稿ネタ構成AI', gem:'❸dマガジン:投稿ネタ構成AI', type:'gem', note:'荒いメモ→投稿構成案' },
+      { name:'エンゲージメント・ビルダー', gem:'エンゲージメント・ビルダー', type:'gem', note:'共感テキストを生成' },
+      { name:'❷原因解決＆CTAジェネレーター', gem:'❷原因解決＆CTAジェネレーター', type:'gem', note:'CTA文を生成' },
+      { name:'⑦ SNS投稿作成GPT', gem:'⑦ SNS投稿作成GPT', type:'gem', note:'媒体別テキスト最適化' }
+    ]},
+    { id:'G5', phase:'rp2', name:'画像 & 動画クリエイティブ', time:'20 min', steps:[
+      { name:'❾キャンバ Pro｜SNS編集手順書', gem:'❾キャンバ Pro｜SNS編集手順書・仕様書メーカー', type:'gem', note:'Canva操作SOPを出力' },
+      { name:'✴️Filmora15 SNSディレクター', gem:'✴️Filmora15 SNSディレクター（台本＆仕様書自動生成）', type:'gem', note:'動画台本＆Filmora SOP' },
+      { name:'🖼️ Gemini画像プロンプト・ディレクター', gem:'🖼️ Gemini画像プロンプト・ディレクター', type:'gem', note:'画像プロンプトを生成' }
+    ]},
+    { id:'G6', phase:'rp2', name:'YouTube / note 台本', time:'10 min', steps:[
+      { name:'YouTube台本＆演出生成アシスタント', gem:'YouTube台本＆演出生成アシスタント（汎用型）', type:'gem', note:'YT台本を生成' },
+      { name:'1️⃣売れるnote構成案', gem:'1️⃣売れるnote構成案の自動生成モジュール', type:'gem', note:'note有料記事の構成案' }
+    ]},
+    { id:'G7', phase:'rp3', name:'コンプライアンス & レビュー', time:'10 min', steps:[
+      { name:'守：EPPM×YMYL遵守', gem:'守：EPPM×YMYL遵守', type:'skill', note:'NG表現・注意書きをチェック' },
+      { name:'監査：プロフィール/固定/OGP', gem:'監査：プロフィール/固定/OGP/CTA（Page Analyzer）', type:'skill', note:'導線・CTAをチェック' }
+    ]},
+    { id:'G8', phase:'rp3', name:'A/Bテスト設計', time:'10 min', steps:[
+      { name:'❽A/Bテスト設計＆計測SSOT', gem:'❽A/Bテスト設計＆計測SSOT（Single Source of Truth）GPT', type:'skill', note:'テスト行列とKPIを設計' }
+    ]},
+    { id:'G9', phase:'rp4', name:'予約投稿データ成形', time:'10 min', steps:[
+      { name:'CraftTwix SNS予約シート・フォーマッター', gem:'CraftTwix SNS Marketing_Console_2026用SNS予約シート・フォーマッター', type:'skill', note:'CraftTwix用データを成形' },
+      { name:'Buffer投稿クリエイター', gem:'Buffer投稿クリエイター', type:'skill', note:'Buffer CSVデータを成形' }
+    ]},
+    { id:'G10', phase:'rp4', name:'HTMLとして保存 & 振り返り', time:'5 min', steps:[
+      { name:'HTMLとして保存（saveAsHtml）', type:'manual', note:'トップバーの「💾 HTMLとして保存」をクリック' },
+      { name:'❽A/Bテスト設計でログを更新', gem:'❽A/Bテスト設計＆計測SSOT', type:'skill', note:'計測データを記録' }
+    ]}
+  ]
+};
+
+let rmPhase = 'rp1';
+
+function findGemUrl(name) {
+  for (const cat of categories) {
+    const g = (cat.gems||[]).find(gem => gem.name === name || gem.name.includes(name.slice(0,6)));
+    if (g?.url) return g.url;
+  }
+  return null;
+}
+
+function toggleRmGroup(el) {
+  el.parentElement.classList.toggle('open');
+}
+
+function selectRoadmapPhase(phase) {
+  rmPhase = phase;
+  document.querySelectorAll('.rm-phase-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll(`.rm-phase-tab`).forEach(t => {
+    if (t.dataset.phase === phase) t.classList.add('active');
+  });
+  renderRoadmapGroups();
+}
+
+function renderRoadmapGroups() {
+  const wrap = document.getElementById('rmGroups');
+  if (!wrap) return;
+  const groups = ROADMAP.groups.filter(g => g.phase === rmPhase);
+  let html = '';
+  groups.forEach(grp => {
+    html += `<div class="rm-group">
+      <div class="rm-group-hd" onclick="toggleRmGroup(this)">
+        <span class="rm-group-id">${grp.id}</span>
+        <span class="rm-group-name">${grp.name}</span>
+        <span class="rm-group-time">${grp.time}</span>
+        <span class="rm-chevron">▾</span>
+      </div>
+      <div class="rm-step-wrap">`;
+    grp.steps.forEach(step => {
+      const url = step.gem ? findGemUrl(step.gem) : null;
+      const badgeCls = step.type==='gem' ? 'rm-b-gem' : step.type==='skill' ? 'rm-b-skill' : 'rm-b-manual';
+      const badgeLabel = step.type==='gem' ? 'GEM' : step.type==='skill' ? 'SKILL' : 'MANUAL';
+      html += `<div class="rm-step${url?' rm-linked':''}">
+        <span class="rm-badge ${badgeCls}">${badgeLabel}</span>
+        <div class="rm-step-body">
+          <span class="rm-step-name">${url ? `<a href="${url}" target="_blank">${step.name}</a>` : step.name}</span>
+          ${step.note ? `<span class="rm-step-note">${step.note}</span>` : ''}
+        </div>
+        ${url ? '<span class="rm-arr">↗</span>' : ''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  wrap.innerHTML = html;
+}
+
+function toggleRoadmap() {
+  roadmapMode = !roadmapMode;
+  const btn = document.getElementById('roadmapBtn');
+  if (btn) btn.classList.toggle('active', roadmapMode);
+  if (roadmapMode) {
+    if (dmagazineMode) { dmagazineMode = false; const b=document.getElementById('dmagazineBtn'); if(b) b.classList.remove('active'); }
+    if (sourcesMode)   { sourcesMode   = false; const b=document.getElementById('sourcesBtn');   if(b) b.classList.remove('active'); }
+    if (memoMode)      { memoMode      = false; const b=document.getElementById('memoBtn');        if(b) b.classList.remove('active'); }
+    if (editMode) toggleEditMode();
+    const tt = document.getElementById('topbarTitle');
+    const tm = document.getElementById('topbarMeta');
+    if (tt) tt.textContent = '🗺 ロードマップ';
+    if (tm) tm.textContent = `${ROADMAP.phases.length} フェーズ · ${ROADMAP.groups.length} グループ`;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    renderRoadmap();
+  } else {
+    const tt = document.getElementById('topbarTitle');
+    if (tt) tt.textContent = activeCategory === 'all' ? 'すべてのGem' : (categories.find(c=>c.id===activeCategory)?.name || '');
+    renderContent();
+    updateMeta();
+    updateSidebarActive(activeCategory);
+  }
+}
+
+function renderRoadmap() {
+  const content = document.getElementById('content');
+  if (!content) return;
+  let tabsHtml = ROADMAP.phases.map((p, i) =>
+    `<div class="rm-phase-tab ${p.cls}${p.id===rmPhase?' active':''}" data-phase="${p.id}" onclick="selectRoadmapPhase('${p.id}')">
+      <span class="rm-phase-num">PHASE ${i+1}</span>
+      <span class="rm-phase-name">${p.label}</span>
+      <span class="rm-phase-time">${p.time}</span>
+    </div>`
+  ).join('');
+
+  content.innerHTML = `
+    <div style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:26px">🗺</span>
+      <div>
+        <div style="font-size:15px;font-weight:700">SNS制作ロードマップ</div>
+        <div style="font-size:10.5px;opacity:.82;font-family:var(--font-mono);margin-top:2px">企画〜予約投稿の全工程 · ${ROADMAP.groups.length} グループ · 合計約110分</div>
+      </div>
+    </div>
+    <div class="rm-phase-tabs">${tabsHtml}</div>
+    <div class="rm-groups" id="rmGroups"></div>`;
+
+  renderRoadmapGroups();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADVISOR (コンシェルジュ)
+// ═══════════════════════════════════════════════════════════════
+const ADVISOR_IDEAS = [
+  'TikTokショート動画を作りたい',
+  '競合アカウントを分析したい',
+  'dマガジンからネタを抽出したい',
+  'Xのアフィリ投稿を量産したい',
+  'note有料記事を設計したい',
+  'LINEへの導線を設計したい',
+  'Instagramリール台本を作りたい',
+  'プロフィールと固定ポストを改善したい',
+  'YouTube台本を一から作りたい',
+  'A/Bテストを設計したい',
+  '投稿カレンダーを30日分作りたい',
+  'コンプライアンスチェックをしたい'
+];
+
+let advisorHistory = [];
+let advisorGoal = '';
+
+// ─── API Key helpers ──────────────────────────────────────────
+function getAdvisorApiKey() {
+  try { return localStorage.getItem('gemhub_gemini_key') || ''; } catch(e) { return ''; }
+}
+function saveAdvisorApiKey(key) {
+  try { localStorage.setItem('gemhub_gemini_key', key); } catch(e) {}
+}
+function showAdvisorKeyPrompt(msg) {
+  const body = document.getElementById('advisorBody');
+  if (!body) return;
+  const current = getAdvisorApiKey();
+  body.innerHTML = `
+    <div style="padding:4px 0">
+      ${msg ? `<div class="advisor-error" style="margin-bottom:12px">⚠️ ${msg}</div>` : ''}
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">🔑 Gemini APIキー</div>
+      <div style="font-size:10.5px;color:var(--text3);line-height:1.6;margin-bottom:10px">
+        <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">aistudio.google.com/apikey</a> でキーを取得し、ここに入力してください。<br>
+        キーはブラウザのlocalStorageにのみ保存されます。
+      </div>
+      <input id="apiKeyInput" type="password" placeholder="AIza..." value="${current}"
+        style="width:100%;border:1.5px solid var(--border-mid);border-radius:8px;padding:8px 11px;font-size:12.5px;font-family:var(--font-mono);color:var(--text);outline:none;background:var(--bg);margin-bottom:8px"
+        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-mid)'">
+      <div style="display:flex;gap:6px">
+        <button onclick="
+          const v=document.getElementById('apiKeyInput').value.trim();
+          if(!v){alert('APIキーを入力してください');return;}
+          saveAdvisorApiKey(v);
+          showToast('✅ APIキーを保存しました');
+          buildAdvisorWelcomeToBody();
+        " style="flex:1;padding:8px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">保存する</button>
+        ${current ? `<button onclick="buildAdvisorWelcomeToBody()" style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--border-mid);background:var(--bg);color:var(--text2);font-family:var(--font);font-size:12px;cursor:pointer">キャンセル</button>` : ''}
+      </div>
+    </div>`;
+}
+function buildAdvisorWelcomeToBody() {
+  const body = document.getElementById('advisorBody');
+  if (body) body.innerHTML = buildAdvisorWelcome();
+}
+let currentIdeaIndex = 0;
+
+function toggleAdvisor() {
+  const panel = document.getElementById('advisorPanel');
+  const overlay = document.getElementById('advisorOverlay');
+  if (!panel || !overlay) return;
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) {
+    closeAdvisor();
+  } else {
+    panel.classList.add('open');
+    overlay.classList.add('show');
+    document.getElementById('advisorBtn').classList.add('active');
+  }
+}
+
+function closeAdvisor() {
+  const panel = document.getElementById('advisorPanel');
+  const overlay = document.getElementById('advisorOverlay');
+  if (panel) panel.classList.remove('open');
+  if (overlay) overlay.classList.remove('show');
+  const btn = document.getElementById('advisorBtn');
+  if (btn) btn.classList.remove('active');
+}
+
+function advisorShuffle() {
+  const btn = document.getElementById('advisorShuffleBtn');
+  if (btn) { btn.classList.add('spin'); setTimeout(() => btn.classList.remove('spin'), 400); }
+  currentIdeaIndex = Math.floor(Math.random() * ADVISOR_IDEAS.length);
+  const ta = document.getElementById('advisorInput');
+  if (ta) ta.value = ADVISOR_IDEAS[currentIdeaIndex];
+  ta.focus();
+}
+
+function advisorRandom() {
+  const idx = Math.floor(Math.random() * ADVISOR_IDEAS.length);
+  const ta = document.getElementById('advisorInput');
+  if (ta) ta.value = ADVISOR_IDEAS[idx];
+  advisorSubmit();
+}
+
+function advisorNewSession() {
+  advisorHistory = [];
+  advisorGoal = '';
+  const body = document.getElementById('advisorBody');
+  if (body) body.innerHTML = buildAdvisorWelcome();
+  const ta = document.getElementById('advisorInput');
+  if (ta) ta.value = '';
+}
+
+function buildAdvisorWelcome() {
+  const examples = ADVISOR_IDEAS.slice(0,4).map(idea =>
+    `<button class="advisor-example" onclick="advisorQuickFill('${idea}')">${idea}</button>`
+  ).join('');
+  return `<div class="advisor-welcome">
+    <div class="advisor-welcome-icon">🤖</div>
+    <div class="advisor-welcome-msg">「〜したい」を入力すると<br>最適なGem使用順をAIが提案します</div>
+    <div class="advisor-shuffle-row">
+      <span class="advisor-shuffle-label">例を参考に入力：</span>
+      <button class="advisor-shuffle-btn" id="advisorShuffleBtn" onclick="advisorShuffle()">
+        <span class="shuffle-icon">🔀</span> シャッフル
+      </button>
+    </div>
+    <div class="advisor-examples">${examples}</div>
+    <div class="advisor-divider">または</div>
+    <button class="advisor-random-btn" onclick="advisorRandom()">🎲 ランダムで相談する</button>
+  </div>`;
+}
+
+function advisorQuickFill(text) {
+  const ta = document.getElementById('advisorInput');
+  if (ta) { ta.value = text; ta.focus(); }
+}
+
+async function advisorSubmit() {
+  const ta = document.getElementById('advisorInput');
+  const input = ta ? ta.value.trim() : '';
+  if (!input) return;
+
+  // API Key check
+  const apiKey = getAdvisorApiKey();
+  if (!apiKey) {
+    showAdvisorKeyPrompt('APIキーを入力してから送信してください。');
+    return;
+  }
+
+  if (ta) ta.value = '';
+  const body = document.getElementById('advisorBody');
+  if (!body) return;
+
+  if (!advisorGoal) advisorGoal = input;
+  advisorHistory.push({ role: 'user', parts: [{ text: input }] });
+
+  // Show loading
+  body.innerHTML = `
+    <div class="advisor-goal-badge">${advisorGoal}</div>
+    ${advisorHistory.length > 1 ? `<button class="advisor-new-btn" onclick="advisorNewSession()">＋ 新しい相談</button>` : ''}
+    <div class="advisor-loading">🤖 Gemの使用順を検討中...</div>`;
+
+  // Build gem catalog for context
+  const gemList = categories.flatMap(c => (c.gems||[]).map(g =>
+    `- ${g.name}${g.url?' [URL有]':''}${g.note?' ('+g.note+')':''}`
+  )).join('\n');
+
+  const systemInstruction = `あなたはGemHubのコンシェルジュです。ユーザーの「〜したい」という目標に対して、登録済みGemの使用順序と理由を提案してください。
+返答は日本語で、マークダウン形式（**太字**・番号付きリスト）を使い、200〜400字程度に収めてください。
+
+登録済みGem一覧：
+${gemList}`;
+
+  try {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: systemInstruction }] },
+        contents: advisorHistory
+      })
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(`${response.status}: ${err.error?.message || response.statusText}`);
+    }
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '回答を取得できませんでした。';
+    advisorHistory.push({ role: 'model', parts: [{ text }] });
+
+    // Render response with simple markdown
+    const rendered = text
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+
+    body.innerHTML = `
+      <div class="advisor-goal-badge">${advisorGoal}</div>
+      <button class="advisor-new-btn" onclick="advisorNewSession()">＋ 新しい相談</button>
+      <div class="advisor-response"><p>${rendered}</p></div>`;
+  } catch(e) {
+    body.innerHTML = `
+      <div class="advisor-goal-badge">${advisorGoal}</div>
+      <div class="advisor-error">❌ API呼び出しエラー: ${e.message}<br><small style="opacity:.75">APIキーを確認するか、🔑ボタンで再設定してください。</small></div>
+      <button class="advisor-new-btn" onclick="advisorNewSession()">＋ 新しい相談</button>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 📝 MEMO MODE
+// ═══════════════════════════════════════════════════════════════
+function toggleMemo() {
+  memoMode = !memoMode;
+  const btn = document.getElementById('memoBtn');
+  if (btn) btn.classList.toggle('active', memoMode);
+  if (memoMode) {
+    if (dmagazineMode) { dmagazineMode = false; const b=document.getElementById('dmagazineBtn'); if(b) b.classList.remove('active'); }
+    if (sourcesMode)   { sourcesMode   = false; const b=document.getElementById('sourcesBtn');   if(b) b.classList.remove('active'); }
+    if (roadmapMode)   { roadmapMode   = false; const b=document.getElementById('roadmapBtn');   if(b) b.classList.remove('active'); }
+    if (editMode)      {
+      editMode = false;
+      document.body.classList.remove('edit-mode');
+      const eb = document.getElementById('editToggleBtn');
+      if (eb) { eb.textContent = '✏️ 編集'; eb.classList.remove('active'); }
+      const banner = document.getElementById('editBanner');
+      if (banner) banner.style.display = 'none';
+    }
+    document.getElementById('searchInput').value = '';
+    searchQuery = '';
+    const tt = document.getElementById('topbarTitle');
+    const tm = document.getElementById('topbarMeta');
+    if (tt) tt.textContent = '📝 メモ';
+    if (tm) tm.textContent = 'ローカルメモ（自動保存） / aNotepad（ログイン・デバイス間同期）';
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    renderMemo();
+  } else {
+    const tt = document.getElementById('topbarTitle');
+    const tm = document.getElementById('topbarMeta');
+    if (tt) tt.textContent = activeCategory === 'all'
+      ? 'すべてのGem'
+      : (categories.find(c => c.id === activeCategory)?.name || '');
+    renderContent();
+    updateMeta();
+    updateSidebarActive(activeCategory);
+  }
+}
+
+function renderMemo() {
+  const content = document.getElementById('content');
+  if (!content) return;
+  content.innerHTML = `
+    <div style="padding:4px 0 24px">
+      <div style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;box-shadow:0 3px 14px rgba(5,150,105,.3)">
+        <span style="font-size:26px;flex-shrink:0">📝</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;line-height:1.2">メモ帳</div>
+          <div style="font-size:10.5px;opacity:.82;font-family:var(--font-mono);margin-top:2px">
+            ローカルメモ（自動保存） / aNotepad（ログイン・デバイス間同期対応）
+          </div>
+        </div>
+      </div>
+      <div id="memoGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+        <div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-wrap:wrap">
+            <span style="font-size:14px">💾</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text)">ローカルメモ</span>
+            <span style="font-size:10px;font-family:var(--font-mono);color:var(--text3);background:rgba(0,0,0,.06);border-radius:8px;padding:1px 7px">自動保存・ログイン不要</span>
+            <span id="memoSaveStatus" style="font-size:10px;font-family:var(--font-mono);color:var(--green);margin-left:auto;opacity:0;transition:opacity .4s">✓ 保存済み</span>
+          </div>
+          <div style="border-radius:10px;overflow:hidden;border:1px solid var(--border-mid);background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+            <div style="display:flex;align-items:center;gap:6px;padding:8px 11px;border-bottom:1px solid var(--border);background:var(--bg-panel)">
+              <input id="memoTitle" type="text" placeholder="タイトル（任意）"
+                value="${(localStorage.getItem('gemhub_memo_title')||'').replace(/"/g,'&quot;')}"
+                style="flex:1;border:none;background:transparent;font-size:12.5px;font-family:var(--font);color:var(--text);outline:none;font-weight:600"
+                oninput="memoAutoSave()">
+              <button onclick="memoDownload()" title="テキストファイルとしてダウンロード"
+                style="background:none;border:1.5px solid var(--border-mid);border-radius:6px;cursor:pointer;font-size:11px;padding:3px 8px;color:var(--text3);transition:all .14s"
+                onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+                onmouseout="this.style.borderColor='var(--border-mid)';this.style.color='var(--text3)'">⬇ DL</button>
+              <button onclick="memoClear()" title="メモを消去"
+                style="background:none;border:1.5px solid var(--border-mid);border-radius:6px;cursor:pointer;font-size:11px;padding:3px 8px;color:var(--text3);transition:all .14s"
+                onmouseover="this.style.borderColor='var(--danger)';this.style.color='var(--danger)'"
+                onmouseout="this.style.borderColor='var(--border-mid)';this.style.color='var(--text3)'">🗑</button>
+            </div>
+            <textarea id="memoBody" placeholder="ここにメモを入力してください。自動的に保存されます。"
+              style="width:100%;height:510px;border:none;resize:none;padding:12px 14px;font-size:13px;font-family:var(--font);color:var(--text);line-height:1.7;background:#fff;outline:none;display:block"
+              oninput="memoAutoSave()">${(localStorage.getItem('gemhub_memo_body')||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:7px;padding:6px 9px;line-height:1.65;background:rgba(52,168,83,.07);border:1px solid rgba(52,168,83,.2);border-radius:6px">
+            ✅ メモはブラウザの <strong>localStorage</strong> に自動保存されます。<br>
+            同じブラウザ・同じHTMLファイルを開けば次回も内容が残ります。
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-wrap:wrap">
+            <span style="font-size:14px">🔐</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text)">aNotepad</span>
+            <span style="font-size:10px;font-family:var(--font-mono);color:var(--text3);background:rgba(0,0,0,.06);border-radius:8px;padding:1px 7px">ログイン・デバイス間同期対応</span>
+            <a href="https://jp.anotepad.com/" target="_blank"
+               style="font-size:10px;color:var(--accent);text-decoration:none;margin-left:auto;white-space:nowrap">別タブで開く ↗</a>
+          </div>
+          <div style="border-radius:10px;overflow:hidden;border:1px solid var(--border-mid);background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+            <iframe src="https://jp.anotepad.com/" width="100%" height="560px" style="border:none;display:block" loading="lazy"></iframe>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:7px;padding:6px 9px;line-height:1.65;background:rgba(52,168,83,.07);border:1px solid rgba(52,168,83,.2);border-radius:6px">
+            ✅ ログイン後に「保存」→ 発行された専用URLを<br>
+            このHTMLの <code style="background:rgba(0,0,0,.07);border-radius:3px;padding:0 4px">src="https://jp.anotepad.com/"</code> 部分に上書きすると<br>
+            特定ノートへ直接アクセスできます。
+          </div>
+        </div>
+      </div>
+      <style>@media(max-width:768px){#memoGrid{grid-template-columns:1fr !important}}</style>
+    </div>`;
+
+  // ローカルメモ自動保存
+  window.memoAutoSave = (function() {
+    let tid = null;
+    return function() {
+      const status = document.getElementById('memoSaveStatus');
+      if (status) { status.style.opacity = '0'; }
+      clearTimeout(tid);
+      tid = setTimeout(() => {
+        const title = document.getElementById('memoTitle');
+        const body  = document.getElementById('memoBody');
+        try {
+          if (title) localStorage.setItem('gemhub_memo_title', title.value);
+          if (body)  localStorage.setItem('gemhub_memo_body',  body.value);
+        } catch(e) {}
+        if (status) { status.style.opacity = '1'; setTimeout(() => { status.style.opacity='0'; }, 1800); }
+      }, 600);
+    };
+  })();
+
+  window.memoDownload = function() {
+    const title = (document.getElementById('memoTitle')?.value || 'memo').replace(/[^\w\-_. ]/g,'_') || 'memo';
+    const body  = document.getElementById('memoBody')?.value || '';
+    const blob  = new Blob([body], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = title + '.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  window.memoClear = function() {
+    if (!confirm('メモの内容をすべて消去しますか？')) return;
+    const body = document.getElementById('memoBody');
+    if (body) { body.value = ''; }
+    try { localStorage.removeItem('gemhub_memo_body'); } catch(e) {}
+    showToast('🗑️ メモを消去しました');
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+function init() {
+  // Load from localStorage if available, else use embedded data
+  let loaded = false;
+  try {
+    const stored = localStorage.getItem('gemhub_cats');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length) {
+        categories = migrateGemIds(parsed);
+        loaded = true;
+      }
+    }
+  } catch(e) { console.warn('localStorage load failed:', e); }
+
+  if (!loaded) {
+    categories = migrateGemIds(JSON.parse(JSON.stringify(SAVED_DATA)));
+  }
+
+  // Calculate next ID
+  categories.forEach(cat => {
+    (cat.gems||[]).forEach(g => {
+      const n = parseInt(String(g.id).replace(/\D/g, ''));
+      if (!isNaN(n) && n >= nextId) nextId = n + 1;
+    });
+  });
+
+  // Sidebar search
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', e => {
+      searchQuery = e.target.value.trim();
+      renderSidebar();
+      renderContent();
+    });
+  }
+
+  // Mobile toggle
+  const mobToggle = document.getElementById('mobToggle');
+  const sidebar   = document.getElementById('sidebar');
+  const overlay   = document.getElementById('overlay');
+  if (mobToggle) {
+    mobToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('show');
+    });
+  }
+  if (overlay) {
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+    });
+  }
+
+  // Advisor panel (inject if not present)
+  if (!document.getElementById('advisorPanel')) {
+    document.body.insertAdjacentHTML('beforeend', `
+      <div class="advisor-overlay" id="advisorOverlay" onclick="closeAdvisor()"></div>
+      <div class="advisor-panel" id="advisorPanel">
+        <div class="advisor-hd">
+          <span class="advisor-hd-icon">🤖</span>
+          <div class="advisor-hd-text">
+            <div class="advisor-hd-title">AIコンシェルジュ</div>
+            <div class="advisor-hd-sub">Powered by Gemini 2.0 Flash</div>
+          </div>
+          <button onclick="showAdvisorKeyPrompt('')" title="APIキーを設定"
+            style="background:none;border:1.5px solid var(--border-mid);border-radius:6px;cursor:pointer;font-size:13px;padding:3px 7px;color:var(--text3);margin-right:4px;transition:all .14s;line-height:1"
+            onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+            onmouseout="this.style.borderColor='var(--border-mid)';this.style.color='var(--text3)'">🔑</button>
+          <button class="advisor-close" onclick="closeAdvisor()">✕</button>
+        </div>
+        <div class="advisor-body" id="advisorBody"></div>
+        <div class="advisor-input-area">
+          <textarea class="advisor-textarea" id="advisorInput" rows="3"
+            placeholder="例: TikTokショート動画を量産したい"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();advisorSubmit()}"
+          ></textarea>
+          <div class="advisor-input-row">
+            <span class="advisor-hint">Enterで送信 / Shift+Enterで改行</span>
+            <button class="advisor-submit" onclick="advisorSubmit()">🚀 提案する</button>
+          </div>
+        </div>
+      </div>`);
+  }
+
+  const advisorBody = document.getElementById('advisorBody');
+  if (advisorBody && !advisorBody.innerHTML.trim()) {
+    if (getAdvisorApiKey()) {
+      advisorBody.innerHTML = buildAdvisorWelcome();
+    } else {
+      showAdvisorKeyPrompt('');
+    }
+  }
+
+  renderSidebar();
+  renderContent();
+  updateMeta();
+
+  const tt = document.getElementById('topbarTitle');
+  if (tt) tt.textContent = 'すべてのGem';
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
