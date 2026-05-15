@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategic Content Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN TOKENS — Refined Light Theme
+   ============================================================ */
+:root {
+  --page:    #F0F2F6;
+  --surface: #FFFFFF;
+  --sf2:     #F7F8FC;
+  --sidebar: #FAFBFD;
+
+  --accent:        #4361EE;
+  --accent-hover:  #3451D1;
+  --accent-light:  rgba(67,97,238,.07);
+  --accent-border: rgba(67,97,238,.22);
+
+  --t0: #1C1D2E;
+  --t1: #5A5B78;
+  --t2: #9A9BB5;
+  --t3: #C4C5D6;
+
+  --border:    rgba(0,0,0,.06);
+  --border-md: rgba(0,0,0,.10);
+
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,.07), 0 8px 32px rgba(0,0,0,.05);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,.09), 0 16px 48px rgba(0,0,0,.06);
+
+  --red-bg:#FEE2E2; --red-tx:#991B1B; --red-bd:rgba(239,68,68,.25);
+  --vio-bg:rgba(124,58,237,.08); --vio-tx:#6D28D9; --vio-bd:rgba(124,58,237,.2);
+  --grn-bg:rgba(16,185,129,.09); --grn-tx:#0D7A55; --grn-bd:rgba(16,185,129,.22);
+  --org-bg:rgba(245,158,11,.10); --org-tx:#B45309; --org-bd:rgba(245,158,11,.25);
+  --blu-bg:rgba(59,130,246,.09); --blu-tx:#1D4ED8; --blu-bd:rgba(59,130,246,.22);
+  --slt-bg:rgba(100,116,139,.08);--slt-tx:#475569; --slt-bd:rgba(100,116,139,.20);
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--page); color:var(--t0);
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:14px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.app  {display:flex;flex-direction:column;height:100vh}
+.main {display:flex;flex:1;overflow:hidden;min-height:0}
+
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px; height:58px;
+  background:var(--surface); border-bottom:1px solid var(--border-md);
+  box-shadow:var(--shadow-xs); flex-shrink:0; z-index:10;
+}
+
+.left{
+  width:344px; min-width:300px; flex-shrink:0;
+  background:var(--sidebar); border-right:1px solid var(--border-md);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.left-scroll{
+  flex:1; overflow-y:auto;
+  padding:20px 18px;
+  display:flex; flex-direction:column; gap:18px;
+}
+.left-scroll::-webkit-scrollbar{width:3px}
+.left-scroll::-webkit-scrollbar-thumb{background:var(--border-md);border-radius:2px}
+.left-foot{
+  padding:16px 18px; border-top:1px solid var(--border-md);
+  background:var(--surface); flex-shrink:0;
+}
+
+.right{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+.tabs-bar{
+  display:flex; background:var(--surface);
+  border-bottom:1px solid var(--border-md);
+  overflow-x:auto; flex-shrink:0; scrollbar-width:none;
+  box-shadow:var(--shadow-xs);
+}
+.tabs-bar::-webkit-scrollbar{display:none}
+
+.output{
+  flex:1; overflow-y:auto;
+  padding:24px 28px; background:var(--page);
+}
+.output::-webkit-scrollbar{width:4px}
+.output::-webkit-scrollbar-track{background:transparent}
+.output::-webkit-scrollbar-thumb{background:var(--border-md);border-radius:2px}
+
+/* ============================================================
+   HEADER ELEMENTS
+   ============================================================ */
+.logo-wrap{display:flex;align-items:center;gap:11px}
+.logo-icon{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,#4361EE,#3451D1);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(67,97,238,.35);flex-shrink:0;
+}
+.logo-icon span{font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#fff}
+.logo-title{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:var(--t0);letter-spacing:-.02em}
+.logo-title em{color:var(--accent);font-style:normal}
+.logo-sub{font-size:10.5px;color:var(--t2);margin-top:1px;letter-spacing:.03em}
+
+.pill{
+  font-family:'Syne',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.07em;
+  padding:3px 9px;border-radius:20px;border:1px solid;
+}
+.pill-blue{background:var(--accent-light);color:var(--accent);border-color:var(--accent-border)}
+.pill-vio{background:var(--vio-bg);color:var(--vio-tx);border-color:var(--vio-bd)}
+
+/* ============================================================
+   FORM
+   ============================================================ */
+.lbl{
+  display:block;
+  font-family:'Syne',sans-serif;font-size:10.5px;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;
+  color:var(--t1);margin-bottom:6px;
+}
+.sec-lbl{
+  display:block;
+  font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--t2);margin-bottom:8px;
+}
+.inp{
+  width:100%;
+  background:var(--surface);border:1px solid var(--border-md);
+  border-radius:9px;padding:9px 13px;
+  color:var(--t0);font-family:'Noto Sans JP',sans-serif;font-size:13px;
+  box-shadow:var(--shadow-xs);
+  transition:border-color .18s,box-shadow .18s;
+  outline:none;appearance:none;
+}
+.inp:focus{border-color:var(--accent-border);box-shadow:0 0 0 3px var(--accent-light),var(--shadow-xs)}
+.inp::placeholder{color:var(--t3)}
+textarea.inp{resize:none;line-height:1.7}
+select.inp{
+  cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239A9BB5' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:30px;
+}
+.inp-wrap{position:relative}
+.eye-btn{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--t2);font-size:14px;padding:3px;
+  transition:color .15s;
+}
+.eye-btn:hover{color:var(--t1)}
+
+.opt-row{display:flex;align-items:center;gap:9px;cursor:pointer;padding:3px 0}
+.opt-row input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px;flex-shrink:0;cursor:pointer}
+.opt-row span{font-size:12.5px;color:var(--t1);user-select:none}
+
+.hint{font-size:11px;color:var(--t2);margin-top:5px}
+.divider{border:none;border-top:1px solid var(--border)}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn-gen{
+  width:100%;padding:13px 16px;border:none;border-radius:10px;cursor:pointer;
+  background:linear-gradient(135deg,#4361EE 0%,#3451D1 100%);
+  color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:13.5px;letter-spacing:.03em;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 2px 8px rgba(67,97,238,.3),0 1px 2px rgba(67,97,238,.2);
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.btn-gen::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+  transform:translateX(-100%);transition:transform .45s;
+}
+.btn-gen:hover::after{transform:translateX(100%)}
+.btn-gen:hover{
+  background:linear-gradient(135deg,#3A54E0,#2E48C4);
+  box-shadow:0 4px 16px rgba(67,97,238,.4);
+  transform:translateY(-1px);
+}
+.btn-gen:active{transform:translateY(0)}
+.btn-gen:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+.btn-copy{
+  font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;
+  background:var(--sf2);border:1px solid var(--border-md);color:var(--t1);
+  padding:4px 11px;border-radius:6px;cursor:pointer;white-space:nowrap;
+  transition:all .15s;box-shadow:var(--shadow-xs);
+}
+.btn-copy:hover{border-color:var(--accent-border);color:var(--accent);background:var(--accent-light)}
+.btn-copy.copied{color:var(--grn-tx);border-color:var(--grn-bd);background:var(--grn-bg)}
+
+.btn-sec{
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.05em;
+  background:var(--surface);border:1px solid var(--border-md);color:var(--t1);
+  padding:6px 14px;border-radius:7px;cursor:pointer;
+  transition:all .15s;box-shadow:var(--shadow-xs);
+}
+.btn-sec:hover{border-color:var(--accent-border);color:var(--accent)}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+.tab{
+  padding:0 18px;height:46px;
+  font-family:'Syne',sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.04em;
+  white-space:nowrap;color:var(--t2);
+  border:none;border-bottom:2px solid transparent;
+  background:none;cursor:pointer;transition:color .18s,border-color .18s;
+}
+.tab:hover{color:var(--t1)}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;box-shadow:var(--shadow-sm);overflow:hidden;
+  transition:box-shadow .2s,border-color .2s;
+}
+.card:hover{box-shadow:var(--shadow-md);border-color:var(--border-md)}
+.card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 16px;border-bottom:1px solid var(--border);
+  background:var(--sf2);
+}
+.card-body{padding:16px}
+
+.post-text{
+  font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.78;
+  color:var(--t0);white-space:pre-wrap;word-break:break-word;
+  background:var(--sf2);border:1px solid var(--border);
+  border-radius:8px;padding:14px;margin-bottom:10px;
+}
+
+.cc{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t2)}
+.cc.over{color:var(--red-tx);font-weight:600}
+
+.tip{
+  background:linear-gradient(135deg,rgba(67,97,238,.05),rgba(67,97,238,.02));
+  border:1px solid var(--accent-border);
+  border-radius:9px;padding:11px 14px;
+  font-size:12px;color:var(--t1);line-height:1.68;
+}
+.tip strong{color:var(--accent)}
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:'Syne',sans-serif;font-size:9.5px;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;
+  padding:3px 8px;border-radius:5px;border:1px solid;
+}
+.b-red   {background:var(--red-bg);color:var(--red-tx);border-color:var(--red-bd)}
+.b-vio   {background:var(--vio-bg);color:var(--vio-tx);border-color:var(--vio-bd)}
+.b-grn   {background:var(--grn-bg);color:var(--grn-tx);border-color:var(--grn-bd)}
+.b-org   {background:var(--org-bg);color:var(--org-tx);border-color:var(--org-bd)}
+.b-blu   {background:var(--blu-bg);color:var(--blu-tx);border-color:var(--blu-bd)}
+.b-slt   {background:var(--slt-bg);color:var(--slt-tx);border-color:var(--slt-bd)}
+.b-acc   {background:var(--accent-light);color:var(--accent);border-color:var(--accent-border)}
+
+/* ============================================================
+   CALENDAR
+   ============================================================ */
+.cal-day{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;box-shadow:var(--shadow-sm);overflow:hidden;
+  margin-bottom:16px;transition:box-shadow .2s;
+}
+.cal-day:hover{box-shadow:var(--shadow-md)}
+.cal-day-head{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 18px;border-bottom:1px solid var(--border);
+  background:var(--sf2);
+}
+.day-pill{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:.1em;
+  background:var(--accent);color:#fff;
+  padding:4px 10px;border-radius:5px;
+  box-shadow:0 2px 6px rgba(67,97,238,.28);
+}
+
+.tl-wrap{position:relative;padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.tl-line{
+  position:absolute;left:30px;top:20px;bottom:20px;width:1px;
+  background:linear-gradient(180deg,var(--accent-border),var(--border));
+}
+.tl-item{position:relative;padding-left:46px}
+.tl-dot{
+  position:absolute;left:22px;top:16px;
+  width:9px;height:9px;border-radius:50%;transform:translateX(-50%);
+  background:var(--accent);
+  box-shadow:0 0 0 3px rgba(67,97,238,.14),0 0 8px rgba(67,97,238,.28);
+  z-index:1;
+}
+.tl-time{
+  font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;
+  color:var(--accent);letter-spacing:.1em;margin-bottom:5px;
+}
+.tl-card{
+  background:var(--sf2);border:1px solid var(--border);
+  border-radius:9px;padding:13px;
+  transition:border-color .18s,box-shadow .18s;
+}
+.tl-card:hover{border-color:var(--accent-border);box-shadow:0 2px 12px rgba(67,97,238,.06)}
+.tl-purpose{font-size:11.5px;color:var(--t2);margin-bottom:8px}
+.tl-post{
+  font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.75;
+  color:var(--t0);white-space:pre-wrap;word-break:break-word;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:7px;padding:10px 12px;margin-bottom:8px;
+}
+.tl-strategy{
+  font-size:11px;color:var(--t1);line-height:1.6;
+  padding:7px 10px;
+  background:linear-gradient(135deg,rgba(67,97,238,.04),rgba(67,97,238,.02));
+  border:1px solid rgba(67,97,238,.12);border-radius:6px;margin-bottom:8px;
+}
+
+/* ============================================================
+   PLACEHOLDER & LOADING
+   ============================================================ */
+.ph{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:340px;gap:12px;
+}
+.ph-icon{font-size:44px;opacity:.18}
+.ph-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--t2)}
+.ph-sub{font-size:12.5px;color:var(--t3);text-align:center;line-height:1.75}
+
+.loading{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:340px;gap:20px;
+}
+.dots{display:flex;gap:7px}
+.dots span{
+  width:8px;height:8px;border-radius:50%;background:var(--accent);
+  animation:pulse 1.4s infinite ease-in-out;
+}
+.dots span:nth-child(1){animation-delay:-.32s}
+.dots span:nth-child(2){animation-delay:-.16s}
+@keyframes pulse{0%,80%,100%{transform:scale(.2);opacity:.25}40%{transform:scale(1);opacity:1}}
+.ld-msg{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--t0);text-align:center}
+.ld-sub{font-size:12px;color:var(--t2);text-align:center;margin-top:4px}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fi{animation:fadeUp .32s ease forwards}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+.row-sb{display:flex;align-items:center;justify-content:space-between}
+.row-g8{display:flex;align-items:center;gap:8px}
+.col-g8{display:flex;flex-direction:column;gap:8px}
+.col-g6{display:flex;flex-direction:column;gap:6px}
+
+.export-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+.road-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.road-cell{background:var(--sf2);border:1px solid var(--border);border-radius:9px;padding:13px}
+.road-title{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;margin-bottom:7px}
+.road-body{font-size:11.5px;color:var(--t1);line-height:1.78}
+
+.af-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:var(--sf2);border:1px solid var(--border);border-radius:8px}
+.af-body{font-size:12px;color:var(--t1);line-height:1.65}
+.af-body b{color:var(--t0)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="header">
+  <div class="logo-wrap">
+    <div class="logo-icon"><span>SC</span></div>
+    <div>
+      <div class="logo-title">Strategic <em>Content</em> Generator</div>
+      <div class="logo-sub">体験談 → 7コンテンツ + 投稿カレンダー自動生成</div>
+    </div>
+  </div>
+  <div class="row-g8">
+    <span class="pill pill-blue">Gemini 2.5 Flash</span>
+    <span class="pill pill-vio">v2.0 Calendar</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="left">
+    <div class="left-scroll">
+
+      <div>
+        <label class="lbl" for="apiKey">🔑 Gemini API Key</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div class="inp-wrap" style="flex:1;">
+            <input type="password" id="apiKey" class="inp" placeholder="AIzaSy...">
+            <button class="eye-btn" onclick="toggleKey()">👁</button>
+          </div>
+          <button id="save-ak-btn" style="width: 38px; height: 38px; border-radius: 9px; border: 1px solid var(--border-md); background: var(--surface); display: flex; justify-content: center; align-items: center; font-size: 16px; cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-xs);" title="APIキーを保存">💾</button>
+        </div>
+        <p class="hint">Google AI Studio から取得してください</p>
+      </div>
+
+      <hr class="divider">
+
+      <div>
+        <label class="lbl" for="expInput">📝 体験談・商品情報</label>
+        <textarea id="expInput" class="inp" rows="13"
+          placeholder="体験談や商品レビューを自由に入力してください&#10;&#10;例：&#10;• 半年前から〇〇を使い始めた&#10;• 最初は半信半疑だったが...&#10;• 3ヶ月目から変化を感じた&#10;• 今では毎日の習慣になった&#10;• 価格は月〇〇円、公式サイトで購入"
+          oninput="updateCC()"></textarea>
+        <div class="row-sb" style="margin-top:5px">
+          <span class="hint" style="margin-top:0">具体的な数字・エピソードで精度UP</span>
+          <span class="cc" id="cc">0文字</span>
+        </div>
+      </div>
+
+      <div>
+        <span class="sec-lbl">⚙️ マーケティング技法</span>
+        <div class="col-g6">
+          <label class="opt-row"><input type="checkbox" id="oHero" checked><span>🗺️ ヒーローズジャーニー構造</span></label>
+          <label class="opt-row"><input type="checkbox" id="oZeig" checked><span>🎣 ツァイガルニク効果（未完ループ）</span></label>
+          <label class="opt-row"><input type="checkbox" id="oEnem" checked><span>⚔️ 仮想敵・対比構造</span></label>
+          <label class="opt-row"><input type="checkbox" id="oPas"  checked><span>💡 PASONA法則</span></label>
+          <label class="opt-row"><input type="checkbox" id="oSoc"  checked><span>👥 社会的証明・数字の力</span></label>
+        </div>
+      </div>
+
+      <div>
+        <label class="lbl" for="startDate">📅 カレンダー開始日</label>
+        <input type="date" id="startDate" class="inp">
+      </div>
+
+      <div>
+        <label class="lbl" for="postTime">🕐 メイン投稿時間帯</label>
+        <select id="postTime" class="inp">
+          <option value="morning">朝型（7時・20時）</option>
+          <option value="night">夜型（12時・21時）</option>
+          <option value="noon">昼型（12時・18時）</option>
+        </select>
+      </div>
+
+    </div>
+
+    <div class="left-foot">
+      <button class="btn-gen" id="genBtn" onclick="generate()">
+        <span id="btnIcon">⚡</span>
+        <span id="btnLabel">コンテンツを一括生成する</span>
+      </button>
+      <p style="text-align:center;font-size:11px;color:var(--t2);margin-top:7px">7種類のコンテンツ + 3日間スケジュール自動生成</p>
+    </div>
+  </div>
+
+  <div class="right">
+
+    <div class="tabs-bar">
+      <button class="tab on" data-tab="review"     onclick="switchTab('review',this)">⭐ レビュー記事</button>
+      <button class="tab"    data-tab="affiliate"  onclick="switchTab('affiliate',this)">💰 アフィリエイト</button>
+      <button class="tab"    data-tab="x_viral"    onclick="switchTab('x_viral',this)">🐦 X 共感・認知</button>
+      <button class="tab"    data-tab="x_story"    onclick="switchTab('x_story',this)">👤 X 属人化</button>
+      <button class="tab"    data-tab="x_teaser"   onclick="switchTab('x_teaser',this)">🔗 X ブログ誘導</button>
+      <button class="tab"    data-tab="x_interact" onclick="switchTab('x_interact',this)">💬 X 交流・投票</button>
+      <button class="tab"    data-tab="wikipedia"  onclick="switchTab('wikipedia',this)">📖 Wikipedia風</button>
+      <button class="tab"    data-tab="calendar"   onclick="switchTab('calendar',this)"
+        style="color:var(--accent);font-weight:800">🗓️ 投稿カレンダー</button>
+    </div>
+
+    <div class="output" id="output">
+
+      <div class="ph" id="ph">
+        <div class="ph-icon">✨</div>
+        <div class="ph-title">コンテンツがまだ生成されていません</div>
+        <div class="ph-sub">左パネルに体験談を入力して<br>「コンテンツを一括生成する」を押してください</div>
+      </div>
+
+      <div class="loading" id="ld" style="display:none">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div>
+          <div class="ld-msg" id="ldMsg">Gemini APIに接続中...</div>
+          <div class="ld-sub">7コンテンツ + カレンダーを同時生成しています</div>
+        </div>
+      </div>
+
+      <div id="pane-review"    class="pane" style="display:none"></div>
+      <div id="pane-affiliate" class="pane" style="display:none"></div>
+      <div id="pane-x_viral"   class="pane" style="display:none"></div>
+      <div id="pane-x_story"   class="pane" style="display:none"></div>
+      <div id="pane-x_teaser"  class="pane" style="display:none"></div>
+      <div id="pane-x_interact"class="pane" style="display:none"></div>
+      <div id="pane-wikipedia" class="pane" style="display:none"></div>
+      <div id="pane-calendar"  class="pane" style="display:none"></div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ===== APIキー保存・復元機能 =====
+const saveAkBtn = document.getElementById('save-ak-btn');
+const akEl = document.getElementById('apiKey');
+
+window.addEventListener('DOMContentLoaded', function() {
+  const savedKey = localStorage.getItem('savedGeminiApiKey');
+  if (savedKey) {
+    akEl.value = savedKey;
+  }
+});
+
+if(saveAkBtn) {
+  saveAkBtn.addEventListener('click', function() {
+    const currentKey = akEl.value.trim();
+    if (currentKey) {
+      localStorage.setItem('savedGeminiApiKey', currentKey);
+      const origText = saveAkBtn.textContent;
+      saveAkBtn.textContent = '✓';
+      saveAkBtn.style.color = 'var(--grn-tx)';
+      saveAkBtn.style.borderColor = 'var(--grn-bd)';
+      saveAkBtn.style.background = 'var(--grn-bg)';
+      setTimeout(function(){
+        saveAkBtn.textContent = origText;
+        saveAkBtn.style.color = '';
+        saveAkBtn.style.borderColor = 'var(--border-md)';
+        saveAkBtn.style.background = 'var(--surface)';
+      }, 2000);
+    } else {
+      localStorage.removeItem('savedGeminiApiKey');
+      alert('APIキーの保存を解除しました');
+    }
+  });
+}
+// ================================
+
+/* ---- STATE ---- */
+let data = null, activeTab = 'review', copyStore = {};
+
+/* ---- INIT ---- */
+(function(){ document.getElementById('startDate').value = new Date().toISOString().split('T')[0]; })();
+
+/* ---- UI ---- */
+function toggleKey(){ const e=document.getElementById('apiKey'); e.type=e.type==='password'?'text':'password'; }
+
+function updateCC(){
+  const n=[...document.getElementById('expInput').value].length;
+  const el=document.getElementById('cc');
+  el.textContent=n+'文字'; el.className='cc'+(n>2500?' over':'');
+}
+
+function switchTab(key,btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+  activeTab=key;
+  if(!data) return;
+  document.querySelectorAll('.pane').forEach(p=>p.style.display='none');
+  document.getElementById('pane-'+key).style.display='block';
+}
+
+function showLd(){ document.getElementById('ph').style.display='none'; document.getElementById('ld').style.display='flex'; document.querySelectorAll('.pane').forEach(p=>p.style.display='none'); }
+function hideLd(){ document.getElementById('ld').style.display='none'; }
+function setLdMsg(m){ document.getElementById('ldMsg').textContent=m; }
+
+/* ---- COPY ---- */
+function reg(id,text){ copyStore[id]=text; }
+function doCopy(id,btn){
+  const text=copyStore[id]; if(!text) return;
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='✅ コピー完了'; btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='📋 コピー'; btn.classList.remove('copied'); },2000);
+  });
+}
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ---- CARD ---- */
+function makeCard({id,badge,bc,content,tip}){
+  reg(id,content);
+  const chars=[...content].length;
+  const tipHtml=tip?`<div class="tip" style="margin-bottom:12px"><strong>💡 戦略メモ：</strong>${esc(tip)}</div>`:'';
+  return `${tipHtml}
+  <div class="card fi">
+    <div class="card-head">
+      <div class="row-g8"><span class="badge ${bc}">${badge}</span></div>
+      <div class="row-g8"><span class="cc">${chars}文字</span><button class="btn-copy" onclick="doCopy('${id}',this)">📋 コピー</button></div>
+    </div>
+    <div class="card-body"><div class="post-text">${esc(content)}</div></div>
+  </div>`;
+}
+
+/* ---- RENDER TABS ---- */
+const TAB_META={
+  review:    {badge:'⭐ レビュー記事',     bc:'b-org', tip:null},
+  affiliate: {badge:'💰 アフィリエイト',   bc:'b-grn', tip:null},
+  x_viral:   {badge:'🐦 X / 共感・認知',  bc:'b-red',
+    tip:'ヒーローズジャーニーの「試練」フェーズから入り、多くの人が「これ自分のことだ！」と感じる普遍的な悩みを起点にします。仮想敵（よくある誤解・古い常識）との対比で引きを作り、未完のループで終わらせます。'},
+  x_story:   {badge:'👤 X / 属人化',      bc:'b-vio',
+    tip:'「実は私、〇〇だったんです」という告白スタイルで開始し、ツァイガルニク効果で「続きが気になる」終わり方にします。人間的な弱さや具体的な数字を見せることで信頼関係を構築します。'},
+  x_teaser:  {badge:'🔗 X / ブログ誘導',  bc:'b-grn',
+    tip:'価値ある情報の「一部だけ」を見せるティーザー構成が鉄則。「答えはブログで」という明確なCTAと、読者が「知りたい！」と思う強烈な問いかけで締めます。'},
+  x_interact:{badge:'💬 X / 交流・投票',  bc:'b-org',
+    tip:'投票・2択質問でエンゲージメントを稼ぎ、アルゴリズムの拡散評価を高めます。誰でも15秒で答えられるライトな設計にし、絵文字で視認性を上げましょう。'},
+  wikipedia: {badge:'📖 Wikipedia風',      bc:'b-slt', tip:null},
+};
+
+function renderAllTabs(d){
+  Object.entries(TAB_META).forEach(([key,meta])=>{
+    document.getElementById('pane-'+key).innerHTML=makeCard({id:'c-'+key,badge:meta.badge,bc:meta.bc,content:d[key]||'',tip:meta.tip});
+  });
+}
+
+/* ---- RENDER CALENDAR ---- */
+function renderCalendar(d){
+  const pane=document.getElementById('pane-calendar');
+  const start=new Date(document.getElementById('startDate').value+'T00:00:00');
+  const pt=document.getElementById('postTime').value;
+  const DJ=['日','月','火','水','木','金','土'];
+  const fmt=dt=>`${dt.getMonth()+1}/${dt.getDate()}（${DJ[dt.getDay()]}）`;
+  const T={morning:{a:'07:00',b:'20:00',c:'07:30',d:'19:00',e:'08:00',f:'21:00'},night:{a:'12:00',b:'21:00',c:'12:30',d:'21:30',e:'12:00',f:'22:00'},noon:{a:'12:00',b:'18:00',c:'12:30',d:'18:00',e:'12:00',f:'19:00'}}[pt]||{a:'07:00',b:'20:00',c:'07:30',d:'19:00',e:'08:00',f:'21:00'};
+
+  const schedule=[
+    {offset:0,label:'DAY 1',phase:'🔥 認知獲得フェーズ',phaseColor:'#991B1B',posts:[
+      {time:T.a,key:'x_viral',  bc:'b-red',emoji:'🔥',type:'共感・認知拡大',   purpose:'インプレッション最大化・新規フォロワー獲得',strategy:'ヒーローズジャーニー「試練」フェーズで広範な共感を呼ぶ。通勤時間帯に最大リーチを狙う。'},
+      {time:T.b,key:'x_interact',bc:'b-org',emoji:'💬',type:'交流・投票',      purpose:'エンゲージメント向上・アルゴリズム優遇',   strategy:'投票でエンゲージメントを稼ぎ、夜のアルゴリズム評価タイムに備える。'},
+    ]},
+    {offset:1,label:'DAY 2',phase:'🤝 信頼構築フェーズ',phaseColor:'#6D28D9',posts:[
+      {time:T.c,key:'x_story',  bc:'b-vio',emoji:'👤',type:'属人化・ストーリー',purpose:'フォロワーとの信頼関係・ブランド構築',   strategy:'ツァイガルニク効果で「続きが気になる」終わり方に。人間性を伝えることが目的。'},
+      {time:T.d,key:'x_teaser', bc:'b-grn',emoji:'🔗',type:'ブログ誘導',       purpose:'ブログへのトラフィック誘導・収益化の準備', strategy:'「答えはブログで」の構成でCTRを最大化。夜の習慣的なスクロール時間を狙う。'},
+    ]},
+    {offset:2,label:'DAY 3',phase:'💰 収益化フェーズ',phaseColor:'#1D4ED8',posts:[
+      {time:T.e,key:'x_viral',  bc:'b-red',emoji:'🔥',type:'共感（再訴求）',   purpose:'DAY1の認知を補強・新規流入への対応',   strategy:'Xは時間差で届く読者が多い。同ポストの再投稿は合理的な戦略。'},
+      {time:T.f,key:'x_story',  bc:'b-vio',emoji:'👤',type:'CTA付きストーリー',purpose:'アフィリエイトへの自然な誘導・収益化', strategy:'認知×信頼が積み上がった3日目。ストーリー末尾に自然なCTAを添えて収益化。'},
+    ]},
+  ];
+
+  const overview=`
+  <div class="card fi" style="margin-bottom:16px">
+    <div class="card-head">
+      <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:var(--accent)">🗓️ 3日間・戦略的投稿カレンダー</span>
+      <span class="cc">開始：${fmt(start)}</span>
+    </div>
+    <div class="card-body">
+      <div class="tip" style="margin-bottom:12px">
+        <strong>📊 3日間の戦略構造（認知 → 信頼 → 収益化）</strong>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px">
+          <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:#991B1B;margin-bottom:4px">Day 1：認知獲得</div><div style="font-size:11.5px;color:var(--t1)">バズ狙いの共感ポストで新規リーチを最大化。夜の投票でエンゲージメントを加速。</div></div>
+          <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:#6D28D9;margin-bottom:4px">Day 2：信頼構築</div><div style="font-size:11.5px;color:var(--t1)">ストーリーで人間性を見せ、ブログ誘導でコンテンツの価値を証明。</div></div>
+          <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:#1D4ED8;margin-bottom:4px">Day 3：収益化</div><div style="font-size:11.5px;color:var(--t1)">認知×信頼を活かしてアフィリエイトへ自然誘導。CTAを組み込む。</div></div>
+        </div>
+      </div>
+      <div class="export-row">
+        <button class="btn-sec" onclick="exportAll()">📤 全6投稿を一括コピー</button>
+        <button class="btn-sec" onclick="exportMarkdown()">📄 Markdown形式でコピー</button>
+      </div>
+    </div>
+  </div>`;
+
+  let daysHtml='';
+  schedule.forEach(({offset,label,phase,phaseColor,posts})=>{
+    const thisDate=new Date(start); thisDate.setDate(thisDate.getDate()+offset);
+    let postsHtml='';
+    posts.forEach(({time,key,bc,emoji,type,purpose,strategy},idx)=>{
+      const content=d[key]||'', cid=`cal-${offset}-${idx}`;
+      reg(cid,content);
+      const chars=[...content].length, isOver=chars>140;
+      postsHtml+=`
+      <div class="tl-item fi" style="animation-delay:${(offset*.07+idx*.04).toFixed(2)}s">
+        <div class="tl-dot"></div>
+        <div class="tl-time">${time}</div>
+        <div style="margin-bottom:5px"><span class="badge ${bc}">${emoji} ${type}</span></div>
+        <div class="tl-card">
+          <div class="tl-purpose">🎯 ${purpose}</div>
+          <div class="tl-post">${esc(content)}</div>
+          <div class="tl-strategy">💡 ${strategy}</div>
+          <div class="row-sb">
+            <span class="cc ${isOver?'over':''}">${chars}文字${isOver?' ⚠️ 140字超過':''}</span>
+            <button class="btn-copy" onclick="doCopy('${cid}',this)">📋 コピー</button>
+          </div>
+        </div>
+      </div>`;
+    });
+    daysHtml+=`
+    <div class="cal-day fi" style="animation-delay:${(offset*.07).toFixed(2)}s">
+      <div class="cal-day-head">
+        <span class="day-pill">${label}</span>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--t0)">${fmt(thisDate)}</div>
+          <div style="font-size:10.5px;color:${phaseColor};margin-top:1px;font-weight:600">${phase}</div>
+        </div>
+        <div style="margin-left:auto"><span class="badge b-acc">${posts.length} 投稿</span></div>
+      </div>
+      <div class="tl-wrap"><div class="tl-line"></div>${postsHtml}</div>
+    </div>`;
+  });
+
+  const roadmap=`
+  <div class="card fi" style="margin-top:16px;animation-delay:.28s">
+    <div class="card-head"><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:var(--vio-tx)">📈 Week 2以降の戦略ロードマップ</span></div>
+    <div class="card-body">
+      <div class="road-grid">
+        <div class="road-cell"><div class="road-title" style="color:var(--blu-tx)">🔁 Week 2：深掘りフェーズ</div><div class="road-body">• レビュー記事をブログに公開<br>• Wikipedia風コンテンツで権威性UP<br>• DAY1〜3のパターンを繰り返す<br>• 反応の高かったポストをリポスト</div></div>
+        <div class="road-cell"><div class="road-title" style="color:var(--grn-tx)">💰 Week 3：収益最大化フェーズ</div><div class="road-body">• アフィリエイトCTAを全ポストに自然挿入<br>• 反応の多かったテーマを深掘り<br>• DM・リプライで個別クローズ<br>• LINEやメルマガへの誘導を強化</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card fi" style="margin-top:10px;animation-delay:.34s">
+    <div class="card-head"><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:var(--grn-tx)">💰 アフィリエイトコンテンツとの連携</span></div>
+    <div class="card-body">
+      <div style="font-size:12px;color:var(--t1);margin-bottom:10px">生成したアフィリエイトコピーを最大限活用するタイミング：</div>
+      <div class="col-g8">
+        <div class="af-item"><span class="badge b-grn" style="flex-shrink:0;margin-top:1px">LP</span><div class="af-body"><b>ブログ記事の末尾</b>に配置。DAY2のブログ誘導ポストからの流入を収益化します。</div></div>
+        <div class="af-item"><span class="badge b-vio" style="flex-shrink:0;margin-top:1px">DM</span><div class="af-body"><b>反応したユーザーへのDM</b>の冒頭に使用。一対一の信頼関係を収益に変換します。</div></div>
+        <div class="af-item"><span class="badge b-org" style="flex-shrink:0;margin-top:1px">LINE</span><div class="af-body"><b>LINEステップ配信の3通目以降</b>に組み込み。ウォームアップ後の最適なタイミングです。</div></div>
+      </div>
+      <div class="export-row"><button class="btn-sec" onclick="copyAffiliate()">📋 アフィリエイトコピーをコピー</button></div>
+    </div>
+  </div>`;
+
+  pane.innerHTML=overview+daysHtml+roadmap;
+}
+
+/* ---- EXPORTS ---- */
+function copyAffiliate(){
+  if(!data?.affiliate){alert('先にコンテンツを生成してください');return;}
+  navigator.clipboard.writeText(data.affiliate).then(()=>alert('✅ アフィリエイトコピーをコピーしました！'));
+}
+function exportAll(){
+  if(!data) return;
+  const s=new Date(document.getElementById('startDate').value+'T00:00:00');
+  const T={morning:{a:'07:00',b:'20:00',c:'07:30',d:'19:00',e:'08:00',f:'21:00'},night:{a:'12:00',b:'21:00',c:'12:30',d:'21:30',e:'12:00',f:'22:00'},noon:{a:'12:00',b:'18:00',c:'12:30',d:'18:00',e:'12:00',f:'19:00'}}[document.getElementById('postTime').value]||{a:'07:00',b:'20:00',c:'07:30',d:'19:00',e:'08:00',f:'21:00'};
+  const DJ=['日','月','火','水','木','金','土'];
+  const fd=n=>{const d=new Date(s);d.setDate(d.getDate()+n);return `${d.getMonth()+1}/${d.getDate()}(${DJ[d.getDay()]})`;};
+  const txt=['===== 3日間 戦略的投稿カレンダー =====','',`【DAY1 ${fd(0)} ${T.a} / 🔥 共感・認知拡大】`,data.x_viral,'',`【DAY1 ${fd(0)} ${T.b} / 💬 交流・投票】`,data.x_interact,'',`【DAY2 ${fd(1)} ${T.c} / 👤 属人化・ストーリー】`,data.x_story,'',`【DAY2 ${fd(1)} ${T.d} / 🔗 ブログ誘導】`,data.x_teaser,'',`【DAY3 ${fd(2)} ${T.e} / 🔥 共感（再訴求）】`,data.x_viral,'',`【DAY3 ${fd(2)} ${T.f} / 👤 CTA付きストーリー】`,data.x_story].join('\n');
+  navigator.clipboard.writeText(txt).then(()=>alert('✅ 全6投稿をコピーしました！'));
+}
+function exportMarkdown(){
+  if(!data) return;
+  const txt=['# 3日間 投稿カレンダー','','## DAY 1 — 認知獲得フェーズ','### 🔥 共感・認知拡大','```',data.x_viral,'```','','### 💬 交流・投票','```',data.x_interact,'```','','## DAY 2 — 信頼構築フェーズ','### 👤 属人化・ストーリー','```',data.x_story,'```','','### 🔗 ブログ誘導','```',data.x_teaser,'```','','## DAY 3 — 収益化フェーズ','### 🔥 共感（再訴求）','```',data.x_viral,'```','','### 👤 CTA付きストーリー','```',data.x_story,'```'].join('\n');
+  navigator.clipboard.writeText(txt).then(()=>alert('✅ Markdown形式でコピーしました！'));
+}
+
+/* ---- SYSTEM PROMPT ---- */
+function buildPrompt(){
+  const techs=[];
+  if(document.getElementById('oHero').checked) techs.push('1. ヒーローズジャーニー（日常→試練→変容→帰還の物語構造）');
+  if(document.getElementById('oZeig').checked) techs.push('2. ツァイガルニク効果（未完の情報ループで読者を引き留める）');
+  if(document.getElementById('oEnem').checked) techs.push('3. 仮想敵の設定（共通の敵・古い常識・よくある間違いを設定）');
+  if(document.getElementById('oPas' ).checked) techs.push('4. PASONA法則（Problem→Agitation→Solution→Narrowing→Action）');
+  if(document.getElementById('oSoc' ).checked) techs.push('5. 社会的証明と数字の力（具体的な数値・期間・実績で信頼性を高める）');
+  const techStr=techs.length?techs.join('\n'):'・自然で誠実なコピーライティング';
+  return `あなたは日本最高峰のSNSマーケター兼コピーライターです。
+以下のSNSマーケティング技法を完璧に駆使して、ユーザーの体験談・商品情報から7種類のコンテンツを生成してください。
+
+【適用するマーケティング技法】
+${techStr}
+
+【各コンテンツの詳細要件】
+
+1. review（レビュー記事）
+- 1500〜2000文字の本格的なレビュー記事
+- 構成：結論から入る（PREP法）→ Before状態の詳細描写 → 試行錯誤の過程 → After状態（数値・期間含む）→ 向いている人・向いていない人 → 総合評価
+- ヒーローズジャーニーの構造を自然に組み込む
+
+2. affiliate（アフィリエイトコピー）
+- LPに使えるセールスコピー（1000〜1500文字）
+- PASONA法則に厳密に従った構成
+- 強力なCTA（行動喚起）で終わる
+
+3. x_viral（X投稿：共感・認知拡大）
+- 必ず140文字以内
+- 最初の一文で「これ自分のことだ」と思わせる
+- 仮想敵（「〇〇だと思っていた」「実は間違いだった常識」など）を設定
+- 最後に問いかけか未完のループで終わる、ハッシュタグ2〜3個
+
+4. x_story（X投稿：属人化）
+- 必ず140文字以内
+- 「実は私、〇〇だったんです」という告白スタイルで開始
+- ツァイガルニク効果で「続きが気になる」終わり方
+
+5. x_teaser（X投稿：ブログ誘導）
+- 必ず140文字以内
+- ティーザー構成＋URLプレースホルダー（←ブログURL）含む
+
+6. x_interact（X投稿：交流・投票）
+- 必ず140文字以内、2択か3択の投票or質問形式
+
+7. wikipedia（Wikipedia風まとめ）
+- 800〜1200文字、百科事典スタイル
+- セクション構成：概要 / 特徴・成分 / 効果・用法 / 注意事項
+
+【出力ルール】
+JSONのみ出力。マークダウン記法・コードブロック・前置き一切不要。
+
+{
+  "review": "テキスト",
+  "affiliate": "テキスト",
+  "x_viral": "140文字以内",
+  "x_story": "140文字以内",
+  "x_teaser": "140文字以内",
+  "x_interact": "140文字以内",
+  "wikipedia": "テキスト"
+}`;
+}
+
+/* ---- GENERATE ---- */
+async function generate(){
+  const apiKey=document.getElementById('apiKey').value.trim();
+  const exp=document.getElementById('expInput').value.trim();
+  if(!apiKey){alert('⚠️ Gemini APIキーを入力してください');return;}
+  if(exp.length<20){alert('⚠️ 体験談を20文字以上入力してください');return;}
+
+  const btn=document.getElementById('genBtn');
+  btn.disabled=true;
+  document.getElementById('btnIcon').textContent='⏳';
+  document.getElementById('btnLabel').textContent='生成中...';
+  showLd();
+
+  const msgs=['Gemini 2.5 Flash に接続中...','ヒーローズジャーニーを構築中...','ツァイガルニク効果を計算中...','仮想敵とPASONA法則を適用中...','X投稿を最適化中...','カレンダーをスケジューリング中...','コンテンツを仕上げています...'];
+  let mi=0;
+  const iv=setInterval(()=>{mi=(mi+1)%msgs.length;setLdMsg(msgs[mi]);},1600);
+
+  try{
+    const res=await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({
+         system_instruction:{parts:[{text:buildPrompt()}]},
+         contents:[{parts:[{text:`以下の体験談・商品情報を元に、指定のJSONフォーマットで7種類のコンテンツを生成してください。\n\n【体験談・商品情報】\n${exp}`}]}],
+         generationConfig:{responseMimeType:'application/json',temperature:0.88,maxOutputTokens:8192}
+       })
+      }
+    );
+    if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err?.error?.message||`HTTP ${res.status}`);}
+    const result=await res.json();
+    const raw=result?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if(!raw) throw new Error('レスポンスが空です。APIキーを確認してください。');
+    data=JSON.parse(raw.replace(/^```json\s*/,'').replace(/\s*```$/,'').trim());
+
+    renderAllTabs(data);
+    renderCalendar(data);
+
+    hideLd();
+    document.querySelectorAll('.pane').forEach(p=>p.style.display='none');
+    const calBtn=document.querySelector('[data-tab="calendar"]');
+    if(calBtn) switchTab('calendar',calBtn);
+    else document.getElementById('pane-'+activeTab).style.display='block';
+
+  }catch(e){
+    hideLd();
+    const pane=document.getElementById('pane-'+activeTab);
+    pane.style.display='block';
+    pane.innerHTML=`<div class="card fi"><div class="card-body" style="text-align:center;padding:40px 24px"><div style="font-size:36px;margin-bottom:12px">⚠️</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:var(--red-tx);margin-bottom:8px">生成に失敗しました</div><div style="font-size:13px;color:var(--t1);margin-bottom:4px">${esc(e.message)}</div><div style="font-size:12px;color:var(--t2)">APIキー・ネットワーク接続・クォータをご確認ください</div></div></div>`;
+  }finally{
+    clearInterval(iv);
+    btn.disabled=false;
+    document.getElementById('btnIcon').textContent='⚡';
+    document.getElementById('btnLabel').textContent='コンテンツを一括生成する';
+  }
+}
+</script>
+</body>
+</html>
