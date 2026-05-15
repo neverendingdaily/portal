@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OCR テキスト抽出｜Gemini powered</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%%22 y=%2250%%22 style=%22dominant-baseline:central;text-anchor:middle;font-size:90px;%22>🎭</text></svg>"><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=DM+Serif+Display&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f5f2ec;--bg2:#fff;--bg3:#f0ece3;--surface:#e8e3d8;
+  --border:rgba(0,0,0,.09);--border2:rgba(0,0,0,.15);
+  --text:#1a1814;--muted:#7a7060;--muted2:#b0a898;
+  --accent:#c8371a;--accent2:#e04520;--gold:#9a7c30;--green:#1d7a4a;
+  --sw:280px; /* sidebar width */
+}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
+
+/* ── HEADER ── */
+.hd{height:50px;min-height:50px;background:var(--text);display:flex;align-items:center;padding:0 20px;gap:14px;}
+.hd-logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.15em;text-transform:uppercase;color:#d4b06a;white-space:nowrap;}
+.hd-sep{width:1px;height:18px;background:rgba(255,255,255,.15);}
+.hd-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);}
+.hd-tag{margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(200,55,26,.5);padding:2px 9px;}
+
+/* ── LAYOUT ── */
+.body{display:flex;flex:1;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sb{width:var(--sw);min-width:var(--sw);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;}
+.sb-s{padding:14px 16px;border-bottom:1px solid var(--border);}
+.lbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:7px;}
+.lbl::after{content:'';flex:1;height:1px;background:var(--border);}
+.sub-lbl{font-size:11px;color:var(--muted);margin-bottom:4px;margin-top:8px;}
+
+/* fields */
+.f{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12px;padding:8px 12px;outline:none;transition:border-color .2s;}
+.f:focus{border-color:var(--gold);}
+.f::placeholder{color:var(--muted2);}
+.fw{position:relative;}.fw .f{padding-right:34px;}
+.eye{position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;}
+
+/* api status */
+.st{margin-top:5px;display:flex;align-items:center;gap:5px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--muted2);}
+.dot.ok{background:var(--green);}.dot.err{background:var(--accent);}
+
+/* model row */
+.model-row{display:flex;gap:5px;}
+.model-row .f{flex:1;}
+.fetch-btn{background:none;border:1px solid var(--border2);color:var(--muted);font-size:11px;padding:0 9px;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;}
+.fetch-btn:hover:not(:disabled){border-color:var(--gold);color:var(--gold);}
+.fetch-btn:disabled{opacity:.4;cursor:not-allowed;}
+.fetch-st{font-size:10px;color:var(--muted2);line-height:1.6;min-height:13px;margin-top:4px;}
+.fetch-st.err{color:var(--accent);}.fetch-st.ok{color:var(--green);}
+
+/* upload */
+.dz{border:1px dashed var(--border2);padding:16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;}
+.dz:hover,.dz.over{border-color:var(--gold);background:rgba(154,124,48,.04);}
+.dz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.dz-ic{font-size:22px;margin-bottom:4px;color:var(--muted);}
+.dz-t{font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.dz-h{font-size:11px;color:var(--muted);}
+.fl{display:flex;flex-direction:column;gap:4px;margin-top:7px;}
+.fi{background:var(--bg3);border:1px solid var(--border);padding:6px 9px;display:flex;align-items:center;gap:7px;}
+.fi-ic{font-size:12px;color:var(--gold);}
+.fi-nm{font-size:11px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fi-sz{font-size:10px;color:var(--muted);white-space:nowrap;}
+.fi-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;}
+.fi-rm:hover{color:var(--accent);}
+.pv{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
+.pv img{width:48px;height:48px;object-fit:cover;border:1px solid var(--border);}
+.pv-pdf{width:48px;height:48px;background:var(--bg3);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;color:var(--muted);gap:2px;}
+
+/* mode btns */
+.mode-row{display:flex;gap:4px;margin-bottom:9px;}
+.mb{flex:1;background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Noto Sans JP',sans-serif;font-size:10px;padding:5px 2px;cursor:pointer;transition:all .2s;text-align:center;}
+.mb.on{background:var(--text);border-color:var(--text);color:#fff;}
+
+/* run */
+.run{width:100%;background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;padding:12px;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:9px;}
+.run:hover:not(:disabled){background:var(--accent2);}
+.run:disabled{background:var(--muted2);cursor:not-allowed;}
+.spin{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:none;}
+.run.ld .spin{display:block;}.run.ld .rt{opacity:.7;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.rst{width:100%;background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Noto Sans JP',sans-serif;font-size:11px;padding:8px;cursor:pointer;margin-top:7px;transition:color .2s;}
+.rst:hover{color:var(--text);}
+
+/* ── MAIN ── */
+.mn{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+
+/* tabs */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);}
+.tab{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;padding:10px 20px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+.tab.on{color:var(--text);border-bottom-color:var(--accent);}
+.tab .badge{display:inline-block;background:var(--accent);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:5px;font-family:'Noto Sans JP',sans-serif;letter-spacing:0;}
+
+/* tab panels */
+.panel{flex:1;overflow:hidden;display:none;flex-direction:column;}
+.panel.on{display:flex;}
+
+/* result panel */
+.rp{padding:20px 24px;display:flex;flex-direction:column;height:100%;}
+.rp-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0;}
+.rp-title{font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);}
+.rp-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+.rp-acts{display:flex;gap:7px;flex-wrap:wrap;}
+.ab{background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Noto Sans JP',sans-serif;font-size:11px;padding:5px 11px;cursor:pointer;transition:all .2s;}
+.ab:hover{border-color:var(--gold);color:var(--gold);}
+.ab.ok{border-color:var(--green);color:var(--green);}
+.ab.del:hover{border-color:var(--accent);color:var(--accent);}
+
+/* the big textarea */
+.res-box{
+  flex:1;
+  width:100%;
+  background:var(--bg2);
+  border:1px solid var(--border2);
+  border-top:3px solid var(--gold);
+  padding:20px 22px;
+  font-size:13px;color:var(--text);line-height:2;
+  white-space:pre-wrap;font-family:'Noto Sans JP',sans-serif;
+  outline:none;resize:none;
+  overflow-y:auto;
+}
+.cc{font-size:11px;color:var(--muted);text-align:right;margin-top:5px;flex-shrink:0;}
+
+/* empty / loading */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:40px;}
+.empty-t{font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);}
+.empty-d{font-size:12px;color:var(--muted);line-height:1.9;max-width:360px;}
+.loading{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.ring{width:60px;height:60px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp 1.2s linear infinite;}
+.ld-msg{font-size:13px;color:var(--muted);text-align:center;}
+
+/* error */
+.err-box{margin:20px 24px;background:#fff5f3;border:1px solid rgba(200,55,26,.3);padding:14px 18px;display:flex;gap:10px;align-items:flex-start;}
+.err-t{font-size:13px;font-weight:500;color:var(--accent);margin-bottom:4px;}
+.err-b{font-size:12px;color:#6b4030;line-height:1.8;white-space:pre-wrap;}
+
+/* ── HISTORY PANEL ── */
+.hp{padding:16px 24px;overflow-y:auto;flex:1;}
+.hist-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:10px;color:var(--muted);font-size:13px;}
+.hist-item{background:var(--bg2);border:1px solid var(--border);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color .2s;}
+.hist-item:hover{border-color:var(--gold);}
+.hist-item-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;}
+.hist-item-name{font-size:13px;font-weight:500;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hist-item-date{font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
+.hist-item-preview{font-size:11px;color:var(--muted);line-height:1.7;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.hist-item-meta{display:flex;align-items:center;gap:10px;margin-top:6px;}
+.hist-tag{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);border:1px solid var(--border2);padding:1px 6px;}
+.hist-del{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:11px;margin-left:auto;transition:color .2s;}
+.hist-del:hover{color:var(--accent);}
+.hist-clear-btn{width:100%;background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Noto Sans JP',sans-serif;font-size:11px;padding:8px;cursor:pointer;margin-bottom:14px;transition:color .2s;}
+.hist-clear-btn:hover{color:var(--accent);border-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <div class="hd-logo">OCR Extractor</div>
+  <div class="hd-sep"></div>
+  <div class="hd-sub">テキスト抽出ツール</div>
+  <div class="hd-tag">Gemini powered</div>
+</div>
+
+<div class="body">
+
+  <div class="sb">
+
+    <div class="sb-s">
+      <div class="lbl">Gemini API Key</div>
+      <div style="display:flex; gap:6px;">
+        <div class="fw" style="flex:1;">
+          <input class="f" id="ak" type="password" placeholder="AIza..." autocomplete="off">
+          <button class="eye" id="eye">👁</button>
+        </div>
+        <button id="save-ak-btn" class="fetch-btn" style="width: 33px; padding: 0; font-size: 14px; display: flex; justify-content: center; align-items: center;" title="APIキーを保存">💾</button>
+      </div>
+      <div class="st"><div class="dot" id="dot"></div><span id="st-txt" style="font-size:11px;color:var(--muted);">APIキーを入力してください</span></div>
+    </div>
+
+    <div class="sb-s">
+      <div class="lbl">モデル</div>
+      <div class="model-row">
+        <input class="f" id="mi" list="ml" placeholder="gemini-2.5-flash">
+        <button class="fetch-btn" id="fb" disabled>取得</button>
+      </div>
+      <datalist id="ml">
+        <option value="gemini-2.5-flash">
+        <option value="gemini-2.5-pro">
+        <option value="gemini-2.0-flash-001">
+        <option value="gemini-1.5-pro-002">
+        <option value="gemini-1.5-flash-002">
+      </datalist>
+      <div class="fetch-st" id="fst">APIキー入力後に自動取得します</div>
+    </div>
+
+    <div class="sb-s">
+      <div class="lbl">抽出モード</div>
+      <div class="mode-row">
+        <button class="mb on" data-m="full">全文そのまま</button>
+        <button class="mb" data-m="clean">整形・清書</button>
+        <button class="mb" data-m="md">Markdown化</button>
+      </div>
+      <div class="dz" id="dz">
+        <input type="file" id="fi" multiple accept="image/jpeg,image/png,image/webp,image/gif,application/pdf">
+        <div class="dz-ic">⊕</div>
+        <div class="dz-t">ドラッグ or クリック</div>
+        <div class="dz-h">JPEG・PNG・WebP・PDF に対応</div>
+      </div>
+      <div class="fl" id="fl"></div>
+      <div class="pv" id="pv"></div>
+    </div>
+
+    <div class="sb-s">
+      <button class="run" id="runBtn" disabled><div class="spin"></div><span class="rt">📄 テキストを抽出する</span></button>
+      <button class="rst" id="rstBtn">リセット</button>
+    </div>
+
+    <div class="sb-s" style="flex:1;">
+      <div class="lbl">使い方</div>
+      <div style="font-size:11px;color:var(--muted);line-height:2;">
+        ① APIキーを入力<br>
+        ② モデル名を確認・変更<br>
+        ③ 画像またはPDFをアップロード<br>
+        ④「テキストを抽出する」をクリック<br>
+        ⑤ 結果をコピーして活用
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:var(--muted2);line-height:1.8;">
+        ※ ヘッダー・フッターのノイズは自動除去します<br>
+        ※ 過去の抽出は「履歴」タブで確認できます<br>
+        ※ 履歴はブラウザに保存されます
+      </div>
+    </div>
+  </div>
+
+  <div class="mn">
+
+    <div class="tabs">
+      <button class="tab on" data-tab="result">抽出結果</button>
+      <button class="tab" data-tab="history">履歴 <span class="badge" id="hist-badge">0</span></button>
+    </div>
+
+    <div class="panel on" id="panel-result">
+
+      <div class="empty" id="es">
+        <svg width="72" height="72" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="opacity:.35;">
+          <rect x="12" y="8" width="44" height="56" rx="2" fill="none" stroke="#9a7c30" stroke-width="1.5"/>
+          <rect x="20" y="8" width="28" height="10" rx="1" fill="#9a7c30" opacity=".3"/>
+          <line x1="20" y1="30" x2="48" y2="30" stroke="#9a7c30" stroke-width="1.2"/>
+          <line x1="20" y1="38" x2="48" y2="38" stroke="#9a7c30" stroke-width="1.2"/>
+          <line x1="20" y1="46" x2="40" y2="46" stroke="#9a7c30" stroke-width="1.2"/>
+          <circle cx="58" cy="56" r="14" fill="none" stroke="#c8371a" stroke-width="1.5"/>
+          <line x1="68" y1="66" x2="76" y2="74" stroke="#c8371a" stroke-width="2" stroke-linecap="round"/>
+          <line x1="52" y1="56" x2="64" y2="56" stroke="#c8371a" stroke-width="1.2"/>
+          <line x1="58" y1="50" x2="58" y2="62" stroke="#c8371a" stroke-width="1.2"/>
+        </svg>
+        <div class="empty-t">画像・PDFからテキストを抽出</div>
+        <div class="empty-d">左側でファイルをアップロードして「テキストを抽出する」をクリックしてください。dマガジンのヘッダー・フッターなどのノイズは自動的に除去します。</div>
+      </div>
+
+      <div class="loading" id="ls" style="display:none;">
+        <div class="ring"></div>
+        <div class="ld-msg" id="ldm">準備中...</div>
+      </div>
+
+      <div id="err-s" style="display:none;">
+        <div class="err-box">
+          <span style="font-size:18px;color:var(--accent);flex-shrink:0;">⚠</span>
+          <div><div class="err-t">エラーが発生しました</div><div class="err-b" id="erm"></div></div>
+        </div>
+      </div>
+
+      <div class="rp" id="rs" style="display:none;">
+        <div class="rp-hd">
+          <div>
+            <div class="rp-title">抽出結果</div>
+            <div class="rp-meta" id="rm"></div>
+          </div>
+          <div class="rp-acts">
+            <button class="ab" id="cpBtn">全文をコピー</button>
+            <button class="ab" id="exBtn">テキストで保存</button>
+            <button class="ab" id="clBtn">クリア</button>
+          </div>
+        </div>
+        <textarea class="res-box" id="rb" spellcheck="false"></textarea>
+        <div class="cc" id="cc"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-history">
+      <div class="hp" id="hp">
+        <div class="hist-empty" id="hist-empty">
+          <span style="font-size:32px;opacity:.3;">🕐</span>
+          まだ抽出履歴がありません
+        </div>
+        <div id="hist-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var files=[], mode='full', fetchDone=false;
+
+// ===== APIキー保存・復元機能 =====
+var saveAkBtn = document.getElementById('save-ak-btn');
+var akInput = document.getElementById('ak');
+
+window.addEventListener('DOMContentLoaded', function() {
+  var savedKey = localStorage.getItem('savedGeminiApiKey');
+  if (savedKey) {
+    akInput.value = savedKey;
+    akInput.dispatchEvent(new Event('input')); // UIの表示を自動更新させる
+  }
+});
+
+if(saveAkBtn) {
+  saveAkBtn.addEventListener('click', function() {
+    var currentKey = akInput.value.trim();
+    if (currentKey) {
+      localStorage.setItem('savedGeminiApiKey', currentKey);
+      var origText = saveAkBtn.textContent;
+      saveAkBtn.textContent = '✓';
+      saveAkBtn.style.color = 'var(--green)';
+      saveAkBtn.style.borderColor = 'var(--green)';
+      setTimeout(function(){
+        saveAkBtn.textContent = origText;
+        saveAkBtn.style.color = '';
+        saveAkBtn.style.borderColor = '';
+      }, 2000);
+    } else {
+      localStorage.removeItem('savedGeminiApiKey');
+      alert('APIキーの保存を解除しました');
+    }
+  });
+}
+// ================================
+
+/* ── HISTORY (localStorage) ── */
+var HIST_KEY='ocr_history_v1';
+function loadHistory(){try{return JSON.parse(localStorage.getItem(HIST_KEY)||'[]');}catch(e){return[];}}
+function saveHistory(h){try{localStorage.setItem(HIST_KEY,JSON.stringify(h));}catch(e){}}
+function addHistory(item){var h=loadHistory();h.unshift(item);if(h.length>50)h=h.slice(0,50);saveHistory(h);renderHistory();}
+function delHistory(id){var h=loadHistory().filter(function(x){return x.id!==id;});saveHistory(h);renderHistory();}
+function clearHistory(){saveHistory([]);renderHistory();}
+
+function renderHistory(){
+  var h=loadHistory();
+  document.getElementById('hist-badge').textContent=h.length;
+  var list=document.getElementById('hist-list');
+  var empty=document.getElementById('hist-empty');
+  list.innerHTML='';
+  if(h.length===0){empty.style.display='flex';return;}
+  empty.style.display='none';
+  if(h.length>0){
+    var cb=document.createElement('button');cb.className='hist-clear-btn';cb.textContent='履歴をすべて削除';
+    cb.addEventListener('click',function(){if(confirm('すべての履歴を削除しますか？'))clearHistory();});
+    list.appendChild(cb);
+  }
+  h.forEach(function(item){
+    var d=document.createElement('div');d.className='hist-item';
+    d.innerHTML=
+      '<div class="hist-item-hd">'+
+        '<div class="hist-item-name">'+esc(item.name)+'</div>'+
+        '<div class="hist-item-date">'+esc(item.date)+'</div>'+
+      '</div>'+
+      '<div class="hist-item-preview">'+esc(item.text.substring(0,120))+'...</div>'+
+      '<div class="hist-item-meta">'+
+        '<span class="hist-tag">'+esc(item.model)+'</span>'+
+        '<span class="hist-tag">'+item.chars.toLocaleString()+' 文字</span>'+
+        '<button class="hist-del" title="削除">✕ 削除</button>'+
+      '</div>';
+    d.querySelector('.hist-del').addEventListener('click',function(e){e.stopPropagation();delHistory(item.id);});
+    // click to restore
+    d.addEventListener('click',function(e){
+      if(e.target.classList.contains('hist-del'))return;
+      document.getElementById('rb').value=item.text;
+      document.getElementById('cc').textContent=item.text.length.toLocaleString()+' 文字';
+      document.getElementById('rm').textContent=item.date+' ／ '+item.model+' ／ 履歴から復元';
+      showResult('res');
+      switchTab('result');
+    });
+    list.appendChild(d);
+  });
+}
+
+/* ── TABS ── */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',t.dataset.tab===name);});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('on',p.id==='panel-'+name);});
+}
+document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){switchTab(t.dataset.tab);});});
+
+/* ── EYE ── */
+document.getElementById('eye').addEventListener('click',function(){
+  var ak=document.getElementById('ak');ak.type=ak.type==='password'?'text':'password';
+});
+
+function apiOk(){var v=document.getElementById('ak').value.trim();return v.startsWith('AIza')&&v.length>30;}
+
+document.getElementById('ak').addEventListener('input',function(){
+  var ok=apiOk(),v=this.value.trim();
+  document.getElementById('dot').className='dot'+(ok?' ok':v.length?' err':'');
+  document.getElementById('st-txt').textContent=ok?'APIキーを確認しました':v.length?'キーの形式が正しくありません':'APIキーを入力してください';
+  document.getElementById('fb').disabled=!ok;
+  updateRun();
+  if(ok&&!fetchDone)fetchModels();
+});
+document.getElementById('mi').addEventListener('input',updateRun);
+
+/* ── FETCH MODELS ── */
+document.getElementById('fb').addEventListener('click',fetchModels);
+async function fetchModels(){
+  document.getElementById('fb').disabled=true;
+  document.getElementById('fst').textContent='取得中...';
+  document.getElementById('fst').className='fetch-st';
+  try{
+    var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+document.getElementById('ak').value.trim()+'&pageSize=100',{signal:AbortSignal.timeout(10000)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    var d=await r.json();
+    var ms=(d.models||[]).filter(function(m){return m.supportedGenerationMethods&&m.supportedGenerationMethods.includes('generateContent');});
+    if(!ms.length)throw new Error('モデルが見つかりません');
+    var dl=document.getElementById('ml');dl.innerHTML='';
+    ms.forEach(function(m){var id=m.name.replace('models/','');var o=document.createElement('option');o.value=id;dl.appendChild(o);});
+    var best=ms.find(function(m){var id=m.name.replace('models/','');return id.includes('flash')&&!id.includes('lite')&&!id.includes('8b')&&!id.includes('preview');});
+    if(!best)best=ms.find(function(m){return m.name.includes('flash');});
+    if(best)document.getElementById('mi').value=best.name.replace('models/','');
+    document.getElementById('fst').textContent='✓ '+ms.length+' モデル取得済み';
+    document.getElementById('fst').className='fetch-st ok';
+    fetchDone=true;
+  }catch(e){
+    document.getElementById('fst').textContent='⚠ 取得失敗 — モデル名を手動で入力してください';
+    document.getElementById('fst').className='fetch-st err';
+  }
+  document.getElementById('fb').disabled=!apiOk();
+}
+
+/* ── DEFAULT MODEL ── */
+document.getElementById('mi').value='gemini-2.5-flash';
+
+/* ── MODE BTNS ── */
+document.querySelectorAll('.mb').forEach(function(b){
+  b.addEventListener('click',function(){document.querySelectorAll('.mb').forEach(function(x){x.classList.remove('on');});b.classList.add('on');mode=b.dataset.m;});
+});
+
+/* ── UPLOAD ── */
+var dz=document.getElementById('dz');
+dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',function(){dz.classList.remove('over');});
+dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('over');addFiles(Array.from(e.dataTransfer.files));});
+document.getElementById('fi').addEventListener('change',function(){addFiles(Array.from(this.files));this.value='';});
+
+function addFiles(nf){
+  var ok=['image/jpeg','image/png','image/webp','image/gif','application/pdf'];
+  nf.forEach(function(f){if(!ok.includes(f.type))return;if(files.find(function(x){return x.name===f.name&&x.size===f.size;}))return;files.push(f);});
+  renderFiles();updateRun();
+}
+function rmF(i){files.splice(i,1);renderFiles();updateRun();}
+function renderFiles(){
+  document.getElementById('fl').innerHTML='';document.getElementById('pv').innerHTML='';
+  files.forEach(function(f,i){
+    var isPdf=f.type==='application/pdf';
+    var d=document.createElement('div');d.className='fi';
+    d.innerHTML='<span class="fi-ic">'+(isPdf?'📄':'🖼')+'</span><span class="fi-nm">'+esc(f.name)+'</span><span class="fi-sz">'+Math.round(f.size/1024)+'KB</span><button class="fi-rm">✕</button>';
+    d.querySelector('.fi-rm').addEventListener('click',function(){rmF(i);});
+    document.getElementById('fl').appendChild(d);
+    if(!isPdf){var img=document.createElement('img');img.src=URL.createObjectURL(f);document.getElementById('pv').appendChild(img);}
+    else{var p=document.createElement('div');p.className='pv-pdf';p.innerHTML='<span style="font-size:18px;color:var(--accent);">📑</span><span>PDF</span>';document.getElementById('pv').appendChild(p);}
+  });
+}
+function updateRun(){runBtn.disabled=!(apiOk()&&document.getElementById('mi').value.trim()&&files.length>0);}
+var runBtn=document.getElementById('runBtn');
+
+document.getElementById('rstBtn').addEventListener('click',function(){files=[];renderFiles();showResult('empty');updateRun();});
+document.getElementById('clBtn').addEventListener('click',function(){showResult('empty');});
+
+/* ── STATE ── */
+function showResult(s){
+  document.getElementById('es').style.display='none';
+  document.getElementById('ls').style.display='none';
+  document.getElementById('err-s').style.display='none';
+  document.getElementById('rs').style.display='none';
+  if(s==='empty')document.getElementById('es').style.display='flex';
+  if(s==='load')document.getElementById('ls').style.display='flex';
+  if(s==='err')document.getElementById('err-s').style.display='block';
+  if(s==='res')document.getElementById('rs').style.display='flex';
+}
+
+/* ── NOISE FILTER ── */
+
+// 日本語文字（ひらがな・カタカナ・漢字・全角記号）を含むか判定
+function hasJapanese(s){
+  return /[\u3040-\u309f\u30a0-\u30bf\u4e00-\u9fff\u3400-\u4dbf\uff01-\uff9f\u3000-\u303f]/.test(s);
+}
+
+function cleanOcrText(text){
+  var lines=text.split('\n');
+  var out=[];
+
+  for(var i=0;i<lines.length;i++){
+    var line=lines[i];
+    var trimmed=line.trim();
+
+    // ── 空行はそのまま残す（段落間のスペース保持）──
+    if(trimmed===''){out.push('');continue;}
+
+    // ── 固定ノイズパターン（優先除去）──
+
+    // "Page N" 行
+    if(/^Page\s+\d+\s*$/.test(trimmed)){continue;}
+
+    // dマガジン系URL
+    if(/https?:\/\/dmagazine\.docomo\.ne\.jp\//i.test(trimmed)){continue;}
+
+    // dマガジンバナー
+    if(/dマガジン/.test(trimmed)&&/読み放題/.test(trimmed)){continue;}
+
+    // FireShot 系
+    if(/^Captured by FireShot/i.test(trimmed)){continue;}
+    if(/https?:\/\/(www\.)?getfireshot\.com/i.test(trimmed)){continue;}
+
+    // 任意のURL（http/httpsで始まる行）
+    if(/^https?:\/\/\S+$/.test(trimmed)){continue;}
+
+    // ── 日本語ゼロ の行を除去 ──
+    // 日本語が一文字でもあれば残す（英数字混在OK）
+    if(!hasJapanese(trimmed)){
+      // 例外: 記号・絵文字だけの区切り行は残す（▲ ★ ● など）
+      // ただし純粋な英数字のみ行・数字のみ行は除去
+      // 全角記号・絵文字を含む場合は残す
+      var hasSymbol=/[▲▼●○◎★☆■□♡♥◆◇→←↑↓※†‡…・。、！？【】『』「」（）〈〉《》〔〕～＆＠＃]/.test(trimmed);
+      var hasEmoji=/[\u{1F300}-\u{1FFFF}]/u.test(trimmed);
+      if(!hasSymbol&&!hasEmoji){continue;}
+    }
+
+    out.push(line); // 元の行（インデント保持）
+  }
+
+  // 先頭・末尾の空行を除去
+  while(out.length&&!out[0].trim())out.shift();
+  while(out.length&&!out[out.length-1].trim())out.pop();
+
+  // 連続する空行を1行にまとめる
+  var result=[];
+  var prevBlank=false;
+  for(var j=0;j<out.length;j++){
+    var isBlank=!out[j].trim();
+    if(isBlank&&prevBlank)continue;
+    result.push(out[j]);
+    prevBlank=isBlank;
+  }
+
+  return result.join('\n');
+}
+
+/* ── OCR PROMPT ── */
+function buildPrompt(){
+  if(mode==='full')return 'この画像またはPDFに含まれるすべてのテキストを、レイアウト・改行・段落・見出しの構造をできる限り忠実に保ちながら、そのまま抽出してください。テキスト以外の説明や注釈は一切不要です。抽出したテキストのみを出力してください。';
+  if(mode==='clean')return 'この画像またはPDFに含まれるすべてのテキストを抽出してください。OCRノイズや不要な改行を除去し、自然に読みやすい形に整形して出力してください。テキスト以外の説明は不要です。';
+  return 'この画像またはPDFに含まれるすべてのテキストを抽出し、Markdown形式（見出し#・##、太字**、リスト-）に変換して出力してください。テキスト以外の説明は不要です。';
+}
+
+/* ── PDF UPLOAD ── */
+async function uploadPdf(f,key){
+  var buf=await f.arrayBuffer(),u8=new Uint8Array(buf);
+  var b='ocr_b_'+Date.now(),meta=JSON.stringify({file:{display_name:f.name}});
+  var enc=new TextEncoder();
+  var h=enc.encode('--'+b+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+'\r\n--'+b+'\r\nContent-Type: '+f.type+'\r\n\r\n');
+  var t=enc.encode('\r\n--'+b+'--');
+  var body=new Uint8Array(h.length+u8.length+t.length);body.set(h,0);body.set(u8,h.length);body.set(t,h.length+u8.length);
+  var r=await fetch('https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=multipart&key='+key,{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body:body.buffer});
+  if(!r.ok){var e=await r.json().catch(function(){return{};});throw new Error('PDFアップロード失敗: '+(e&&e.error&&e.error.message?e.error.message:'HTTP '+r.status));}
+  var d=await r.json();if(!d.file||!d.file.uri)throw new Error('URI取得失敗');return d.file.uri;
+}
+function b64(f){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(f);});}
+
+/* ── RUN ── */
+runBtn.addEventListener('click',run);
+async function run(){
+  var key=document.getElementById('ak').value.trim();
+  var model=document.getElementById('mi').value.trim();
+  runBtn.classList.add('ld');runBtn.disabled=true;
+  showResult('load');
+  try{
+    var parts=[{text:buildPrompt()}];
+    for(var i=0;i<files.length;i++){
+      var f=files[i];
+      document.getElementById('ldm').textContent=(f.type==='application/pdf'?'PDF送信中':'画像読込中')+' ('+(i+1)+'/'+files.length+')';
+      if(f.type==='application/pdf'){var uri=await uploadPdf(f,key);parts.push({file_data:{mime_type:'application/pdf',file_uri:uri}});}
+      else{var d=await b64(f);parts.push({inline_data:{mime_type:f.type,data:d}});}
+    }
+    document.getElementById('ldm').textContent='Gemini がテキストを解析中...';
+    var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+key,
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({contents:[{role:'user',parts:parts}],generationConfig:{temperature:.05,maxOutputTokens:8192}})});
+    if(!r.ok){var ed=await r.json().catch(function(){return{};});throw new Error(ed&&ed.error&&ed.error.message?ed.error.message:'HTTP '+r.status);}
+    var dd=await r.json();
+    var raw=dd&&dd.candidates&&dd.candidates[0]&&dd.candidates[0].content&&dd.candidates[0].content.parts&&dd.candidates[0].content.parts[0]&&dd.candidates[0].content.parts[0].text;
+    if(!raw)throw new Error('応答が空でした。別のモデル名を試してください。');
+
+    // ── Clean noise ──
+    var txt=cleanOcrText(raw);
+
+    document.getElementById('rb').value=txt;
+    document.getElementById('cc').textContent=txt.length.toLocaleString()+' 文字（ノイズ除去済み）';
+    var now=new Date().toLocaleString('ja-JP');
+    var fname=files.map(function(f){return f.name;}).join(', ');
+    document.getElementById('rm').textContent=now+' ／ '+model;
+    showResult('res');
+
+    // save to history
+    addHistory({
+      id:Date.now()+'_'+Math.random().toString(36).slice(2),
+      name:fname,
+      date:now,
+      model:model,
+      chars:txt.length,
+      text:txt
+    });
+
+  }catch(e){
+    showResult('err');
+    document.getElementById('erm').textContent=fmtErr(e.message);
+  }finally{
+    runBtn.classList.remove('ld');updateRun();
+  }
+}
+
+/* ── RESULT ACTIONS ── */
+document.getElementById('rb').addEventListener('input',function(){document.getElementById('cc').textContent=this.value.length.toLocaleString()+' 文字';});
+document.getElementById('cpBtn').addEventListener('click',function(){
+  navigator.clipboard.writeText(document.getElementById('rb').value).then(function(){flash(document.getElementById('cpBtn'));});
+});
+document.getElementById('exBtn').addEventListener('click',function(){
+  var bl=new Blob([document.getElementById('rb').value],{type:'text/plain;charset=utf-8'});
+  var u=URL.createObjectURL(bl);var a=document.createElement('a');a.href=u;a.download='ocr-'+Date.now()+'.txt';a.click();URL.revokeObjectURL(u);
+});
+
+/* ── UTILS ── */
+function flash(btn){var o=btn.textContent;btn.textContent='✓ コピー済み';btn.classList.add('ok');setTimeout(function(){btn.textContent=o;btn.classList.remove('ok');},2000);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtErr(msg){
+  if(!msg)return '不明なエラー';
+  if(msg.includes('not found')||msg.includes('no longer')||msg.includes('deprecated'))
+    return '指定したモデルが見つかりません。\n\n'+msg+'\n\n→ モデル名を変更してください。\n例: gemini-1.5-pro-002 / gemini-1.5-flash-002';
+  if(msg.includes('API_KEY_INVALID')||msg.includes('API key not valid'))return 'APIキーが無効です。';
+  if(msg.includes('RESOURCE_EXHAUSTED'))return 'レート制限に達しました。しばらく待ってから再試行してください。';
+  return msg;
+}
+
+/* ── INIT ── */
+renderHistory();
+</script>
+</body>
+</html>
