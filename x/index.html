@@ -3,324 +3,756 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>X高度な検索アプリ（プリセット保存対応・完全版）</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
-<https://github.com/neverendingdaily/portal/blob/main/searchhub/index.html>
+<title>X 高度な検索</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background-color: #f5f8fa; color: #333; }
-    .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    h2 { text-align: center; color: #1da1f2; font-size: 1.4rem; margin-top: 0; margin-bottom: 20px; }
-    .section { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-    .section-title { font-size: 1.1rem; color: #1da1f2; margin-bottom: 15px; font-weight: bold; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.85rem; color: #555; }
-    input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #ccd6dd; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem; }
-    .flex-row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .flex-row-nowrap { display: flex; gap: 10px; flex-wrap: nowrap; align-items: stretch;}
-    .checkbox-group { display: flex; align-items: center; margin-bottom: 10px; }
-    .checkbox-group input { margin-right: 10px; transform: scale(1.2); }
-    .checkbox-group label { margin-bottom: 0; font-weight: normal; font-size: 0.95rem; cursor: pointer; }
-    .btn-main { width: 100%; padding: 16px; background-color: #1da1f2; color: white; border: none; border-radius: 24px; font-size: 1.1rem; font-weight: bold; cursor: pointer; position: sticky; bottom: 10px; box-shadow: 0 4px 10px rgba(29,161,242,0.4); }
-    .btn-main:hover { background-color: #0c85d0; }
-    .btn-sub { background-color: #657786; color: white; border: none; border-radius: 8px; padding: 8px 15px; font-size: 0.85rem; font-weight: bold; cursor: pointer; white-space: nowrap; }
-    .btn-sub:hover { background-color: #38444d; }
-    .btn-pain { background-color: #e0245e; }
-    .btn-pain:hover { background-color: #c01b4c; }
-    .btn-benefit { background-color: #17bf63; }
-    .btn-benefit:hover { background-color: #12994f; }
-    .preset-box { background-color: #e8f5fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bce2fa; }
-    .note { font-size: 0.75rem; color: #888; margin-top: 5px; }
+:root {
+  --cream:    #faf8f2;
+  --cream2:   #f3efe5;
+  --cream3:   #ede8db;
+  --white:    #ffffff;
+  --text:     #2a2620;
+  --text2:    #4a4540;
+  --muted:    #8c8278;
+  --border:   #ddd8ce;
+  --border2:  #ccc7bc;
+  --coral:    #d95235;
+  --coral-bg: #fdf0ec;
+  --coral-bd: #f5c4b8;
+  --teal:     #0e7ea4;
+  --teal-bg:  #e8f5fa;
+  --teal-bd:  #b0d8ea;
+  --amber:    #c47e10;
+  --amber-bg: #fdf6e3;
+  --amber-bd: #f0d898;
+  --green:    #2a8c5e;
+  --green-bg: #e8f7f0;
+  --green-bd: #a8dcc4;
+  --shadow-s: 0 1px 4px rgba(42,38,32,.07), 0 2px 8px rgba(42,38,32,.05);
+  --shadow-m: 0 2px 12px rgba(42,38,32,.10), 0 4px 20px rgba(42,38,32,.06);
+  --radius:   12px;
+  --radius-s: 8px;
+  --radius-xs: 6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body {
+  font-family:'Zen Kaku Gothic New','Noto Sans JP',sans-serif;
+  background:var(--cream); color:var(--text); min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 15% 10%,rgba(212,140,80,.07) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 80% at 85% 90%,rgba(14,126,164,.05) 0%,transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.018'/%3E%3C/svg%3E");
+}
+.wrap{max-width:520px;margin:0 auto;padding:16px 14px 40px;}
+
+/* Header */
+.site-header{display:flex;flex-direction:column;align-items:center;padding:22px 0 18px;gap:6px;}
+.logo-row{display:flex;align-items:center;gap:10px;}
+.logo-icon{
+  width:38px;height:38px;background:var(--coral);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+  box-shadow:0 4px 12px rgba(217,82,53,.3);flex-shrink:0;
+}
+.site-header h1{
+  font-family:'Noto Serif JP',serif;font-size:1.35rem;font-weight:700;
+  color:var(--text);letter-spacing:.02em;
+}
+.site-header p{font-size:.74rem;color:var(--muted);letter-spacing:.04em;}
+
+/* Translate strip */
+.translate-strip{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius-s);
+  padding:8px 12px;margin-bottom:14px;display:flex;align-items:center;gap:8px;
+  box-shadow:var(--shadow-s);flex-wrap:wrap;
+}
+.translate-strip .ts-label{font-size:.72rem;font-weight:700;color:var(--muted);white-space:nowrap;letter-spacing:.04em;}
+#google_translate_element{flex:1;min-width:0;}
+.goog-te-gadget{font-family:'Zen Kaku Gothic New',sans-serif!important;font-size:.8rem!important;color:var(--muted)!important;}
+.goog-te-gadget-simple{border:1px solid var(--border)!important;border-radius:6px!important;background:var(--cream)!important;padding:4px 8px!important;font-size:.78rem!important;}
+.goog-te-gadget-simple .goog-te-menu-value span{color:var(--text)!important;}
+
+/* Tabs */
+.tabs{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:4px;
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+  padding:4px;margin-bottom:14px;box-shadow:var(--shadow-s);
+}
+.tab{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:8px 4px;border:none;background:transparent;color:var(--muted);
+  font-family:inherit;font-size:.7rem;font-weight:700;
+  border-radius:var(--radius-xs);cursor:pointer;transition:all .18s;letter-spacing:.02em;
+}
+.tab .ti{font-size:1.05rem;}
+.tab:hover:not(.active){background:var(--cream2);color:var(--text2);}
+.tab.active{background:var(--coral);color:#fff;}
+.badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:16px;height:16px;padding:0 4px;
+  background:var(--coral);border-radius:8px;font-size:.6rem;font-weight:700;color:#fff;margin-left:2px;
+}
+.tab.active .badge{background:rgba(255,255,255,.3);}
+
+/* Panel */
+.panel{display:none;}
+.panel.active{display:block;animation:panelIn .22s ease;}
+@keyframes panelIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+
+/* Card */
+.card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-bottom:12px;box-shadow:var(--shadow-s);transition:box-shadow .18s;
+}
+.card:focus-within{box-shadow:var(--shadow-m);}
+.card-title{
+  font-family:'Noto Serif JP',serif;font-size:.82rem;font-weight:700;color:var(--text2);
+  margin-bottom:13px;display:flex;align-items:center;gap:6px;
+  padding-bottom:9px;border-bottom:2px solid var(--cream3);letter-spacing:.01em;
+}
+.ct-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* Form */
+.form-group{margin-bottom:12px;}
+.form-group:last-child{margin-bottom:0;}
+label,.lbl{
+  display:block;font-size:.72rem;font-weight:700;color:var(--muted);
+  margin-bottom:5px;letter-spacing:.05em;
+}
+input[type="text"],input[type="number"],input[type="date"],select,textarea{
+  width:100%;padding:9px 12px;background:var(--cream);border:1.5px solid var(--border);
+  border-radius:var(--radius-s);color:var(--text);
+  font-family:'Zen Kaku Gothic New','Noto Sans JP',sans-serif;
+  font-size:.88rem;outline:none;transition:border-color .16s,background .16s,box-shadow .16s;
+  -webkit-appearance:none;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--teal);background:var(--white);box-shadow:0 0 0 3px rgba(14,126,164,.1);
+}
+input::placeholder{color:var(--muted);opacity:.7;}
+textarea{resize:vertical;min-height:75px;line-height:1.6;}
+select{cursor:pointer;}
+select option{background:var(--white);}
+input[type="date"]::-webkit-calendar-picker-indicator{opacity:.5;cursor:pointer;}
+.row{display:flex;gap:8px;}
+.row>*{flex:1;}
+.row-fit{display:flex;gap:6px;align-items:center;}
+.row-fit input,.row-fit select{flex:1;}
+
+/* Checkbox */
+.check-row{
+  display:flex;align-items:center;gap:9px;margin-bottom:8px;cursor:pointer;padding:5px 0;
+}
+.check-row:last-child{margin-bottom:0;}
+.check-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--coral);cursor:pointer;flex-shrink:0;}
+.check-row .cl{font-size:.84rem;color:var(--text2);cursor:pointer;}
+
+/* Buttons */
+.btn{
+  padding:7px 13px;border:none;border-radius:var(--radius-xs);
+  font-family:'Zen Kaku Gothic New','Noto Sans JP',sans-serif;
+  font-size:.77rem;font-weight:700;cursor:pointer;white-space:nowrap;
+  transition:all .15s;letter-spacing:.02em;
+}
+.btn-coral{background:var(--coral);color:#fff;box-shadow:0 2px 8px rgba(217,82,53,.25);}
+.btn-coral:hover{filter:brightness(1.08);transform:translateY(-1px);}
+.btn-teal{background:var(--teal);color:#fff;box-shadow:0 2px 8px rgba(14,126,164,.22);}
+.btn-teal:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-amber{background:var(--amber);color:#fff;box-shadow:0 2px 8px rgba(196,126,16,.2);}
+.btn-amber:hover{filter:brightness(1.08);}
+.btn-green{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(42,140,94,.2);}
+.btn-green:hover{filter:brightness(1.08);}
+.btn-ghost{background:var(--cream2);color:var(--text2);border:1.5px solid var(--border2);}
+.btn-ghost:hover{background:var(--cream3);color:var(--text);}
+.btn-danger{background:var(--coral-bg);color:var(--coral);border:1.5px solid var(--coral-bd);}
+.btn-danger:hover{background:var(--coral-bd);}
+
+/* Pill buttons */
+.pill-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;}
+.pill{
+  padding:5px 11px;border:1.5px solid;border-radius:20px;
+  font-family:'Zen Kaku Gothic New','Noto Sans JP',sans-serif;
+  font-size:.74rem;font-weight:700;cursor:pointer;transition:all .15s;
+}
+.pill-coral{border-color:var(--coral-bd);color:var(--coral);background:var(--coral-bg);}
+.pill-coral:hover{background:var(--coral);color:#fff;}
+.pill-green{border-color:var(--green-bd);color:var(--green);background:var(--green-bg);}
+.pill-green:hover{background:var(--green);color:#fff;}
+.pill-ghost{border-color:var(--border2);color:var(--muted);background:var(--cream2);}
+.pill-ghost:hover{background:var(--cream3);color:var(--text2);}
+
+/* Search button */
+.btn-search{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,var(--coral) 0%,#c03a1c 100%);
+  color:#fff;border:none;border-radius:var(--radius);
+  font-family:'Noto Serif JP',serif;font-size:1rem;font-weight:700;
+  cursor:pointer;letter-spacing:.06em;transition:all .2s;
+  margin-top:14px;position:sticky;bottom:12px;
+  box-shadow:0 4px 18px rgba(217,82,53,.38),0 2px 6px rgba(217,82,53,.2);
+}
+.btn-search:hover{filter:brightness(1.06);transform:translateY(-1px);box-shadow:0 6px 22px rgba(217,82,53,.45);}
+.btn-search:active{transform:translateY(0);}
+
+/* Preset */
+.preset-row{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
+.preset-row select{flex:1;}
+
+/* Divider */
+hr.div{border:none;border-top:1.5px solid var(--cream3);margin:11px 0;}
+
+/* Word tags */
+.tags-area{display:flex;flex-wrap:wrap;gap:6px;min-height:24px;}
+.wtag{
+  display:inline-flex;align-items:center;gap:4px;padding:4px 10px;
+  border-radius:20px;font-size:.74rem;font-weight:500;
+  cursor:pointer;transition:all .15s;border:1.5px solid;max-width:180px;
+}
+.wtag-pain   {background:var(--coral-bg);border-color:var(--coral-bd);color:var(--coral);}
+.wtag-benefit{background:var(--green-bg);border-color:var(--green-bd);color:var(--green);}
+.wtag-custom {background:var(--teal-bg); border-color:var(--teal-bd); color:var(--teal);}
+.wtag-account{background:var(--amber-bg);border-color:var(--amber-bd);color:var(--amber);}
+.wtag:hover{filter:brightness(.94);transform:scale(1.02);}
+.wtag .wd-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.wtag .wd-del{font-size:.85rem;opacity:.5;flex-shrink:0;}
+.wtag:hover .wd-del{opacity:1;color:var(--coral);}
+.cat-chip{display:inline-block;padding:1px 5px;border-radius:4px;font-size:.62rem;font-weight:700;letter-spacing:.03em;flex-shrink:0;}
+.cat-chip-pain   {background:var(--coral-bd);color:#8a200e;}
+.cat-chip-benefit{background:var(--green-bd);color:#1a5a3a;}
+.cat-chip-custom {background:var(--teal-bd); color:#0a4a62;}
+.cat-chip-account{background:var(--amber-bd);color:#7a4a06;}
+
+/* History */
+.hist-item{
+  background:var(--cream);border:1.5px solid var(--border);border-radius:var(--radius-s);
+  padding:10px 12px;margin-bottom:8px;transition:border-color .15s,box-shadow .15s;
+}
+.hist-item:hover{border-color:var(--teal-bd);box-shadow:0 2px 8px rgba(14,126,164,.08);}
+.hist-query{
+  font-family:'DM Mono','Courier New',monospace;font-size:.72rem;color:var(--teal);
+  word-break:break-all;line-height:1.55;
+  background:var(--teal-bg);border:1px solid var(--teal-bd);
+  border-radius:5px;padding:5px 8px;margin-bottom:7px;
+}
+.hist-meta{display:flex;justify-content:space-between;align-items:center;gap:6px;}
+.hist-date{font-size:.67rem;color:var(--muted);}
+.hist-btns{display:flex;gap:4px;}
+.hbtn{font-size:.68rem;padding:3px 8px;border:1.5px solid;border-radius:5px;cursor:pointer;font-family:inherit;font-weight:700;transition:all .14s;}
+.hbtn-restore{border-color:var(--teal-bd); color:var(--teal); background:var(--teal-bg);}
+.hbtn-restore:hover{background:var(--teal);color:#fff;}
+.hbtn-rerun  {border-color:var(--green-bd);color:var(--green);background:var(--green-bg);}
+.hbtn-rerun:hover  {background:var(--green);color:#fff;}
+.hbtn-del    {border-color:var(--coral-bd);color:var(--coral);background:var(--coral-bg);}
+.hbtn-del:hover    {background:var(--coral);color:#fff;}
+
+/* Memo */
+.memo-item{
+  background:var(--amber-bg);border:1.5px solid var(--amber-bd);
+  border-radius:var(--radius-s);padding:12px;margin-bottom:9px;position:relative;
+}
+.memo-item::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:4px;background:var(--amber);border-radius:4px 0 0 4px;
+}
+.memo-ttl{
+  font-family:'Noto Serif JP',serif;font-size:.85rem;font-weight:700;color:var(--text);
+  margin-bottom:5px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;
+}
+.memo-body{font-size:.8rem;color:var(--text2);line-height:1.65;white-space:pre-wrap;word-break:break-all;}
+.memo-date{font-size:.65rem;color:var(--muted);margin-top:8px;}
+
+/* Section subtitle */
+.sec-sub{font-size:.7rem;font-weight:700;letter-spacing:.07em;color:var(--muted);margin-bottom:7px;text-transform:uppercase;}
+
+/* Empty */
+.empty{text-align:center;padding:28px 16px;color:var(--muted);}
+.empty .ei{font-size:1.8rem;margin-bottom:7px;}
+.empty p{font-size:.8rem;line-height:1.6;}
+
+/* Flash */
+.flash-border{animation:flashBorder .7s ease;}
+@keyframes flashBorder{0%,100%{border-color:var(--border);}40%{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,126,164,.15);}}
+
+/* Word meta */
+.word-meta-row{display:flex;gap:6px;margin-top:6px;}
+.word-meta-row select{flex:0 0 118px;}
+.word-meta-row input{flex:1;}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--cream2);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--muted);}
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<div class="container">
-    <h2>X高度な検索アプリ</h2>
-    
-    <div class="preset-box">
-        <div class="section-title" style="margin-bottom: 10px; font-size: 1rem;">💾 検索条件の保存・読込</div>
-        <div class="form-group">
-            <select id="preset_list" onchange="loadPreset()">
-                <option value="">-- 保存済みの条件を選択して読込 --</option>
-            </select>
-        </div>
-        <div class="flex-row-nowrap">
-            <input type="text" id="preset_name" placeholder="保存する名前 (例: 競合A分析)" style="flex: 1;">
-            <button type="button" class="btn-sub" style="background-color: #1da1f2;" onclick="savePreset()">保存</button>
-            <button type="button" class="btn-sub" style="background-color: #e0245e;" onclick="deletePreset()">削除</button>
-        </div>
+  <!-- ヘッダー -->
+  <div class="site-header">
+    <div class="logo-row">
+      <div class="logo-icon">🔍</div>
+      <h1>X 高度な検索</h1>
+    </div>
+    <p>プリセット・履歴・ワード登録・メモ</p>
+  </div>
+
+  <!-- Google 翻訳 -->
+  <div class="translate-strip">
+    <span class="ts-label">🌐 UI言語</span>
+    <div id="google_translate_element"></div>
+  </div>
+
+  <!-- タブ -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('search',this)">
+      <span class="ti">🔍</span>検索
+    </button>
+    <button class="tab" onclick="switchTab('history',this)">
+      <span class="ti">🕐</span>履歴<span class="badge" id="hist-badge">0</span>
+    </button>
+    <button class="tab" onclick="switchTab('words',this)">
+      <span class="ti">📌</span>ワード
+    </button>
+    <button class="tab" onclick="switchTab('memo',this)">
+      <span class="ti">📝</span>メモ
+    </button>
+  </div>
+
+  <!-- ======== 検索 ======== -->
+  <div class="panel active" id="panel-search">
+
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--amber)"></span>💾 プリセット</div>
+      <div class="preset-row">
+        <select id="preset_list" onchange="loadPreset()">
+          <option value="">── 保存済みを読込 ──</option>
+        </select>
+        <button class="btn btn-danger" onclick="deletePreset()">削除</button>
+      </div>
+      <div class="row-fit">
+        <input type="text" id="preset_name" placeholder="プリセット名…">
+        <button class="btn btn-coral" onclick="savePreset()">保存</button>
+      </div>
     </div>
 
-    <div class="section">
-        <div class="section-title">🔍 キーワード分析</div>
-        <div class="form-group">
-            <label>メインキーワード (すべての単語を含む)</label>
-            <div class="flex-row-nowrap">
-                <input type="text" id="all_words" placeholder="例: SNS">
-                <button type="button" class="btn-sub" onclick="fetchSuggests()">関連ワード</button>
-            </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--teal)"></span>🔍 キーワード</div>
+      <div class="form-group">
+        <label>すべての単語を含む</label>
+        <div class="row-fit">
+          <input type="text" id="all_words" placeholder="例: SNS マーケティング">
+          <button class="btn btn-ghost" onclick="fetchSuggests()">関連↗</button>
         </div>
-        
-        <div class="form-group">
-            <label>いずれかの単語を含む (OR)</label>
-            <input type="text" id="any_words" placeholder="例: マーケティング アフィリエイト">
-            <div class="flex-row" style="margin-top: 8px;">
-                <button type="button" class="btn-sub btn-pain" onclick="addWords('any_words', '最悪 つらい 失敗 騙された 後悔 微妙 悩む')">ペイン抽出(-)</button>
-                <button type="button" class="btn-sub btn-benefit" onclick="addWords('any_words', '最高 助かった おすすめ 解決 買ってよかった 神 感謝')">ベネフィット抽出(+)</button>
-                <button type="button" class="btn-sub" onclick="document.getElementById('any_words').value=''">クリア</button>
-            </div>
+      </div>
+      <div class="form-group">
+        <label>いずれかの単語を含む（OR）</label>
+        <div class="row-fit">
+          <input type="text" id="any_words" placeholder="例: 副業 フリーランス">
+          <button class="btn btn-ghost" onclick="clearField('any_words')">✕</button>
         </div>
-        
-        <div class="form-group">
-            <label>フレーズと完全一致</label>
-            <input type="text" id="exact_phrase" placeholder="例: 売上アップ">
+        <div class="pill-row">
+          <button class="pill pill-coral" onclick="addWords('any_words','最悪 つらい 失敗 騙された 後悔 微妙 悩む')">😤 ペインワード</button>
+          <button class="pill pill-green" onclick="addWords('any_words','最高 助かった おすすめ 解決 買ってよかった 神 感謝')">✨ ベネフィット</button>
         </div>
-        <div class="form-group">
-            <label>除外する単語 (-)</label>
-            <input type="text" id="exclude_words" placeholder="例: 相互フォロー">
-        </div>
+      </div>
+      <div class="form-group">
+        <label>フレーズと完全一致</label>
+        <input type="text" id="exact_phrase" placeholder='例: 売上アップ'>
+      </div>
+      <div class="form-group">
+        <label>除外する単語</label>
+        <input type="text" id="exclude_words" placeholder="例: 相互フォロー bot">
+      </div>
     </div>
 
-    <div class="section">
-        <div class="section-title">👤 競合アカウント分析</div>
+    <!-- 登録ワードから挿入 -->
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--coral)"></span>📌 登録ワードから挿入</div>
+      <div id="quick-tags-area">
+        <div class="empty" style="padding:10px 0;">
+          <p>ワードタブで登録すると<br>ここにタグとして表示されます</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--amber)"></span>👤 アカウント</div>
+      <div class="form-group">
+        <label>アカウントの投稿（from:）</label>
+        <div class="row-fit">
+          <input type="text" id="from_account" placeholder="例: elonmusk">
+          <button class="btn btn-amber" onclick="setCompetitorBuzz()">競合バズ</button>
+        </div>
+      </div>
+      <div class="row">
         <div class="form-group">
-            <label>特定のアカウントの投稿 (from:)</label>
-            <div class="flex-row-nowrap">
-                <input type="text" id="from_account" placeholder="例: elonmusk">
-                <button type="button" class="btn-sub" style="background-color: #f4a100;" onclick="setCompetitorBuzz()">競合バズ抽出</button>
-            </div>
+          <label>宛先アカウント（to:）</label>
+          <input type="text" id="to_account" placeholder="例: elonmusk">
         </div>
+        <div class="form-group">
+          <label>言及（@mention）</label>
+          <input type="text" id="mention_account" placeholder="例: elonmusk">
+        </div>
+      </div>
     </div>
 
-    <div class="section">
-        <div class="section-title">⚙️ フィルター・メディア</div>
-        <div class="checkbox-group">
-            <input type="checkbox" id="filter_images">
-            <label for="filter_images">画像を含む (filter:images)</label>
-        </div>
-        <div class="checkbox-group">
-            <input type="checkbox" id="filter_videos">
-            <label for="filter_videos">動画を含む (filter:videos)</label>
-        </div>
-        <div class="checkbox-group">
-            <input type="checkbox" id="exclude_zombies" checked>
-            <label for="exclude_zombies">インプレゾンビ除外 (日本語＋リプライ除外)</label>
-        </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--green)"></span>⚙️ フィルター</div>
+      <div class="form-group">
+        <label>ツイートの言語（lang:）</label>
+        <select id="lang_filter">
+          <option value="">言語を指定しない</option>
+          <option value="ja">日本語</option>
+          <option value="en">English</option>
+          <option value="zh-cn">中文（简体）</option>
+          <option value="zh-tw">中文（繁體）</option>
+          <option value="ko">한국어</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="pt">Português</option>
+          <option value="ar">العربية</option>
+          <option value="hi">हिन्दी</option>
+          <option value="id">Bahasa Indonesia</option>
+          <option value="th">ภาษาไทย</option>
+          <option value="vi">Tiếng Việt</option>
+          <option value="ru">Русский</option>
+          <option value="tr">Türkçe</option>
+          <option value="it">Italiano</option>
+          <option value="nl">Nederlands</option>
+        </select>
+      </div>
+      <hr class="div">
+      <label class="check-row"><input type="checkbox" id="filter_images"><span class="cl">画像を含む（filter:images）</span></label>
+      <label class="check-row"><input type="checkbox" id="filter_videos"><span class="cl">動画を含む（filter:videos）</span></label>
+      <label class="check-row"><input type="checkbox" id="filter_links"><span class="cl">リンクを含む（filter:links）</span></label>
+      <label class="check-row"><input type="checkbox" id="exclude_replies"><span class="cl">リプライを除外（-filter:replies）</span></label>
+      <label class="check-row"><input type="checkbox" id="exclude_reposts" checked><span class="cl">インプレゾンビ除外（リプライ除外）</span></label>
     </div>
 
-    <div class="section">
-        <div class="section-title">❤️ エンゲージメント</div>
-        <div class="flex-row-nowrap">
-            <div class="form-group" style="flex: 1;">
-                <label>最小いいね</label>
-                <input type="number" id="min_faves" placeholder="0">
-            </div>
-            <div class="form-group" style="flex: 1;">
-                <label>最小リポスト</label>
-                <input type="number" id="min_retweets" placeholder="0">
-            </div>
-        </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--coral)"></span>❤️ エンゲージメント</div>
+      <div class="row">
+        <div class="form-group"><label>最小いいね数</label><input type="number" id="min_faves" placeholder="0" min="0"></div>
+        <div class="form-group"><label>最小リポスト数</label><input type="number" id="min_retweets" placeholder="0" min="0"></div>
+        <div class="form-group"><label>最小返信数</label><input type="number" id="min_replies" placeholder="0" min="0"></div>
+      </div>
     </div>
 
-    <div class="section" style="border-bottom: none;">
-        <div class="section-title">📅 日付</div>
-        <div class="flex-row-nowrap">
-            <div class="form-group" style="flex: 1;">
-                <label>開始 (since:)</label>
-                <input type="date" id="since_date">
-            </div>
-            <div class="form-group" style="flex: 1;">
-                <label>終了 (until:)</label>
-                <input type="date" id="until_date">
-            </div>
-        </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--teal)"></span>📅 日付範囲</div>
+      <div class="row">
+        <div class="form-group"><label>開始（since:）</label><input type="date" id="since_date"></div>
+        <div class="form-group"><label>終了（until:）</label><input type="date" id="until_date"></div>
+      </div>
     </div>
 
-    <button class="btn-main" onclick="executeSearch()">Xアプリで検索する</button>
+    <button class="btn-search" onclick="executeSearch()">🚀 Xで検索する</button>
+    <div style="height:24px;"></div>
+  </div>
+
+  <!-- ======== 履歴 ======== -->
+  <div class="panel" id="panel-history">
+    <div class="card">
+      <div class="card-title">
+        <span class="ct-dot" style="background:var(--teal)"></span>🕐 検索履歴
+        <span style="font-size:.72rem;font-weight:400;color:var(--muted);margin-left:auto;">最新30件</span>
+      </div>
+      <div id="history-list"></div>
+    </div>
+    <div style="text-align:right;margin-top:-4px;margin-bottom:16px;">
+      <button class="btn btn-danger" onclick="clearHistory()">履歴を全削除</button>
+    </div>
+  </div>
+
+  <!-- ======== ワード ======== -->
+  <div class="panel" id="panel-words">
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--coral)"></span>📌 ワードを登録する</div>
+      <div class="form-group">
+        <label>ワード・フレーズ（スペース区切りで複数可）</label>
+        <input type="text" id="new_word" placeholder="例: 副業 ブログ 収益化">
+      </div>
+      <div class="word-meta-row">
+        <select id="new_word_cat">
+          <option value="custom">🏷 カスタム</option>
+          <option value="pain">😤 ペイン</option>
+          <option value="benefit">✨ ベネフィット</option>
+          <option value="account">👤 アカウント</option>
+        </select>
+        <input type="text" id="new_word_label" placeholder="ラベル名（省略可）例: 副業系KW">
+      </div>
+      <button class="btn btn-coral" style="width:100%;margin-top:10px;" onclick="registerWord()">＋ 登録する</button>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--green)"></span>登録済みワード</div>
+      <div class="sec-sub">😤 ペイン</div>
+      <div class="tags-area" id="tags-pain"></div>
+      <hr class="div">
+      <div class="sec-sub">✨ ベネフィット</div>
+      <div class="tags-area" id="tags-benefit"></div>
+      <hr class="div">
+      <div class="sec-sub">🏷 カスタム</div>
+      <div class="tags-area" id="tags-custom"></div>
+      <hr class="div">
+      <div class="sec-sub">👤 アカウント</div>
+      <div class="tags-area" id="tags-account"></div>
+    </div>
+    <div style="height:20px;"></div>
+  </div>
+
+  <!-- ======== メモ ======== -->
+  <div class="panel" id="panel-memo">
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--amber)"></span>📝 メモを追加</div>
+      <div class="form-group"><label>タイトル</label><input type="text" id="memo_title" placeholder="例: 競合A 分析メモ"></div>
+      <div class="form-group"><label>本文</label><textarea id="memo_body" placeholder="気づいたこと、検索のコツ、スクリーンショットURLなど自由に…"></textarea></div>
+      <button class="btn btn-amber" style="width:100%;" onclick="addMemo()">メモを保存</button>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot" style="background:var(--amber)"></span>メモ一覧</div>
+      <div id="memo-list"></div>
+    </div>
+    <div style="height:20px;"></div>
+  </div>
+
 </div>
 
+<!-- Google 翻訳 -->
 <script>
-    // --- プリセット機能のロジック ---
-    const PRESET_KEY = 'xSearchAppPresets';
-
-    // 全入力項目のIDリスト
-    const inputIds = [
-        'all_words', 'any_words', 'exact_phrase', 'exclude_words',
-        'from_account', 'min_faves', 'min_retweets', 'since_date', 'until_date'
-    ];
-    const checkboxIds = ['filter_images', 'filter_videos', 'exclude_zombies'];
-
-    // 起動時にプリセット一覧を読み込む
-    window.onload = function() {
-        updatePresetList();
-    };
-
-    function getPresets() {
-        const data = localStorage.getItem(PRESET_KEY);
-        return data ? JSON.parse(data) : {};
-    }
-
-    function updatePresetList() {
-        const presets = getPresets();
-        const select = document.getElementById('preset_list');
-        select.innerHTML = '<option value="">-- 保存済みの条件を選択して読込 --</option>';
-        for (let name in presets) {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            select.appendChild(option);
-        }
-    }
-
-    function savePreset() {
-        const name = document.getElementById('preset_name').value.trim();
-        if (!name) return alert("保存する名前を入力してください。");
-
-        const presets = getPresets();
-        const currentData = {};
-
-        inputIds.forEach(id => currentData[id] = document.getElementById(id).value);
-        checkboxIds.forEach(id => currentData[id] = document.getElementById(id).checked);
-
-        presets[name] = currentData;
-        localStorage.setItem(PRESET_KEY, JSON.stringify(presets));
-        
-        document.getElementById('preset_name').value = '';
-        updatePresetList();
-        document.getElementById('preset_list').value = name;
-        alert(`「${name}」を保存しました。`);
-    }
-
-    function loadPreset() {
-        const name = document.getElementById('preset_list').value;
-        if (!name) return;
-
-        const presets = getPresets();
-        const data = presets[name];
-        if (!data) return;
-
-        inputIds.forEach(id => {
-            if(data[id] !== undefined) document.getElementById(id).value = data[id];
-        });
-        checkboxIds.forEach(id => {
-            if(data[id] !== undefined) document.getElementById(id).checked = data[id];
-        });
-    }
-
-    function deletePreset() {
-        const name = document.getElementById('preset_list').value;
-        if (!name) return alert("削除するプリセットを選択してください。");
-        
-        if (!confirm(`「${name}」を削除しますか？`)) return;
-
-        const presets = getPresets();
-        delete presets[name];
-        localStorage.setItem(PRESET_KEY, JSON.stringify(presets));
-        
-        updatePresetList();
-        
-        // フォームのクリア
-        inputIds.forEach(id => document.getElementById(id).value = '');
-        checkboxIds.forEach(id => document.getElementById(id).checked = false);
-        document.getElementById('exclude_zombies').checked = true; // デフォルトONに戻す
-    }
-
-    // --- 既存の検索補助・実行ロジック ---
-    function addWords(targetId, words) {
-        const input = document.getElementById(targetId);
-        const currentVal = input.value.trim();
-        input.value = currentVal ? currentVal + ' ' + words : words;
-    }
-
-    function setCompetitorBuzz() {
-        document.getElementById('min_faves').value = 100;
-        document.getElementById('exclude_zombies').checked = true;
-        document.getElementById('from_account').focus();
-        const btn = event.target;
-        const originalText = btn.innerText;
-        btn.innerText = "セット完了！";
-        setTimeout(() => { btn.innerText = originalText; }, 1500);
-    }
-
-    function applySuggests(data) {
-        if (data && data[1] && data[1].length > 0) {
-            const originalKeyword = data[0];
-            const suggests = data[1].filter(w => w !== originalKeyword).slice(0, 4);
-            if (suggests.length === 0) return;
-            addWords('any_words', suggests.join(' '));
-            const btn = document.querySelector('button[onclick="fetchSuggests()"]');
-            const originalText = btn.innerText;
-            btn.innerText = "取得完了！";
-            btn.style.backgroundColor = "#17bf63";
-            setTimeout(() => { btn.innerText = originalText; btn.style.backgroundColor = "#657786"; }, 2000);
-        } else {
-            alert("関連キーワードが見つかりませんでした。");
-        }
-    }
-
-    function fetchSuggests() {
-        const keyword = document.getElementById('all_words').value.trim();
-        if (!keyword) return alert("「メインキーワード」を入力してください。");
-        const script = document.createElement('script');
-        script.src = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(keyword)}&callback=applySuggests`;
-        document.body.appendChild(script);
-    }
-
-    function executeSearch() {
-        let queryParts = [];
-
-        const allWords = document.getElementById('all_words').value.trim();
-        if (allWords) queryParts.push(allWords);
-
-        const exactPhrase = document.getElementById('exact_phrase').value.trim();
-        if (exactPhrase) queryParts.push(`"${exactPhrase}"`);
-
-        const anyWords = document.getElementById('any_words').value.trim();
-        if (anyWords) {
-            const orQuery = anyWords.split(/\s+/).join(' OR ');
-            queryParts.push(`(${orQuery})`);
-        }
-
-        const excludeWords = document.getElementById('exclude_words').value.trim();
-        if (excludeWords) {
-            excludeWords.split(/\s+/).forEach(word => {
-                if(word) queryParts.push(`-${word}`);
-            });
-        }
-
-        const fromAcc = document.getElementById('from_account').value.trim().replace(/^@/, '');
-        if (fromAcc) queryParts.push(`from:${fromAcc}`);
-
-        if (document.getElementById('filter_images').checked) queryParts.push('filter:images');
-        if (document.getElementById('filter_videos').checked) queryParts.push('filter:videos');
-        
-        if (document.getElementById('exclude_zombies').checked) {
-            queryParts.push('lang:ja -filter:replies');
-        }
-
-        const minFaves = document.getElementById('min_faves').value;
-        if (minFaves) queryParts.push(`min_faves:${minFaves}`);
-
-        const minRetweets = document.getElementById('min_retweets').value;
-        if (minRetweets) queryParts.push(`min_retweets:${minRetweets}`);
-
-        const sinceDate = document.getElementById('since_date').value;
-        if (sinceDate) queryParts.push(`since:${sinceDate}`);
-
-        const untilDate = document.getElementById('until_date').value;
-        if (untilDate) queryParts.push(`until:${untilDate}`);
-
-        const finalQuery = queryParts.join(' ');
-        
-        if (!finalQuery) return alert("検索条件を入力してください。");
-
-        const encodedQuery = encodeURIComponent(finalQuery);
-        const targetUrl = `https://twitter.com/search?q=${encodedQuery}`;
-        window.open(targetUrl, '_blank');
-    }
+function googleTranslateElementInit(){
+  new google.translate.TranslateElement({
+    pageLanguage:'ja',
+    includedLanguages:'ja,en,zh-CN,zh-TW,ko,es,fr,de,pt,ar,hi,id,th,vi,ru,tr,it,nl',
+    layout:google.translate.TranslateElement.InlineLayout.SIMPLE,
+    autoDisplay:false
+  },'google_translate_element');
+}
 </script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 
-<script type="module" src="https://neverendingdaily.github.io/portal/global-memo.js"></script>
-    
+<script>
+const K={presets:'xs_presets_ja',history:'xs_history_ja',words:'xs_words_ja',memos:'xs_memos_ja'};
+function ld(k,d){try{return JSON.parse(localStorage.getItem(k))||d;}catch{return d;}}
+function sv(k,v){localStorage.setItem(k,JSON.stringify(v));}
+function fmtD(ts){const d=new Date(ts);return`${d.getFullYear()}/${p2(d.getMonth()+1)}/${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;}
+function p2(n){return String(n).padStart(2,'0');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function ea(s){return String(s||'').replace(/'/g,"\\'");}
+
+function switchTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='history')renderHistory();
+  if(name==='words')  renderWords();
+  if(name==='memo')   renderMemos();
+}
+
+const TIDS=['all_words','any_words','exact_phrase','exclude_words',
+            'from_account','to_account','mention_account',
+            'min_faves','min_retweets','min_replies','since_date','until_date','lang_filter'];
+const CIDS=['filter_images','filter_videos','filter_links','exclude_replies','exclude_reposts'];
+function getForm(){
+  const d={};
+  TIDS.forEach(id=>d[id]=document.getElementById(id).value);
+  CIDS.forEach(id=>d[id]=document.getElementById(id).checked);
+  return d;
+}
+function setForm(d){
+  TIDS.forEach(id=>{if(d[id]!==undefined)document.getElementById(id).value=d[id];});
+  CIDS.forEach(id=>{if(d[id]!==undefined)document.getElementById(id).checked=d[id];});
+}
+
+/* プリセット */
+function updatePresetList(){
+  const presets=ld(K.presets,{});
+  const sel=document.getElementById('preset_list');
+  sel.innerHTML='<option value="">── 保存済みを読込 ──</option>';
+  Object.keys(presets).forEach(name=>{
+    const o=document.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o);
+  });
+}
+function savePreset(){
+  const name=document.getElementById('preset_name').value.trim();
+  if(!name)return alert('保存する名前を入力してください。');
+  const presets=ld(K.presets,{});presets[name]=getForm();sv(K.presets,presets);
+  document.getElementById('preset_name').value='';updatePresetList();
+  document.getElementById('preset_list').value=name;flash(event.target,'保存済 ✓');
+}
+function loadPreset(){
+  const name=document.getElementById('preset_list').value;if(!name)return;
+  const presets=ld(K.presets,{});if(presets[name])setForm(presets[name]);
+}
+function deletePreset(){
+  const name=document.getElementById('preset_list').value;
+  if(!name)return alert('削除するプリセットを選択してください。');
+  if(!confirm(`「${name}」を削除しますか？`))return;
+  const presets=ld(K.presets,{});delete presets[name];sv(K.presets,presets);updatePresetList();
+}
+
+/* クエリ生成 */
+function buildQuery(){
+  const parts=[];
+  const allW=document.getElementById('all_words').value.trim();if(allW)parts.push(allW);
+  const exact=document.getElementById('exact_phrase').value.trim();if(exact)parts.push(`"${exact}"`);
+  const anyW=document.getElementById('any_words').value.trim();
+  if(anyW)parts.push(`(${anyW.split(/\s+/).join(' OR ')})`);
+  const excW=document.getElementById('exclude_words').value.trim();
+  if(excW)excW.split(/\s+/).forEach(w=>w&&parts.push(`-${w}`));
+  const from=document.getElementById('from_account').value.trim().replace(/^@/,'');if(from)parts.push(`from:${from}`);
+  const to=document.getElementById('to_account').value.trim().replace(/^@/,'');if(to)parts.push(`to:${to}`);
+  const mention=document.getElementById('mention_account').value.trim().replace(/^@/,'');if(mention)parts.push(`@${mention}`);
+  const lang=document.getElementById('lang_filter').value;if(lang)parts.push(`lang:${lang}`);
+  if(document.getElementById('filter_images').checked)parts.push('filter:images');
+  if(document.getElementById('filter_videos').checked)parts.push('filter:videos');
+  if(document.getElementById('filter_links').checked)parts.push('filter:links');
+  if(document.getElementById('exclude_replies').checked)parts.push('-filter:replies');
+  if(document.getElementById('exclude_reposts').checked)parts.push('-filter:replies');
+  const faves=document.getElementById('min_faves').value;if(faves)parts.push(`min_faves:${faves}`);
+  const rt=document.getElementById('min_retweets').value;if(rt)parts.push(`min_retweets:${rt}`);
+  const rep=document.getElementById('min_replies').value;if(rep)parts.push(`min_replies:${rep}`);
+  const since=document.getElementById('since_date').value;if(since)parts.push(`since:${since}`);
+  const until=document.getElementById('until_date').value;if(until)parts.push(`until:${until}`);
+  return parts.join(' ');
+}
+function executeSearch(){
+  const query=buildQuery();if(!query)return alert('検索条件を入力してください。');
+  const hist=ld(K.history,[]);
+  hist.unshift({query,ts:Date.now(),formData:getForm()});
+  if(hist.length>30)hist.pop();sv(K.history,hist);updateHistBadge();
+  window.open(`https://twitter.com/search?q=${encodeURIComponent(query)}`,'_blank');
+}
+
+/* 履歴 */
+function updateHistBadge(){document.getElementById('hist-badge').textContent=ld(K.history,[]).length;}
+function renderHistory(){
+  const hist=ld(K.history,[]);
+  const el=document.getElementById('history-list');
+  if(!hist.length){el.innerHTML='<div class="empty"><div class="ei">🕐</div><p>まだ検索履歴がありません。<br>検索すると自動で記録されます。</p></div>';return;}
+  el.innerHTML=hist.map((h,i)=>`
+    <div class="hist-item">
+      <div class="hist-query">${esc(h.query)}</div>
+      <div class="hist-meta">
+        <div class="hist-date">${fmtD(h.ts)}</div>
+        <div class="hist-btns">
+          <button class="hbtn hbtn-restore" onclick="restoreHist(${i})">フォーム復元</button>
+          <button class="hbtn hbtn-rerun"   onclick="rerunHist(${i})">再検索</button>
+          <button class="hbtn hbtn-del"     onclick="delHist(${i})">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function restoreHist(i){
+  const h=ld(K.history,[])[i];
+  if(h&&h.formData){setForm(h.formData);switchTab('search',document.querySelectorAll('.tab')[0]);}
+}
+function rerunHist(i){
+  const h=ld(K.history,[])[i];
+  if(h)window.open(`https://twitter.com/search?q=${encodeURIComponent(h.query)}`,'_blank');
+}
+function delHist(i){
+  const hist=ld(K.history,[]);hist.splice(i,1);sv(K.history,hist);updateHistBadge();renderHistory();
+}
+function clearHistory(){
+  if(!confirm('検索履歴をすべて削除しますか？'))return;
+  sv(K.history,[]);updateHistBadge();renderHistory();
+}
+
+/* ワード */
+function registerWord(){
+  const word=document.getElementById('new_word').value.trim();
+  const cat=document.getElementById('new_word_cat').value;
+  const label=document.getElementById('new_word_label').value.trim()||word;
+  if(!word)return alert('ワードを入力してください。');
+  const words=ld(K.words,[]);words.push({id:Date.now(),word,cat,label,ts:Date.now()});sv(K.words,words);
+  document.getElementById('new_word').value='';document.getElementById('new_word_label').value='';
+  renderWords();renderQuickInsert();flash(document.querySelector('#panel-words .btn-coral'),'登録済 ✓');
+}
+function delWord(id){sv(K.words,ld(K.words,[]).filter(w=>w.id!==id));renderWords();renderQuickInsert();}
+function catEmoji(cat){return{pain:'😤',benefit:'✨',custom:'🏷',account:'👤'}[cat]||'🏷';}
+function renderWords(){
+  ['pain','benefit','custom','account'].forEach(cat=>{
+    const container=document.getElementById(`tags-${cat}`);
+    const catW=ld(K.words,[]).filter(w=>w.cat===cat);
+    if(!catW.length){container.innerHTML='<span style="font-size:.72rem;color:var(--muted);">なし</span>';return;}
+    container.innerHTML=catW.map(w=>`
+      <span class="wtag wtag-${w.cat}" title="${esc(w.word)}" onclick="insertWord('${ea(w.word)}','${ea(w.cat)}')">
+        <span class="cat-chip cat-chip-${w.cat}">${catEmoji(w.cat)}</span>
+        <span class="wd-label">${esc(w.label)}</span>
+        <span class="wd-del" onclick="event.stopPropagation();delWord(${w.id})">✕</span>
+      </span>`).join('');
+  });
+}
+function renderQuickInsert(){
+  const words=ld(K.words,[]);
+  const area=document.getElementById('quick-tags-area');
+  if(!words.length){area.innerHTML='<div class="empty" style="padding:8px 0;"><p>ワードタブで登録すると<br>ここにタグとして表示されます</p></div>';return;}
+  area.innerHTML=`<div class="tags-area">${words.map(w=>`
+    <span class="wtag wtag-${w.cat}" title="${esc(w.word)}" onclick="insertWord('${ea(w.word)}','${ea(w.cat)}')">
+      <span class="cat-chip cat-chip-${w.cat}">${catEmoji(w.cat)}</span>
+      <span class="wd-label">${esc(w.label)}</span>
+    </span>`).join('')}</div>`;
+}
+function insertWord(word,cat){
+  if(cat==='account'){document.getElementById('from_account').value=word.replace(/^@/,'');}
+  else{addWords('any_words',word);}
+  const el=document.getElementById('any_words');
+  el.classList.add('flash-border');setTimeout(()=>el.classList.remove('flash-border'),700);
+}
+
+/* メモ */
+function addMemo(){
+  const title=document.getElementById('memo_title').value.trim();
+  const body=document.getElementById('memo_body').value.trim();
+  if(!title&&!body)return alert('タイトルまたは本文を入力してください。');
+  const memos=ld(K.memos,[]);
+  memos.unshift({id:Date.now(),title:title||'（無題）',body,ts:Date.now()});sv(K.memos,memos);
+  document.getElementById('memo_title').value='';document.getElementById('memo_body').value='';renderMemos();
+}
+function delMemo(id){sv(K.memos,ld(K.memos,[]).filter(m=>m.id!==id));renderMemos();}
+function renderMemos(){
+  const memos=ld(K.memos,[]);
+  const el=document.getElementById('memo-list');
+  if(!memos.length){el.innerHTML='<div class="empty"><div class="ei">📝</div><p>まだメモがありません。</p></div>';return;}
+  el.innerHTML=memos.map(m=>`
+    <div class="memo-item">
+      <div class="memo-ttl">
+        <span>${esc(m.title)}</span>
+        <button class="hbtn hbtn-del" style="flex-shrink:0;" onclick="delMemo(${m.id})">✕ 削除</button>
+      </div>
+      <div class="memo-body">${esc(m.body)}</div>
+      <div class="memo-date">${fmtD(m.ts)}</div>
+    </div>`).join('');
+}
+
+/* ユーティリティ */
+function addWords(id,words){const el=document.getElementById(id);const cur=el.value.trim();el.value=cur?cur+' '+words:words;}
+function clearField(id){document.getElementById(id).value='';}
+function setCompetitorBuzz(){
+  document.getElementById('min_faves').value=100;document.getElementById('exclude_reposts').checked=true;
+  document.getElementById('from_account').focus();flash(event.target,'セット完了 ✓');
+}
+function applySuggests(data){
+  if(data&&data[1]&&data[1].length){
+    const sug=data[1].filter(w=>w!==data[0]).slice(0,5);
+    if(sug.length)addWords('any_words',sug.join(' '));
+    flash(document.querySelector('button[onclick="fetchSuggests()"]'),'取得完了 ✓');
+  }else{alert('関連キーワードが見つかりませんでした。');}
+}
+function fetchSuggests(){
+  const kw=document.getElementById('all_words').value.trim();
+  if(!kw)return alert('「すべての単語を含む」を入力してください。');
+  const s=document.createElement('script');
+  s.src=`https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(kw)}&callback=applySuggests`;
+  document.body.appendChild(s);
+}
+function flash(btn,text){
+  if(!btn)return;const orig=btn.textContent;btn.textContent=text;setTimeout(()=>btn.textContent=orig,1800);
+}
+
+window.onload=function(){updatePresetList();updateHistBadge();renderQuickInsert();};
+</script>
 </body>
 </html>
