@@ -99,7 +99,6 @@ textarea.fi{resize:vertical;line-height:1.5;}
 </head>
 <body>
 
-<!-- ═══ HEADER ═══ -->
 <div style="background:#fff;border-bottom:1px solid #e8edf5;position:sticky;top:0;z-index:20;box-shadow:0 1px 4px rgba(15,23,42,.06);">
   <div style="max-width:1040px;margin:0 auto;padding:0 16px;display:flex;align-items:center;gap:4px;">
     <div style="display:flex;align-items:center;gap:8px;padding:10px 16px 10px 0;border-right:1px solid #e8edf5;margin-right:4px;flex-shrink:0;">
@@ -119,10 +118,8 @@ textarea.fi{resize:vertical;line-height:1.5;}
   </div>
 </div>
 
-<!-- ═══ MAIN ═══ -->
 <div style="max-width:1040px;margin:0 auto;padding:20px 16px;">
 
-<!-- ═══ GOOGLE ═══ -->
 <div id="tab-google" class="tab-content active">
   <div class="gr">
     <div class="load-bar">
@@ -210,7 +207,6 @@ textarea.fi{resize:vertical;line-height:1.5;}
   </div>
 </div>
 
-<!-- ═══ X ═══ -->
 <div id="tab-x" class="tab-content">
   <div class="gr">
     <div class="load-bar">
@@ -289,7 +285,6 @@ textarea.fi{resize:vertical;line-height:1.5;}
   </div>
 </div>
 
-<!-- ═══ BLUESKY ═══ -->
 <div id="tab-bluesky" class="tab-content">
   <div class="gr">
     <div class="load-bar">
@@ -355,7 +350,6 @@ textarea.fi{resize:vertical;line-height:1.5;}
   </div>
 </div>
 
-<!-- ═══ REDDIT ═══ -->
 <div id="tab-reddit" class="tab-content">
   <div class="gr">
     <div class="load-bar">
@@ -429,10 +423,8 @@ textarea.fi{resize:vertical;line-height:1.5;}
   </div>
 </div>
 
-<!-- ═══ TRENDS HUB ═══ -->
 <div id="tab-trends" class="tab-content">
   <div class="gr">
-    <!-- Keyword bar -->
     <div class="trend-kw-bar">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <div style="flex:1;min-width:220px;">
@@ -450,12 +442,10 @@ textarea.fi{resize:vertical;line-height:1.5;}
         <span style="font-size:11px;color:#94a3b8;margin-left:auto;" id="trendStats"></span>
       </div>
     </div>
-    <!-- Tool categories - rendered by JS -->
     <div id="trendHub" class="gr"></div>
   </div>
 </div>
 
-<!-- ═══ FAVORITES ═══ -->
 <div id="tab-favorites" class="tab-content">
   <div class="gr">
     <div style="display:flex;gap:3px;border-bottom:1px solid #e8edf5;padding-bottom:0;background:#f1f5f9;border-radius:10px 10px 0 0;padding:6px 6px 0 6px;">
@@ -529,7 +519,6 @@ textarea.fi{resize:vertical;line-height:1.5;}
 </div>
 </div>
 
-<!-- ═══ MODALS ═══ -->
 <div id="saveModal" class="modal-bg" style="display:none;" onclick="if(event.target===this)closeSaveM()">
   <div class="modal-box">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
@@ -572,7 +561,6 @@ textarea.fi{resize:vertical;line-height:1.5;}
 </div>
 <div id="toast" class="hide"></div>
 
-<!-- ═══ SCRIPT ═══ -->
 <script>
 // ─── TREND DATA ────────────────────────────────────────────
 const TRENDS = [
@@ -908,6 +896,358 @@ document.addEventListener('DOMContentLoaded',()=>{
   setupEnterKeyPreventDefault(); // Enter = プレビュー更新のみ（検索は実行しない）
   updatePreview('google');
   document.addEventListener('click',e=>{if(!e.target.closest('.dd-wrap'))document.querySelectorAll('.dd-menu').forEach(d=>d.style.display='none');});
+});
+</script>
+
+<div id="__xwg_anchor"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+/* ── ① Firebaseの設定 ── */
+const firebaseConfig = {
+  apiKey: "AIzaSyCJwQooL2MHQq2fg8aeXWGDD2s8VfzKZ04",
+  authDomain: "portal-app-25359.firebaseapp.com",
+  projectId: "portal-app-25359",
+  storageBucket: "portal-app-25359.firebasestorage.app",
+  messagingSenderId: "148295764653",
+  appId: "1:148295764653:web:fe588512833f88852a9424",
+  measurementId: "G-MLM10WJPGN"
+};
+
+// Firebaseの初期化
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ★★★【ここを改良】URLからサイト別の識別名を自動抽出 ★★★ */
+const getPageKey = () => {
+  const path = location.pathname; // 例: "/portal/aiconcierge/"
+  const segments = path.split('/').filter(Boolean);
+  return segments[segments.length - 1] || 'default';
+};
+const pageKey = getPageKey(); 
+
+// データを保存する場所（ドキュメント名をサイトごとに自動で切り替える）
+const docRef = doc(db, "xwidget", `data_${pageKey}`);
+
+/* ── ② カスタマイズ設定 ── */
+const XWG_KEYS = {
+  words:   'xwg_words',
+  memos:   'xwg_memos',
+  history: 'xwg_history',
+};
+const XWG_MAX_HIST = 50;
+const XWG_AUTO_HIST = true;
+
+/* ── ③ 状態管理とユーティリティ ── */
+let __xwgState = {
+  [XWG_KEYS.history]: [],
+  [XWG_KEYS.words]: [],
+  [XWG_KEYS.memos]: []
+};
+
+const _ld = (k,d) => __xwgState[k] || d;
+const _sv = (k,v) => {
+  __xwgState[k] = v;
+  updateDoc(docRef, { [k]: v }).catch(() => {
+    setDoc(docRef, __xwgState);
+  });
+};
+
+const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const _ea  = s => String(s||'').replace(/'/g,"\\'");
+const _fmt = ts => { const d = new Date(ts); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+/* ── ④ CSS を注入 ── */
+const _css = `
+#__xwg_btn {
+  position:fixed; bottom:20px; right:20px; z-index:2147483000;
+  width:52px; height:52px; border-radius:50%; border:none; cursor:pointer;
+  background:linear-gradient(135deg,#d95235,#b03020);
+  color:#fff; font-size:1.35rem;
+  box-shadow:0 4px 18px rgba(217,82,53,.45);
+  display:flex; align-items:center; justify-content:center;
+  transition:all .2s; font-family:sans-serif;
+}
+#__xwg_btn:hover{ transform:scale(1.1); box-shadow:0 6px 24px rgba(217,82,53,.55); }
+#__xwg_btn .xwg-badge{
+  position:absolute; top:-4px; right:-4px;
+  min-width:18px; height:18px; padding:0 4px;
+  background:#0e7ea4; border-radius:9px; border:2px solid #fff;
+  font-size:.6rem; font-weight:700; color:#fff; display:none;
+  align-items:center; justify-content:center; font-family:sans-serif;
+}
+#__xwg_panel {
+  position:fixed; bottom:84px; right:16px; z-index:2147483001;
+  width:340px; max-width:calc(100vw - 24px);
+  max-height:calc(100vh - 100px);
+  background:#faf8f2; border:1.5px solid #ddd8ce; border-radius:14px;
+  box-shadow:0 8px 40px rgba(42,38,32,.18), 0 2px 10px rgba(42,38,32,.1);
+  display:none; flex-direction:column; overflow:hidden;
+  font-family:'Noto Sans JP',system-ui,sans-serif;
+  animation:__xwg_in .22s ease;
+}
+@keyframes __xwg_in{ from{opacity:0;transform:translateY(8px) scale(.97);} to{opacity:1;transform:none;} }
+#__xwg_panel.open{ display:flex; }
+.__xwg_head{ background:#fff; padding:10px 14px; display:flex; align-items:center; gap:6px; border-bottom:1.5px solid #ede8db; flex-shrink:0; }
+.__xwg_logo{ font-size:1.1rem; }
+.__xwg_title{ font-size:.85rem; font-weight:700; color:#2a2620; flex:1; letter-spacing:.02em; }
+.__xwg_close{ width:26px; height:26px; border-radius:50%; border:none; cursor:pointer; background:#f3efe5; color:#8c8278; font-size:.9rem; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+.__xwg_close:hover{ background:#ede8db; color:#2a2620; }
+.__xwg_tabs{ display:flex; gap:3px; padding:6px 8px; background:#faf8f2; border-bottom:1px solid #ede8db; flex-shrink:0; }
+.__xwg_tab{ flex:1; padding:6px 4px; border:none; border-radius:6px; cursor:pointer; font-family:inherit; font-size:.68rem; font-weight:700; background:transparent; color:#8c8278; transition:all .16s; display:flex; flex-direction:column; align-items:center; gap:1px; }
+.__xwg_tab .ti{ font-size:.95rem; }
+.__xwg_tab:hover:not(.on){ background:#f3efe5; color:#4a4540; }
+.__xwg_tab.on{ background:#d95235; color:#fff; border-radius:6px; }
+.__xwg_body{ flex:1; overflow-y:auto; padding:10px; }
+.__xwg_pane{ display:none; }
+.__xwg_pane.on{ display:block; }
+.__xwg_card{ background:#fff; border:1px solid #ddd8ce; border-radius:9px; padding:11px 12px; margin-bottom:8px; }
+.__xwg_card:last-child{ margin-bottom:0; }
+.__xwg_card_title{ font-size:.7rem; font-weight:700; color:#8c8278; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid #f3efe5; }
+.__xwg_inp{ width:100%; padding:7px 10px; background:#faf8f2; border:1.5px solid #ddd8ce; border-radius:7px; font-size:.82rem; outline:none; box-sizing:border-box;}
+.__xwg_inp:focus{ border-color:#0e7ea4; background:#fff; }
+.__xwg_inp.ta{ resize:vertical; min-height:60px; }
+.__xwg_sel{ width:100%; padding:6px 10px; background:#faf8f2; border:1.5px solid #ddd8ce; border-radius:7px; font-size:.8rem; outline:none; box-sizing:border-box;}
+.__xwg_row{ display:flex; gap:6px; margin-top:5px; }
+.__xwg_row .__xwg_inp{ flex:1; margin-top:0; }
+.__xwg_row .__xwg_sel{ flex:0 0 100px; }
+.__xwg_btn_s{ padding:6px 11px; border:none; border-radius:6px; cursor:pointer; font-weight:700; transition:all .14s; }
+.__xwg_btn_co{ background:#d95235; color:#fff; }
+.__xwg_btn_am{ background:#c47e10; color:#fff; }
+.__xwg_btn_da{ background:#fdf0ec; color:#d95235; border:1.5px solid #f5c4b8; }
+.__xwg_full{ width:100%; padding:8px; margin-top:8px; }
+.__xwg_hi{ background:#e8f5fa; border:1px solid #b0d8ea; border-radius:7px; padding:8px 10px; margin-bottom:6px; }
+.__xwg_hi_url{ font-size:.68rem; color:#0e7ea4; word-break:break-all; margin-bottom:3px; }
+.__xwg_hi_title{ font-size:.76rem; color:#2a2620; font-weight:500; margin-bottom:5px; }
+.__xwg_hi_meta{ display:flex; justify-content:space-between; align-items:center; }
+.__xwg_hi_date{ font-size:.63rem; color:#8c8278; }
+.__xwg_hi_btns{ display:flex; gap:3px; }
+.__xwg_hbtn{ font-size:.63rem; padding:2px 7px; border:1.5px solid; border-radius:4px; cursor:pointer; font-weight:700; }
+.__xwg_hbtn_go{ border-color:#a8dcc4; color:#2a8c5e; background:#e8f7f0; }
+.__xwg_hbtn_cp{ border-color:#b0d8ea; color:#0e7ea4; background:#e8f5fa; }
+.__xwg_hbtn_dl{ border-color:#f5c4b8; color:#d95235; background:#fdf0ec; }
+.__xwg_tags{ display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+.__xwg_tag{ display:inline-flex; align-items:center; gap:3px; padding:3px 8px; border-radius:14px; font-size:.7rem; cursor:pointer; border:1.5px solid; }
+.__xwg_tag .td{ opacity:.45; font-size:.8rem; }
+.__xwg_tag.pain   { background:#fdf0ec; border-color:#f5c4b8; color:#d95235; }
+.__xwg_tag.benefit{ background:#e8f7f0; border-color:#a8dcc4; color:#2a8c5e; }
+.__xwg_tag.custom { background:#e8f5fa; border-color:#b0d8ea; color:#0e7ea4; }
+.__xwg_tag.account{ background:#fdf6e3; border-color:#f0d898; color:#c47e10; }
+.__xwg_sub{ font-size:.65rem; font-weight:700; color:#8c8278; margin-top:8px; margin-bottom:5px; }
+.__xwg_hr{ border:none; border-top:1px solid #ede8db; margin:8px 0; }
+.__xwg_mi{ background:#fdf6e3; border:1.5px solid #f0d898; border-radius:7px; padding:9px 10px 9px 14px; margin-bottom:6px; position:relative; }
+.__xwg_mi::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:#c47e10; border-radius:4px 0 0 4px; }
+.__xwg_mi_ttl{ font-size:.78rem; font-weight:700; margin-bottom:3px; display:flex; justify-content:space-between; }
+.__xwg_mi_body{ font-size:.74rem; line-height:1.6; white-space:pre-wrap; word-break:break-all; }
+.__xwg_mi_date{ font-size:.62rem; color:#8c8278; margin-top:5px; }
+.__xwg_empty{ text-align:center; padding:20px 10px; color:#8c8278; font-size:.76rem; }
+.__xwg_empty .ei{ font-size:1.5rem; margin-bottom:5px; }
+.__xwg_flash{ animation:__xwg_fl .6s ease; }
+@keyframes __xwg_fl{ 40%{ background:#e8f5fa; border-color:#0e7ea4; } }
+`;
+const style = document.createElement('style');
+style.textContent = _css;
+document.head.appendChild(style);
+
+/* ── ⑤ DOM構築 ── */
+const anchor = document.getElementById('__xwg_anchor');
+anchor.innerHTML = `
+<button id="__xwg_btn" onclick="__xwgToggle()" title="メモ・ワード・履歴を開く">
+  📌<span class="xwg-badge" id="__xwg_hbadge"></span>
+</button>
+<div id="__xwg_panel">
+  <div class="__xwg_head">
+    <span class="__xwg_logo">🗂️</span>
+    <span class="__xwg_title">メモ・ワード・履歴</span>
+    <button class="__xwg_close" onclick="__xwgClose()">✕</button>
+  </div>
+  <div class="__xwg_tabs">
+    <button class="__xwg_tab on" onclick="__xwgTab('h',this)"><span class="ti">🕐</span>履歴</button>
+    <button class="__xwg_tab"   onclick="__xwgTab('w',this)"><span class="ti">📌</span>ワード</button>
+    <button class="__xwg_tab"   onclick="__xwgTab('m',this)"><span class="ti">📝</span>メモ</button>
+  </div>
+  <div class="__xwg_body">
+    <div class="__xwg_pane on" id="__xwg_ph">
+      <div class="__xwg_card">
+        <div class="__xwg_card_title">🕐 ページ訪問履歴</div>
+        <div id="__xwg_hlist"></div>
+      </div>
+      <div style="text-align:right;margin-top:4px;">
+        <button class="__xwg_btn_s __xwg_btn_da" onclick="__xwgClearHist()">全削除</button>
+      </div>
+    </div>
+    <div class="__xwg_pane" id="__xwg_pw">
+      <div class="__xwg_card">
+        <div class="__xwg_card_title">＋ ワードを登録</div>
+        <input class="__xwg_inp" type="text" id="__xwg_nw" placeholder="ワード・フレーズ">
+        <div class="__xwg_row">
+          <select class="__xwg_sel" id="__xwg_nc">
+            <option value="custom">🏷 カスタム</option>
+            <option value="pain">😤 ペイン</option>
+            <option value="benefit">✨ ベネフィット</option>
+            <option value="account">👤 アカウント</option>
+          </select>
+          <input class="__xwg_inp" type="text" id="__xwg_nl" placeholder="ラベル名">
+        </div>
+        <button class="__xwg_btn_s __xwg_btn_co __xwg_full" onclick="__xwgRegWord()">＋ 登録する</button>
+      </div>
+      <div class="__xwg_card">
+        <div class="__xwg_card_title">登録済みワード</div>
+        <div id="__xwg_wtags"></div>
+      </div>
+    </div>
+    <div class="__xwg_pane" id="__xwg_pm">
+      <div class="__xwg_card">
+        <div class="__xwg_card_title">📝 メモを追加</div>
+        <input class="__xwg_inp" type="text" id="__xwg_mt" placeholder="タイトル">
+        <textarea class="__xwg_inp ta" id="__xwg_mb" placeholder="本文…" style="margin-top:5px;"></textarea>
+        <button class="__xwg_btn_s __xwg_btn_am __xwg_full" onclick="__xwgAddMemo()">保存</button>
+      </div>
+      <div class="__xwg_card">
+        <div class="__xwg_card_title">メモ一覧</div>
+        <div id="__xwg_mlist"></div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+/* ── ⑥ UIロジック ── */
+let __xwg_open = false;
+window.__xwgToggle = () => {
+  __xwg_open = !__xwg_open;
+  const panel = document.getElementById('__xwg_panel');
+  if(__xwg_open){
+    panel.classList.add('open'); window.__xwgRenderAll();
+  } else {
+    panel.classList.remove('open');
+  }
+};
+window.__xwgClose = () => {
+  __xwg_open = false; document.getElementById('__xwg_panel').classList.remove('open');
+};
+window.__xwgTab = (id, btn) => {
+  document.querySelectorAll('.__xwg_pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.__xwg_tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById({h:'__xwg_ph',w:'__xwg_pw',m:'__xwg_pm'}[id]).classList.add('on');
+  btn.classList.add('on'); window.__xwgRenderAll();
+};
+window.__xwgRenderAll = () => {
+  if(!__xwg_open) return;
+  __xwgRenderHist(); __xwgRenderWords(); __xwgRenderMemos();
+};
+
+function __xwgRenderHist(){
+  const list = _ld(XWG_KEYS.history, []);
+  const el = document.getElementById('__xwg_hlist');
+  if(!list.length) return el.innerHTML = '<div class="__xwg_empty"><div class="ei">🕐</div>履歴がありません</div>';
+  el.innerHTML = list.map((h,i) => `
+    <div class="__xwg_hi">
+      <div class="__xwg_hi_title">${_esc(h.title || '(タイトルなし)')}</div>
+      <div class="__xwg_hi_url">${_esc(h.url)}</div>
+      <div class="__xwg_hi_meta">
+        <span class="__xwg_hi_date">${_fmt(h.ts)}</span>
+        <div class="__xwg_hi_btns">
+          <button class="__xwg_hbtn __xwg_hbtn_go" onclick="window.open('${_ea(h.url)}','_blank')">開く</button>
+          <button class="__xwg_hbtn __xwg_hbtn_cp" onclick="__xwgCopy('${_ea(h.url)}',this)">コピー</button>
+          <button class="__xwg_hbtn __xwg_hbtn_dl" onclick="__xwgDelHist(${i})">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+window.__xwgDelHist = (i) => { const l=_ld(XWG_KEYS.history,[]); l.splice(i,1); _sv(XWG_KEYS.history, l); };
+window.__xwgClearHist = () => { if(confirm('全削除しますか？')) _sv(XWG_KEYS.history, []); };
+
+window.__xwgRegWord = () => {
+  const word = document.getElementById('__xwg_nw').value.trim();
+  const cat  = document.getElementById('__xwg_nc').value;
+  const label = document.getElementById('__xwg_nl').value.trim() || word;
+  if(!word) return alert('ワードを入力してください。');
+  const words = _ld(XWG_KEYS.words, []);
+  words.push({id: Date.now(), word, cat, label, ts: Date.now()});
+  _sv(XWG_KEYS.words, words);
+  document.getElementById('__xwg_nw').value = ''; document.getElementById('__xwg_nl').value = '';
+};
+window.__xwgDelWord = (id) => _sv(XWG_KEYS.words, _ld(XWG_KEYS.words,[]).filter(w=>w.id!==id));
+
+function __xwgRenderWords(){
+  const words = _ld(XWG_KEYS.words, []);
+  const el = document.getElementById('__xwg_wtags');
+  if(!words.length) return el.innerHTML = '<div class="__xwg_empty"><div class="ei">📌</div>登録がありません</div>';
+  const cats = ['pain','benefit','custom','account'];
+  const labels = {pain:'😤 ペイン',benefit:'✨ ベネフィット',custom:'🏷 カスタム',account:'👤 アカウント'};
+  let html = '';
+  cats.forEach(cat => {
+    const cw = words.filter(w=>w.cat===cat);
+    if(!cw.length) return;
+    html += `<div class="__xwg_sub">${labels[cat]}</div><div class="__xwg_tags">` + cw.map(w=>`
+      <span class="__xwg_tag ${w.cat}" title="${_esc(w.word)}" onclick="__xwgCopy('${_ea(w.word)}',this)">
+        <span class="tl">${_esc(w.label)}</span>
+        <span class="td" onclick="event.stopPropagation();__xwgDelWord(${w.id})">✕</span>
+      </span>`).join('') + `</div><div class="__xwg_hr"></div>`;
+  });
+  el.innerHTML = html;
+}
+
+window.__xwgAddMemo = () => {
+  const title = document.getElementById('__xwg_mt').value.trim();
+  const body  = document.getElementById('__xwg_mb').value.trim();
+  if(!title && !body) return;
+  const memos = _ld(XWG_KEYS.memos, []);
+  memos.unshift({id:Date.now(), title:title||'（無題）', body, ts:Date.now()});
+  _sv(XWG_KEYS.memos, memos);
+  document.getElementById('__xwg_mt').value = ''; document.getElementById('__xwg_mb').value = '';
+};
+window.__xwgDelMemo = (id) => _sv(XWG_KEYS.memos, _ld(XWG_KEYS.memos,[]).filter(m=>m.id!==id));
+
+function __xwgRenderMemos(){
+  const memos = _ld(XWG_KEYS.memos, []);
+  const el = document.getElementById('__xwg_mlist');
+  if(!memos.length) return el.innerHTML = '<div class="__xwg_empty"><div class="ei">📝</div>メモがありません</div>';
+  el.innerHTML = memos.map(m=>`
+    <div class="__xwg_mi">
+      <div class="__xwg_mi_ttl"><span>${_esc(m.title)}</span>
+        <button class="__xwg_hbtn __xwg_hbtn_dl" onclick="__xwgDelMemo(${m.id})">✕</button>
+      </div>
+      <div class="__xwg_mi_body">${_esc(m.body)}</div>
+      <div class="__xwg_mi_date">${_fmt(m.ts)}</div>
+    </div>`).join('');
+}
+
+window.__xwgCopy = (text, el) => {
+  navigator.clipboard.writeText(text).then(()=>{
+    if(el){ el.classList.add('__xwg_flash'); setTimeout(()=>el.classList.remove('__xwg_flash'),700); }
+  });
+};
+
+function __xwgUpdateBadge(){
+  const n = _ld(XWG_KEYS.history, []).length;
+  const b = document.getElementById('__xwg_hbadge');
+  if(n > 0){ b.style.display='flex'; b.textContent = n > 99 ? '99+' : n; } else { b.style.display='none'; }
+}
+
+/* ── ⑦ Firebaseからのリアルタイム同期 ── */
+let isFirstLoad = true;
+onSnapshot(docRef, (snapshot) => {
+  if(snapshot.exists()) {
+    __xwgState = { ...__xwgState, ...snapshot.data() };
+  }
+
+  if(isFirstLoad) {
+    isFirstLoad = false;
+    if(XWG_AUTO_HIST) {
+      const entry = { url: location.href, title: document.title, ts: Date.now() };
+      const hist = _ld(XWG_KEYS.history, []);
+      if(!hist.length || hist[0].url !== entry.url){
+        hist.unshift(entry);
+        if(hist.length > XWG_MAX_HIST) hist.pop();
+        _sv(XWG_KEYS.history, hist);
+      }
+    }
+  }
+  window.__xwgRenderAll();
+  __xwgUpdateBadge();
 });
 </script>
 </body>
