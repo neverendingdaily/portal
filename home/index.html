@@ -714,47 +714,49 @@ function renderContent() {
         <div class="section-body-inner">
           <div class="card-grid" id="grid_${cat.id}">`;
 
-    gems.forEach((gem, gi) => {
-      const isLinked = !!gem.url;
-      const isSopCard = isSop;
-      const isPinned = gem.pinned;
-      const tagsHtml = gem.tags ? gem.tags.split(',').map(t => `<span class="pf-tag">${t.trim()}</span>`).join('') : '';
-      
-      const toolBadge = gem.toolType === 'gem' ? '<span class="tool-badge tb-gem">GEM</span>'
-        : gem.toolType === 'skill' ? '<span class="tool-badge tb-skill">SKILL</span>' : '';
+gems.forEach((gem, gi) => {
+        const isLinked = !!gem.url;
+        const isSopCard = isSop;
+        const isPinned = gem.pinned;
+        const tagsHtml = gem.tags ? gem.tags.split(',').map(t => `<span class="pf-tag">${t.trim()}</span>`).join('') : '';
+        
+        const toolBadge = gem.toolType === 'gem' ? '<span class="tool-badge tb-gem">GEM</span>'
+          : gem.toolType === 'skill' ? '<span class="tool-badge tb-skill">SKILL</span>' : '';
 
-      html += `<div class="card${isLinked?' linked':''}${isSopCard?' sop-card':''}"
-        draggable="${editMode}"
-        ondragstart="onDragStart(event,${catIdx},${gi})"
-        ondragover="onDragOver(event)"
-        ondragleave="onDragLeave(event)"
-        ondrop="onDrop(event,${catIdx},${gi})"
-        ondragend="onDragEnd(event)"
-        onclick="${isLinked&&!editMode?`window.open('${gem.url}','_blank')`:''}">
-        
-        ${editMode ? '<span class="drag-handle" title="ドラッグで並び替え">⠿</span>' : ''}
-        
-        <button class="card-pin-btn ${isPinned?'pinned':''}" onclick="togglePin(event, ${cat.id}, '${gem.id}')" title="お気に入り">⭐</button>
+        const linkAttr = (isLinked && !editMode) ? `href="${gem.url}" target="_blank"` : `href="javascript:void(0);" onclick="event.preventDefault();"`;
 
-        ${isSopCard ? `<span class="card-step">${gi+1}</span>` : `<span class="card-dot"></span>`}
-        
-        <div class="card-inner">
-          <span class="card-name">${tagsHtml}${hl(gem.name, q)}</span>
-          ${gem.note ? `<span class="card-note">${hl(gem.note, q)}</span>` : ''}
-        </div>
-        
-        ${toolBadge}
-        
-        ${isLinked ? `<button class="card-copy-btn" onclick="copyToClipboard(event, '${gem.url}')" title="URLをコピー">📋</button>` : ''}
-        
-        ${!editMode && isLinked ? '<span class="card-arrow">↗</span>' : ''}
-        
-        ${editMode ? `<div class="card-actions">
-          <button class="card-act-btn edit" onclick="event.stopPropagation();openEditGem(${cat.id},'${gem.id}')" title="編集">✏️</button>
-          <button class="card-act-btn del"  onclick="event.stopPropagation();deleteGem(${cat.id},'${gem.id}')"  title="削除">🗑️</button>
-        </div>` : ''}
-      </div>`;
-    });
+        html += `<a class="card${isLinked?' linked':''}${isSopCard?' sop-card':''}"
+          ${linkAttr}
+          draggable="${editMode}"
+          ondragstart="onDragStart(event,${catIdx},${gi})"
+          ondragover="onDragOver(event)"
+          ondragleave="onDragLeave(event)"
+          ondrop="onDrop(event,${catIdx},${gi})"
+          ondragend="onDragEnd(event)">
+          
+          ${editMode ? '<span class="drag-handle" title="ドラッグで並び替え">⠿</span>' : ''}
+          
+          <button class="card-pin-btn ${isPinned?'pinned':''}" onclick="togglePin(event, ${cat.id}, '${gem.id}')" title="お気に入り">⭐</button>
+
+          ${isSopCard ? `<span class="card-step">${gi+1}</span>` : `<span class="card-dot"></span>`}
+          
+          <div class="card-inner">
+            <span class="card-name">${tagsHtml}${hl(gem.name, q)}</span>
+            ${gem.note ? `<span class="card-note">${hl(gem.note, q)}</span>` : ''}
+          </div>
+          
+          ${toolBadge}
+          
+          ${isLinked ? `<button class="card-copy-btn" onclick="copyToClipboard(event, '${gem.url}')" title="URLをコピー">📋</button>` : ''}
+          
+          ${!editMode && isLinked ? '<span class="card-arrow">↗</span>' : ''}
+          
+          ${editMode ? `<div class="card-actions">
+            <button class="card-act-btn edit" onclick="event.stopPropagation();openEditGem(${cat.id},'${gem.id}')" title="編集">✏️</button>
+            <button class="card-act-btn del"  onclick="event.stopPropagation();deleteGem(${cat.id},'${gem.id}')"  title="削除">🗑️</button>
+          </div>` : ''}
+        </a>`;
+      });
 
     html += `</div>`;
     if (editMode) {
