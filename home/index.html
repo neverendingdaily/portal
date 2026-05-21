@@ -723,16 +723,16 @@ gems.forEach((gem, gi) => {
         const toolBadge = gem.toolType === 'gem' ? '<span class="tool-badge tb-gem">GEM</span>'
           : gem.toolType === 'skill' ? '<span class="tool-badge tb-skill">SKILL</span>' : '';
 
-        const linkAttr = (isLinked && !editMode) ? `href="${gem.url}" target="_blank"` : `href="javascript:void(0);" onclick="event.preventDefault();"`;
-
-        html += `<a class="card${isLinked?' linked':''}${isSopCard?' sop-card':''}"
-          ${linkAttr}
+        // aタグではなくdivタグに戻し、onauxclick（ミドルクリック検知）を明示的に追加
+        html += `<div class="card${isLinked?' linked':''}${isSopCard?' sop-card':''}"
           draggable="${editMode}"
           ondragstart="onDragStart(event,${catIdx},${gi})"
           ondragover="onDragOver(event)"
           ondragleave="onDragLeave(event)"
           ondrop="onDrop(event,${catIdx},${gi})"
-          ondragend="onDragEnd(event)">
+          ondragend="onDragEnd(event)"
+          onclick="${isLinked&&!editMode?`window.open('${gem.url}','_blank')`:''}"
+          onauxclick="${isLinked&&!editMode?`if(event.button===1){window.open('${gem.url}','_blank')}`:''}">
           
           ${editMode ? '<span class="drag-handle" title="ドラッグで並び替え">⠿</span>' : ''}
           
@@ -755,7 +755,7 @@ gems.forEach((gem, gi) => {
             <button class="card-act-btn edit" onclick="event.stopPropagation();openEditGem(${cat.id},'${gem.id}')" title="編集">✏️</button>
             <button class="card-act-btn del"  onclick="event.stopPropagation();deleteGem(${cat.id},'${gem.id}')"  title="削除">🗑️</button>
           </div>` : ''}
-        </a>`;
+        </div>`;
       });
 
     html += `</div>`;
