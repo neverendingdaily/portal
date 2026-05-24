@@ -1,691 +1,143 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>汎用ウィジェット スニペット</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
-<style>
-/* ── このページ自体のスタイル（スニペットとは無関係） ── */
-:root{
-  --c:  #faf8f2; --c2: #f3efe5; --c3: #ede8db;
-  --w:  #ffffff; --tx: #2a2620; --tx2:#4a4540; --mu:#8c8278;
-  --bo: #ddd8ce; --bo2:#ccc7bc;
-  --co: #d95235; --co-bg:#fdf0ec; --co-bd:#f5c4b8;
-  --te: #0e7ea4; --te-bg:#e8f5fa; --te-bd:#b0d8ea;
-  --am: #c47e10; --am-bg:#fdf6e3; --am-bd:#f0d898;
-  --gr: #2a8c5e; --gr-bg:#e8f7f0; --gr-bd:#a8dcc4;
-  --ss: 0 1px 4px rgba(42,38,32,.07),0 2px 8px rgba(42,38,32,.05);
-  --sm: 0 4px 20px rgba(42,38,32,.12),0 2px 8px rgba(42,38,32,.07);
-  --r:12px; --rs:8px; --rx:6px;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{
-  font-family:'Noto Sans JP',sans-serif;background:var(--c);color:var(--tx);
-  background-image:
-    radial-gradient(ellipse 80% 60% at 15% 10%,rgba(212,140,80,.07) 0%,transparent 60%),
-    radial-gradient(ellipse 60% 80% at 85% 90%,rgba(14,126,164,.05) 0%,transparent 60%);
-}
-.page-wrap{max-width:860px;margin:0 auto;padding:24px 16px 60px;}
-h1{font-family:'Noto Serif JP',serif;font-size:1.5rem;font-weight:700;color:var(--tx);margin-bottom:6px;}
-.tagline{font-size:.82rem;color:var(--mu);margin-bottom:32px;}
-
-.section{background:var(--w);border:1px solid var(--bo);border-radius:var(--r);padding:20px;margin-bottom:20px;box-shadow:var(--ss);}
-.sec-title{font-family:'Noto Serif JP',serif;font-size:1rem;font-weight:700;color:var(--tx);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
-.sec-desc{font-size:.82rem;color:var(--tx2);line-height:1.7;margin-bottom:16px;}
-
-/* コードブロック */
-.code-wrap{position:relative;background:#1e1c18;border-radius:var(--rs);overflow:hidden;}
-.code-header{
-  background:#2d2a24;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;
-  font-size:.72rem;font-weight:700;color:#a09880;letter-spacing:.05em;
-}
-.copy-btn{
-  padding:5px 12px;background:var(--co);color:#fff;border:none;border-radius:5px;
-  font-family:inherit;font-size:.72rem;font-weight:700;cursor:pointer;transition:all .15s;
-}
-.copy-btn:hover{filter:brightness(1.1);}
-pre{
-  font-family:'DM Mono','Courier New',monospace;font-size:.75rem;line-height:1.7;
-  color:#d4c9b0;padding:16px;overflow-x:auto;white-space:pre;
-}
-/* シンタックスハイライト */
-.kw{color:#f97316;}   /* タグ・属性 */
-.st{color:#84cc16;}   /* 文字列 */
-.cm{color:#78716c;font-style:italic;}  /* コメント */
-.fn{color:#60a5fa;}   /* 関数名 */
-.va{color:#e879f9;}   /* 変数 */
-
-/* ポイントリスト */
-.points{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:12px;}
-.points li{
-  display:flex;align-items:flex-start;gap:10px;font-size:.82rem;color:var(--tx2);line-height:1.6;
-  background:var(--c);border:1px solid var(--bo);border-radius:var(--rx);padding:9px 12px;
-}
-.points .pt-icon{font-size:1rem;flex-shrink:0;margin-top:1px;}
-
-/* ストレージ共有の説明 */
-.share-box{
-  background:var(--te-bg);border:1.5px solid var(--te-bd);border-radius:var(--rs);
-  padding:12px 14px;margin-top:14px;font-size:.8rem;color:#0a4a62;line-height:1.7;
-}
-.share-box strong{font-weight:700;}
-
-/* プレビューバナー */
-.preview-hint{
-  background:var(--am-bg);border:1.5px solid var(--am-bd);border-radius:var(--rs);
-  padding:10px 14px;font-size:.8rem;color:#5a380a;margin-bottom:16px;line-height:1.6;
-}
-.preview-hint strong{font-weight:700;}
-
-.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
-.badge{
-  display:inline-flex;align-items:center;gap:4px;padding:4px 10px;
-  border-radius:20px;font-size:.74rem;font-weight:700;border:1.5px solid;
-}
-.badge-co{background:var(--co-bg);border-color:var(--co-bd);color:var(--co);}
-.badge-te{background:var(--te-bg);border-color:var(--te-bd);color:var(--te);}
-.badge-am{background:var(--am-bg);border-color:var(--am-bd);color:var(--am);}
-.badge-gr{background:var(--gr-bg);border-color:var(--gr-bd);color:var(--gr);}
-
-/* カスタムキー説明 */
-.key-table{width:100%;border-collapse:collapse;font-size:.78rem;margin-top:10px;}
-.key-table th{background:var(--c2);padding:7px 10px;text-align:left;color:var(--mu);font-weight:700;border-bottom:1.5px solid var(--bo);}
-.key-table td{padding:7px 10px;border-bottom:1px solid var(--bo);color:var(--tx2);vertical-align:top;}
-.key-table td code{font-family:'DM Mono',monospace;font-size:.72rem;background:var(--c2);padding:1px 5px;border-radius:3px;color:var(--co);}
-.key-table tr:last-child td{border-bottom:none;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTMLファビコン挿入ツール</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f9fc;
+            color: #333;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 { margin-top: 0; color: #2c3e50; }
+        .form-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f1f4f8;
+            border-radius: 6px;
+        }
+        label { font-weight: bold; display: block; margin-bottom: 10px; }
+        input[type="file"] { width: 100%; }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover { background-color: #2980b9; }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        .download-btn {
+            display: none;
+            background-color: #2ecc71;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .download-btn:hover { background-color: #27ae60; }
+    </style>
 </head>
 <body>
-<div class="page-wrap">
 
-  <h1>🧩 汎用ウィジェット スニペット</h1>
-  <p class="tagline">どのHTMLページにも貼るだけで「履歴・ワード登録・メモ」機能が追加できます</p>
+<div class="container">
+    <h2>HTMLファビコン挿入ツール</h2>
+    <p>アップロードした画像を文字列（Base64）に変換し、HTMLの<code>&lt;title&gt;</code>直下に埋め込みます。</p>
 
-  <!-- プレビュー -->
-  <div class="section">
-    <div class="sec-title">👁 このページで実際に動いています</div>
-    <p class="sec-desc">右下のボタン <strong>📌</strong> をタップしてウィジェットを開いてみてください。下のコードを自分のサイトに貼ると同じように動きます。</p>
-    <div class="preview-hint">
-      <strong>💡 GitHub Pages の localStorageについて：</strong><br>
-      あなたのサイトがすべて <code>username.github.io</code> 配下にある場合、localStorage はドメイン単位で共有されます。
-      ウィジェットのキー名（<code>xwg_words</code> など）を統一すれば、<strong>どのサイトを開いても同じワード登録・メモが使えます。</strong>
+    <div class="form-group">
+        <label>1. 対象のHTMLファイルを選択:</label>
+        <input type="file" id="htmlInput" accept=".html, .htm">
     </div>
-    <div class="badge-row">
-      <span class="badge badge-co">🕐 ページ訪問履歴</span>
-      <span class="badge badge-te">📌 ワード登録</span>
-      <span class="badge badge-am">📝 メモ</span>
-      <span class="badge badge-gr">🔗 localStorageで全サイト共有</span>
+
+    <div class="form-group">
+        <label>2. ファビコンにする画像を選択 (PNG, JPG, ICO, SVGなど):</label>
+        <input type="file" id="imgInput" accept="image/*">
     </div>
-  </div>
 
-  <!-- 挿入手順 -->
-  <div class="section">
-    <div class="sec-title">📋 使い方 — 3ステップ</div>
-    <ul class="points">
-      <li><span class="pt-icon">1️⃣</span><div>下のコードブロック右上の <strong>「コピー」</strong> ボタンをクリック</div></li>
-      <li><span class="pt-icon">2️⃣</span><div>追加したいHTMLファイルを開き、<strong><code>&lt;/body&gt;</code> タグの直前</strong>にペースト</div></li>
-      <li><span class="pt-icon">3️⃣</span><div>保存してブラウザで開くと右下に <strong>📌 ボタン</strong>が現れます。以上！</div></li>
-    </ul>
+    <button onclick="processFiles()">コードを挿入して作成</button>
 
-    <div class="share-box">
-      <strong>🔗 全サイトでデータを共有するには：</strong>
-      コードの先頭付近にある <code>const XWG_KEYS</code> のキー名を、すべてのサイトで同じ値にしてください（デフォルトのままでOK）。<br>
-      同じ <code>github.io</code> ドメイン配下であれば自動的に共有されます。
-    </div>
-  </div>
-
-  <!-- コードブロック -->
-  <div class="section">
-    <div class="sec-title">📄 スニペット（&lt;/body&gt;直前に貼ってください）</div>
-    <div class="code-wrap">
-      <div class="code-header">
-        <span>HTML — &lt;/body&gt;直前に挿入</span>
-        <button class="copy-btn" onclick="copySnippet()">📋 コピー</button>
-      </div>
-      <pre id="snippet-display"></pre>
-    </div>
-  </div>
-
-  <!-- カスタマイズ -->
-  <div class="section">
-    <div class="sec-title">⚙️ カスタマイズ可能な部分</div>
-    <table class="key-table">
-      <tr><th>変数・設定</th><th>意味・変更例</th></tr>
-      <tr>
-        <td><code>XWG_KEYS.words</code></td>
-        <td>ワード登録のlocalStorageキー。全サイト共通にしたいなら同じ値を使う</td>
-      </tr>
-      <tr>
-        <td><code>XWG_KEYS.memos</code></td>
-        <td>メモのlocalStorageキー。同上</td>
-      </tr>
-      <tr>
-        <td><code>XWG_KEYS.history</code></td>
-        <td>履歴のキー。サイトごとに分けたい場合は <code>'xwg_hist_mysite'</code> のように変える</td>
-      </tr>
-      <tr>
-        <td><code>XWG_MAX_HIST</code></td>
-        <td>履歴の最大保存件数（デフォルト 50）</td>
-      </tr>
-      <tr>
-        <td><code>XWG_AUTO_HIST</code></td>
-        <td><code>true</code> でページを開いたとき自動記録、<code>false</code> で手動のみ</td>
-      </tr>
-    </table>
-  </div>
-
+    <textarea id="outputArea" readonly placeholder="ここに処理されたHTMLコードが表示されます"></textarea>
+    <a id="downloadLink" class="download-btn">完成したHTMLをダウンロード</a>
 </div>
 
-<!-- =====================================================================
-     ▼ ここからが「貼り付けるスニペット本体」です
-     ===================================================================== -->
-<!-- XWidget v1.0 | 履歴・ワード登録・メモ | </body>直前に貼ってください -->
-<div id="__xwg_anchor"></div>
 <script>
-(function(){
-'use strict';
+    function processFiles() {
+        const htmlFile = document.getElementById('htmlInput').files[0];
+        const imgFile = document.getElementById('imgInput').files[0];
 
-/* ── ① カスタマイズ設定 ── */
-const XWG_KEYS = {
-  words:   'xwg_words',    // ワード登録（全サイト共有推奨）
-  memos:   'xwg_memos',    // メモ    （全サイト共有推奨）
-  history: 'xwg_history',  // ページ履歴（サイト別でも可）
-};
-const XWG_MAX_HIST = 50;    // 履歴の最大保存件数
-const XWG_AUTO_HIST = true; // true = ページ訪問を自動記録
+        if (!htmlFile || !imgFile) {
+            alert("HTMLファイルと画像ファイルの両方を選択してください。");
+            return;
+        }
 
-/* ── ② ユーティリティ ── */
-const _ld = (k,d) => { try{ return JSON.parse(localStorage.getItem(k)) || d; }catch{ return d; }};
-const _sv = (k,v) => { localStorage.setItem(k, JSON.stringify(v)); };
-const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const _ea  = s => String(s||'').replace(/'/g,"\\'");
-const _fmt = ts => { const d = new Date(ts); return `${d.getFullYear()}/${_p2(d.getMonth()+1)}/${_p2(d.getDate())} ${_p2(d.getHours())}:${_p2(d.getMinutes())}`; };
-const _p2  = n => String(n).padStart(2,'0');
+        // 1. 画像ファイルをData URI (Base64) として読み込む
+        const imgReader = new FileReader();
+        imgReader.onload = function(e) {
+            const imageDataUri = e.target.result;
 
-/* ── ③ CSS を注入（プレフィックス #__xwg でスコープ） ── */
-const _css = `
-#__xwg_btn {
-  position:fixed; bottom:20px; right:20px; z-index:2147483000;
-  width:52px; height:52px; border-radius:50%; border:none; cursor:pointer;
-  background:linear-gradient(135deg,#d95235,#b03020);
-  color:#fff; font-size:1.35rem;
-  box-shadow:0 4px 18px rgba(217,82,53,.45);
-  display:flex; align-items:center; justify-content:center;
-  transition:all .2s; font-family:sans-serif;
-}
-#__xwg_btn:hover{ transform:scale(1.1); box-shadow:0 6px 24px rgba(217,82,53,.55); }
-#__xwg_btn .xwg-badge{
-  position:absolute; top:-4px; right:-4px;
-  min-width:18px; height:18px; padding:0 4px;
-  background:#0e7ea4; border-radius:9px; border:2px solid #fff;
-  font-size:.6rem; font-weight:700; color:#fff; display:none;
-  align-items:center; justify-content:center; font-family:sans-serif;
-}
+            // 2. HTMLファイルをテキストとして読み込む
+            const htmlReader = new FileReader();
+            htmlReader.onload = function(e2) {
+                let htmlText = e2.target.result;
+                
+                // 挿入するファビコンタグ（インデント付き）
+                const faviconTag = `\n    <link rel="icon" href="${imageDataUri}">`;
 
-#__xwg_panel {
-  position:fixed; bottom:84px; right:16px; z-index:2147483001;
-  width:340px; max-width:calc(100vw - 24px);
-  max-height:calc(100vh - 100px);
-  background:#faf8f2; border:1.5px solid #ddd8ce; border-radius:14px;
-  box-shadow:0 8px 40px rgba(42,38,32,.18), 0 2px 10px rgba(42,38,32,.1);
-  display:none; flex-direction:column; overflow:hidden;
-  font-family:'Noto Sans JP',system-ui,sans-serif;
-  animation:__xwg_in .22s ease;
-}
-@keyframes __xwg_in{ from{opacity:0;transform:translateY(8px) scale(.97);} to{opacity:1;transform:none;} }
-#__xwg_panel.open{ display:flex; }
+                // <title>タグの閉じタグ（</title>）を探して直下に挿入
+                // 大文字小文字（</TITLE>など）にも対応するため正規表現を使用
+                if (htmlText.match(/<\/title>/i)) {
+                    htmlText = htmlText.replace(/(<\/title>)/i, `$1${faviconTag}`);
+                } else if (htmlText.match(/<head>/i)) {
+                    // titleタグが無い場合はheadタグの直下に挿入
+                    htmlText = htmlText.replace(/(<head>)/i, `$1${faviconTag}`);
+                } else {
+                    alert("HTML内に <title> または <head> タグが見つかりませんでした。");
+                    return;
+                }
 
-.__xwg_head{
-  background:#fff; padding:10px 14px;
-  display:flex; align-items:center; gap:6px;
-  border-bottom:1.5px solid #ede8db; flex-shrink:0;
-}
-.__xwg_logo{ font-size:1.1rem; }
-.__xwg_title{ font-size:.85rem; font-weight:700; color:#2a2620; flex:1; letter-spacing:.02em; }
-.__xwg_close{
-  width:26px; height:26px; border-radius:50%; border:none; cursor:pointer;
-  background:#f3efe5; color:#8c8278; font-size:.9rem;
-  display:flex; align-items:center; justify-content:center; transition:all .15s;
-}
-.__xwg_close:hover{ background:#ede8db; color:#2a2620; }
+                // テキストエリアに結果を表示
+                document.getElementById('outputArea').value = htmlText;
 
-.__xwg_tabs{
-  display:flex; gap:3px; padding:6px 8px;
-  background:#faf8f2; border-bottom:1px solid #ede8db; flex-shrink:0;
-}
-.__xwg_tab{
-  flex:1; padding:6px 4px; border:none; border-radius:6px; cursor:pointer;
-  font-family:inherit; font-size:.68rem; font-weight:700; letter-spacing:.02em;
-  background:transparent; color:#8c8278; transition:all .16s;
-  display:flex; flex-direction:column; align-items:center; gap:1px;
-}
-.__xwg_tab .ti{ font-size:.95rem; }
-.__xwg_tab:hover:not(.on){ background:#f3efe5; color:#4a4540; }
-.__xwg_tab.on{ background:#d95235; color:#fff; border-radius:6px; }
-
-.__xwg_body{ flex:1; overflow-y:auto; padding:10px; }
-.__xwg_pane{ display:none; }
-.__xwg_pane.on{ display:block; }
-
-.__xwg_card{
-  background:#fff; border:1px solid #ddd8ce; border-radius:9px;
-  padding:11px 12px; margin-bottom:8px; box-shadow:0 1px 4px rgba(42,38,32,.05);
-}
-.__xwg_card:last-child{ margin-bottom:0; }
-.__xwg_card_title{
-  font-size:.7rem; font-weight:700; color:#8c8278;
-  letter-spacing:.06em; text-transform:uppercase;
-  margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid #f3efe5;
-}
-
-.__xwg_inp{
-  width:100%; padding:7px 10px; background:#faf8f2; border:1.5px solid #ddd8ce;
-  border-radius:7px; color:#2a2620; font-family:inherit; font-size:.82rem;
-  outline:none; transition:border-color .15s; box-sizing:border-box;
-}
-.__xwg_inp:focus{ border-color:#0e7ea4; background:#fff; box-shadow:0 0 0 2px rgba(14,126,164,.1); }
-.__xwg_inp::placeholder{ color:#8c8278; opacity:.7; }
-.__xwg_inp.ta{ resize:vertical; min-height:60px; line-height:1.55; }
-.__xwg_sel{
-  width:100%; padding:6px 10px; background:#faf8f2; border:1.5px solid #ddd8ce;
-  border-radius:7px; color:#2a2620; font-family:inherit; font-size:.8rem;
-  outline:none; cursor:pointer; -webkit-appearance:none; box-sizing:border-box;
-}
-.__xwg_sel:focus{ border-color:#0e7ea4; }
-
-.__xwg_row{ display:flex; gap:6px; margin-top:5px; }
-.__xwg_row .__xwg_inp{ flex:1; margin-top:0; }
-.__xwg_row .__xwg_sel{ flex:0 0 100px; }
-
-.__xwg_btn_s{
-  padding:6px 11px; border:none; border-radius:6px; cursor:pointer;
-  font-family:inherit; font-size:.74rem; font-weight:700; transition:all .14s; white-space:nowrap;
-}
-.__xwg_btn_co{ background:#d95235; color:#fff; }
-.__xwg_btn_co:hover{ filter:brightness(1.1); }
-.__xwg_btn_te{ background:#0e7ea4; color:#fff; }
-.__xwg_btn_te:hover{ filter:brightness(1.1); }
-.__xwg_btn_am{ background:#c47e10; color:#fff; }
-.__xwg_btn_am:hover{ filter:brightness(1.1); }
-.__xwg_btn_gh{
-  background:#f3efe5; color:#4a4540; border:1.5px solid #ccc7bc;
-}
-.__xwg_btn_gh:hover{ background:#ede8db; }
-.__xwg_btn_da{ background:#fdf0ec; color:#d95235; border:1.5px solid #f5c4b8; }
-.__xwg_btn_da:hover{ background:#f5c4b8; }
-
-.__xwg_full{ width:100%; padding:8px; margin-top:8px; }
-
-/* 履歴アイテム */
-.__xwg_hi{
-  background:#e8f5fa; border:1px solid #b0d8ea; border-radius:7px;
-  padding:8px 10px; margin-bottom:6px; cursor:default;
-}
-.__xwg_hi:last-child{ margin-bottom:0; }
-.__xwg_hi_url{
-  font-size:.68rem; color:#0e7ea4; word-break:break-all; line-height:1.5;
-  margin-bottom:3px; font-family:'DM Mono','Courier New',monospace;
-}
-.__xwg_hi_title{ font-size:.76rem; color:#2a2620; font-weight:500; margin-bottom:5px; }
-.__xwg_hi_meta{ display:flex; justify-content:space-between; align-items:center; gap:4px; }
-.__xwg_hi_date{ font-size:.63rem; color:#8c8278; }
-.__xwg_hi_btns{ display:flex; gap:3px; }
-.__xwg_hbtn{
-  font-size:.63rem; padding:2px 7px; border:1.5px solid; border-radius:4px;
-  cursor:pointer; font-family:inherit; font-weight:700; transition:all .12s;
-}
-.__xwg_hbtn_go{ border-color:#a8dcc4; color:#2a8c5e; background:#e8f7f0; }
-.__xwg_hbtn_go:hover{ background:#2a8c5e; color:#fff; }
-.__xwg_hbtn_cp{ border-color:#b0d8ea; color:#0e7ea4; background:#e8f5fa; }
-.__xwg_hbtn_cp:hover{ background:#0e7ea4; color:#fff; }
-.__xwg_hbtn_dl{ border-color:#f5c4b8; color:#d95235; background:#fdf0ec; }
-.__xwg_hbtn_dl:hover{ background:#d95235; color:#fff; }
-
-/* ワードタグ */
-.__xwg_tags{ display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; min-height:20px; }
-.__xwg_tag{
-  display:inline-flex; align-items:center; gap:3px;
-  padding:3px 8px; border-radius:14px; font-size:.7rem; font-weight:500;
-  cursor:pointer; transition:all .14s; border:1.5px solid; max-width:150px;
-}
-.__xwg_tag .tl{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
-.__xwg_tag .td{ opacity:.45; flex-shrink:0; font-size:.8rem; }
-.__xwg_tag:hover .td{ opacity:1; color:#d95235; }
-.__xwg_tag.pain   { background:#fdf0ec; border-color:#f5c4b8; color:#d95235; }
-.__xwg_tag.benefit{ background:#e8f7f0; border-color:#a8dcc4; color:#2a8c5e; }
-.__xwg_tag.custom { background:#e8f5fa; border-color:#b0d8ea; color:#0e7ea4; }
-.__xwg_tag.account{ background:#fdf6e3; border-color:#f0d898; color:#c47e10; }
-.__xwg_tag:hover{ filter:brightness(.93); transform:scale(1.03); }
-
-.__xwg_sub{ font-size:.65rem; font-weight:700; letter-spacing:.07em; color:#8c8278; text-transform:uppercase; margin-bottom:5px; margin-top:8px; }
-.__xwg_sub:first-child{ margin-top:0; }
-.__xwg_hr{ border:none; border-top:1px solid #ede8db; margin:8px 0; }
-
-/* メモアイテム */
-.__xwg_mi{
-  background:#fdf6e3; border:1.5px solid #f0d898; border-radius:7px;
-  padding:9px 10px 9px 14px; margin-bottom:6px; position:relative;
-}
-.__xwg_mi::before{
-  content:''; position:absolute; left:0; top:0; bottom:0;
-  width:4px; background:#c47e10; border-radius:4px 0 0 4px;
-}
-.__xwg_mi:last-child{ margin-bottom:0; }
-.__xwg_mi_ttl{
-  font-size:.78rem; font-weight:700; color:#2a2620; margin-bottom:3px;
-  display:flex; justify-content:space-between; align-items:flex-start; gap:6px;
-}
-.__xwg_mi_body{ font-size:.74rem; color:#4a4540; line-height:1.6; white-space:pre-wrap; word-break:break-all; }
-.__xwg_mi_date{ font-size:.62rem; color:#8c8278; margin-top:5px; }
-
-/* empty state */
-.__xwg_empty{ text-align:center; padding:20px 10px; color:#8c8278; font-size:.76rem; line-height:1.7; }
-.__xwg_empty .ei{ font-size:1.5rem; margin-bottom:5px; }
-
-/* copy flash */
-.__xwg_flash{ animation:__xwg_fl .6s ease; }
-@keyframes __xwg_fl{ 40%{ background:#e8f5fa; border-color:#0e7ea4; } }
-
-::-webkit-scrollbar{ width:5px; }
-::-webkit-scrollbar-thumb{ background:#ccc7bc; border-radius:3px; }
-`;
-
-const style = document.createElement('style');
-style.textContent = _css;
-document.head.appendChild(style);
-
-/* ── ④ DOM構築 ── */
-const anchor = document.getElementById('__xwg_anchor');
-
-anchor.insertAdjacentHTML('beforeend', `
-<button id="__xwg_btn" onclick="__xwgToggle()" title="メモ・ワード・履歴を開く">
-  📌<span class="xwg-badge" id="__xwg_hbadge"></span>
-</button>
-
-<div id="__xwg_panel">
-  <div class="__xwg_head">
-    <span class="__xwg_logo">🗂️</span>
-    <span class="__xwg_title">メモ・ワード・履歴</span>
-    <button class="__xwg_close" onclick="__xwgClose()">✕</button>
-  </div>
-  <div class="__xwg_tabs">
-    <button class="__xwg_tab on" onclick="__xwgTab('h',this)"><span class="ti">🕐</span>履歴</button>
-    <button class="__xwg_tab"   onclick="__xwgTab('w',this)"><span class="ti">📌</span>ワード</button>
-    <button class="__xwg_tab"   onclick="__xwgTab('m',this)"><span class="ti">📝</span>メモ</button>
-  </div>
-  <div class="__xwg_body">
-
-    <!-- 履歴パネル -->
-    <div class="__xwg_pane on" id="__xwg_ph">
-      <div class="__xwg_card">
-        <div class="__xwg_card_title">🕐 ページ訪問履歴</div>
-        <div id="__xwg_hlist"></div>
-      </div>
-      <div style="text-align:right;margin-top:4px;">
-        <button class="__xwg_btn_s __xwg_btn_da" onclick="__xwgClearHist()">全削除</button>
-      </div>
-    </div>
-
-    <!-- ワードパネル -->
-    <div class="__xwg_pane" id="__xwg_pw">
-      <div class="__xwg_card">
-        <div class="__xwg_card_title">＋ ワードを登録</div>
-        <input class="__xwg_inp" type="text" id="__xwg_nw" placeholder="ワード・フレーズ（スペース区切り可）">
-        <div class="__xwg_row">
-          <select class="__xwg_sel" id="__xwg_nc">
-            <option value="custom">🏷 カスタム</option>
-            <option value="pain">😤 ペイン</option>
-            <option value="benefit">✨ ベネフィット</option>
-            <option value="account">👤 アカウント</option>
-          </select>
-          <input class="__xwg_inp" type="text" id="__xwg_nl" placeholder="ラベル名（省略可）">
-        </div>
-        <button class="__xwg_btn_s __xwg_btn_co __xwg_full" onclick="__xwgRegWord()">＋ 登録する</button>
-      </div>
-      <div class="__xwg_card">
-        <div class="__xwg_card_title">登録済みワード（タップでコピー）</div>
-        <div id="__xwg_wtags"></div>
-      </div>
-    </div>
-
-    <!-- メモパネル -->
-    <div class="__xwg_pane" id="__xwg_pm">
-      <div class="__xwg_card">
-        <div class="__xwg_card_title">📝 メモを追加</div>
-        <input class="__xwg_inp" type="text" id="__xwg_mt" placeholder="タイトル">
-        <textarea class="__xwg_inp ta" id="__xwg_mb" placeholder="本文…" style="margin-top:5px;"></textarea>
-        <button class="__xwg_btn_s __xwg_btn_am __xwg_full" onclick="__xwgAddMemo()">保存</button>
-      </div>
-      <div class="__xwg_card">
-        <div class="__xwg_card_title">メモ一覧</div>
-        <div id="__xwg_mlist"></div>
-      </div>
-    </div>
-
-  </div>
-</div>
-`);
-
-/* ── ⑤ ウィジェットロジック ── */
-let __xwg_open = false;
-
-window.__xwgToggle = function(){
-  __xwg_open = !__xwg_open;
-  const panel = document.getElementById('__xwg_panel');
-  if(__xwg_open){
-    panel.classList.add('open');
-    __xwgRenderHist();
-    __xwgRenderWords();
-    __xwgRenderMemos();
-  } else {
-    panel.classList.remove('open');
-  }
-};
-
-window.__xwgClose = function(){
-  __xwg_open = false;
-  document.getElementById('__xwg_panel').classList.remove('open');
-};
-
-window.__xwgTab = function(id, btn){
-  document.querySelectorAll('.__xwg_pane').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.__xwg_tab').forEach(t=>t.classList.remove('on'));
-  document.getElementById({h:'__xwg_ph',w:'__xwg_pw',m:'__xwg_pm'}[id]).classList.add('on');
-  btn.classList.add('on');
-  if(id==='h') __xwgRenderHist();
-  if(id==='w') __xwgRenderWords();
-  if(id==='m') __xwgRenderMemos();
-};
-
-/* 履歴 */
-function __xwgRenderHist(){
-  const list = _ld(XWG_KEYS.history, []);
-  const el = document.getElementById('__xwg_hlist');
-  if(!list.length){
-    el.innerHTML = '<div class="__xwg_empty"><div class="ei">🕐</div>まだ履歴がありません</div>';
-    return;
-  }
-  el.innerHTML = list.map((h,i) => `
-    <div class="__xwg_hi">
-      <div class="__xwg_hi_title">${_esc(h.title || '(タイトルなし)')}</div>
-      <div class="__xwg_hi_url">${_esc(h.url)}</div>
-      <div class="__xwg_hi_meta">
-        <span class="__xwg_hi_date">${_fmt(h.ts)}</span>
-        <div class="__xwg_hi_btns">
-          <button class="__xwg_hbtn __xwg_hbtn_go"  onclick="window.open('${_ea(h.url)}','_blank')">開く</button>
-          <button class="__xwg_hbtn __xwg_hbtn_cp"  onclick="__xwgCopy('${_ea(h.url)}',this)">URLコピー</button>
-          <button class="__xwg_hbtn __xwg_hbtn_dl"  onclick="__xwgDelHist(${i})">✕</button>
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-window.__xwgDelHist = function(i){
-  const list = _ld(XWG_KEYS.history, []);
-  list.splice(i,1); _sv(XWG_KEYS.history, list);
-  __xwgRenderHist(); __xwgUpdateBadge();
-};
-window.__xwgClearHist = function(){
-  if(!confirm('履歴をすべて削除しますか？'))return;
-  _sv(XWG_KEYS.history, []); __xwgRenderHist(); __xwgUpdateBadge();
-};
-
-function __xwgUpdateBadge(){
-  const n = _ld(XWG_KEYS.history, []).length;
-  const b = document.getElementById('__xwg_hbadge');
-  if(n > 0){ b.style.display='flex'; b.textContent = n > 99 ? '99+' : n; }
-  else{ b.style.display='none'; }
-}
-
-/* ワード */
-window.__xwgRegWord = function(){
-  const word  = document.getElementById('__xwg_nw').value.trim();
-  const cat   = document.getElementById('__xwg_nc').value;
-  const label = document.getElementById('__xwg_nl').value.trim() || word;
-  if(!word) return alert('ワードを入力してください。');
-  const words = _ld(XWG_KEYS.words, []);
-  words.push({id: Date.now(), word, cat, label, ts: Date.now()});
-  _sv(XWG_KEYS.words, words);
-  document.getElementById('__xwg_nw').value = '';
-  document.getElementById('__xwg_nl').value = '';
-  __xwgRenderWords();
-};
-
-window.__xwgDelWord = function(id){
-  _sv(XWG_KEYS.words, _ld(XWG_KEYS.words,[]).filter(w=>w.id!==id));
-  __xwgRenderWords();
-};
-
-function __xwgRenderWords(){
-  const words = _ld(XWG_KEYS.words, []);
-  const el = document.getElementById('__xwg_wtags');
-  if(!words.length){
-    el.innerHTML = '<div class="__xwg_empty"><div class="ei">📌</div>まだ登録がありません</div>';
-    return;
-  }
-  const cats = ['pain','benefit','custom','account'];
-  const labels = {pain:'😤 ペイン',benefit:'✨ ベネフィット',custom:'🏷 カスタム',account:'👤 アカウント'};
-  let html = '';
-  cats.forEach(cat => {
-    const cw = words.filter(w=>w.cat===cat);
-    if(!cw.length) return;
-    html += `<div class="__xwg_sub">${labels[cat]}</div>`;
-    html += `<div class="__xwg_tags">`;
-    html += cw.map(w=>`
-      <span class="__xwg_tag ${w.cat}" title="${_esc(w.word)}（タップでコピー）" onclick="__xwgCopy('${_ea(w.word)}',this)">
-        <span class="tl">${_esc(w.label)}</span>
-        <span class="td" onclick="event.stopPropagation();__xwgDelWord(${w.id})">✕</span>
-      </span>`).join('');
-    html += `</div>`;
-    html += `<div class="__xwg_hr"></div>`;
-  });
-  el.innerHTML = html;
-}
-
-/* メモ */
-window.__xwgAddMemo = function(){
-  const title = document.getElementById('__xwg_mt').value.trim();
-  const body  = document.getElementById('__xwg_mb').value.trim();
-  if(!title && !body) return alert('タイトルまたは本文を入力してください。');
-  const memos = _ld(XWG_KEYS.memos, []);
-  memos.unshift({id:Date.now(), title:title||'（無題）', body, ts:Date.now()});
-  _sv(XWG_KEYS.memos, memos);
-  document.getElementById('__xwg_mt').value = '';
-  document.getElementById('__xwg_mb').value = '';
-  __xwgRenderMemos();
-};
-
-window.__xwgDelMemo = function(id){
-  _sv(XWG_KEYS.memos, _ld(XWG_KEYS.memos,[]).filter(m=>m.id!==id));
-  __xwgRenderMemos();
-};
-
-function __xwgRenderMemos(){
-  const memos = _ld(XWG_KEYS.memos, []);
-  const el = document.getElementById('__xwg_mlist');
-  if(!memos.length){
-    el.innerHTML = '<div class="__xwg_empty"><div class="ei">📝</div>まだメモがありません</div>';
-    return;
-  }
-  el.innerHTML = memos.map(m=>`
-    <div class="__xwg_mi">
-      <div class="__xwg_mi_ttl">
-        <span>${_esc(m.title)}</span>
-        <button class="__xwg_hbtn __xwg_hbtn_dl" style="flex-shrink:0;" onclick="__xwgDelMemo(${m.id})">✕</button>
-      </div>
-      <div class="__xwg_mi_body">${_esc(m.body)}</div>
-      <div class="__xwg_mi_date">${_fmt(m.ts)}</div>
-    </div>`).join('');
-}
-
-/* クリップボードコピー */
-window.__xwgCopy = function(text, el){
-  navigator.clipboard.writeText(text).then(()=>{
-    if(el){ el.classList.add('__xwg_flash'); setTimeout(()=>el.classList.remove('__xwg_flash'),700); }
-  }).catch(()=> alert('コピーできませんでした。'));
-};
-
-/* ── ⑥ 自動履歴記録 ── */
-if(XWG_AUTO_HIST){
-  const entry = { url: location.href, title: document.title, ts: Date.now() };
-  const hist = _ld(XWG_KEYS.history, []);
-  // 直前と同じURLは重複登録しない
-  if(!hist.length || hist[0].url !== entry.url){
-    hist.unshift(entry);
-    if(hist.length > XWG_MAX_HIST) hist.pop();
-    _sv(XWG_KEYS.history, hist);
-  }
-  __xwgUpdateBadge();
-}
-
-})();
-</script>
-<!-- =====================================================================
-     ▲ スニペット本体ここまで
-     ===================================================================== -->
-
-<!-- ── このページのスニペット表示・コピーロジック ── -->
-<script>
-// スニペット本文を抽出して表示
-window.addEventListener('DOMContentLoaded', function(){
-  const src = document.body.innerHTML;
-  const m = src.match(/<!-- XWidget[\s\S]*?<!-- =====[\s\S]*?▲ スニペット本体ここまで[\s\S]*?-->/);
-  if(!m) return;
-
-  // タグを見やすくハイライト
-  let code = m[0]
-    .replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-  document.getElementById('snippet-display').innerHTML = code;
-});
-
-function copySnippet(){
-  const src = document.body.innerHTML;
-  // HTMLデコードされたテキストから抽出
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(src, 'text/html');
-  const scriptEls = doc.querySelectorAll('script');
-  
-  // より確実な方法: 表示テキストからコピー
-  const pre = document.getElementById('snippet-display');
-  const text = pre.innerText || pre.textContent;
-
-  navigator.clipboard.writeText(text).then(()=>{
-    const btn = document.querySelector('.copy-btn');
-    const orig = btn.textContent;
-    btn.textContent = '✅ コピーしました！';
-    btn.style.background = '#2a8c5e';
-    setTimeout(()=>{ btn.textContent = orig; btn.style.background = ''; }, 2200);
-  }).catch(()=>{
-    // フォールバック
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
-    document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta);
-    alert('コピーしました！');
-  });
-}
+                // ダウンロードリンクを生成
+                const blob = new Blob([htmlText], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const downloadLink = document.getElementById('downloadLink');
+                
+                // 元のファイル名に「_with_favicon」を付けて保存できるようにする
+                const newFileName = htmlFile.name.replace(/\.html?$/i, '') + "_with_favicon.html";
+                downloadLink.href = url;
+                downloadLink.download = newFileName;
+                downloadLink.style.display = "block";
+            };
+            htmlReader.readAsText(htmlFile);
+        };
+        imgReader.readAsDataURL(imgFile);
+    }
 </script>
 
 </body>
