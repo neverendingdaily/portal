@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canva Pro マニュアル生成ポータル</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <style>
+    body { min-height:100vh; background:linear-gradient(135deg,#edfffe 0%,#f2eeff 55%,#fce8ff 100%); background-attachment:fixed; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+    ::-webkit-scrollbar{width:6px;height:6px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.14);border-radius:3px}
+    .prose h1{font-size:1.2rem;font-weight:700;margin-bottom:.75rem;color:#0f172a}
+    .prose h2{font-size:1rem;font-weight:700;margin-top:1.25rem;margin-bottom:.4rem;color:#0f172a;border-bottom:2px solid rgba(0,196,204,.3);padding-bottom:.2rem}
+    .prose h3{font-size:.9rem;font-weight:600;margin-top:.875rem;margin-bottom:.3rem;color:#00C4CC}
+    .prose p{font-size:.875rem;line-height:1.7;margin-bottom:.6rem;color:#475569}
+    .prose ul,.prose ol{padding-left:1.25rem;margin-bottom:.6rem}
+    .prose li{font-size:.875rem;line-height:1.65;color:#475569;margin-bottom:.2rem}
+    .prose strong{font-weight:600;color:#1e293b}
+    .prose hr{border:none;border-top:1px solid rgba(0,0,0,.1);margin:1rem 0}
+    .prose code{background:rgba(0,196,204,.1);padding:.1rem .3rem;border-radius:3px;font-size:.8rem;color:#00a8ae;font-family:monospace}
+    .prose blockquote{border-left:3px solid #00C4CC;padding-left:.75rem;color:#64748b;margin:.75rem 0}
+    .prose table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.75rem 0}
+    .prose th{background:rgba(0,196,204,.1);font-weight:600;padding:.35rem .6rem;border:1px solid rgba(0,196,204,.2);text-align:left;color:#00a8ae}
+    .prose td{padding:.35rem .6rem;border:1px solid rgba(0,0,0,.06);color:#475569}
+    .canva-btn{background:linear-gradient(135deg,#00C4CC 0%,#5A32FA 100%);color:white;border:none;cursor:pointer;font-weight:700;transition:all .25s ease}
+    .canva-btn:hover:not(:disabled){transform:scale(1.04);box-shadow:0 8px 24px rgba(90,50,250,.30)}
+    .canva-btn:disabled{background:rgba(0,0,0,.10);color:rgba(0,0,0,.30);cursor:not-allowed;transform:none;box-shadow:none}
+    .canva-badge{background:linear-gradient(135deg,#00C4CC,#5A32FA);color:white;font-weight:700;border-radius:9999px;padding:2px 10px;font-size:.7rem}
+    .fcard{transition:all .15s ease;cursor:pointer}
+    .fcard:hover{transform:translateY(-2px)}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+    .blink{animation:blink 1s infinite;display:inline-block;width:2px;height:1em;background:#00C4CC;vertical-align:text-bottom;margin-left:2px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spin{animation:spin .8s linear infinite}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+'use strict';
+/* ─── Canva Features ─────────────────────────────────────── */
+const FEATURE_CATEGORY_LABELS={design:'🎨 デザイン基本','ai-magic':'✨ AI魔法機能',brand:'🏷️ ブランド管理',productivity:'⚡ 生産性ツール',apps:'🧩 拡張アプリ'};
+const CATEGORY_ORDER=['design','ai-magic','brand','productivity','apps'];
+const CATEGORY_ACCENT={
+  design:      {color:'#00C4CC',bg:'rgba(0,196,204,.08)',border:'rgba(0,196,204,.22)',hdr:'rgba(0,196,204,.05)'},
+  'ai-magic':  {color:'#7D2AE8',bg:'rgba(125,42,232,.08)',border:'rgba(125,42,232,.22)',hdr:'rgba(125,42,232,.05)'},
+  brand:       {color:'#5A32FA',bg:'rgba(90,50,250,.08)',border:'rgba(90,50,250,.22)',hdr:'rgba(90,50,250,.05)'},
+  productivity:{color:'#10b981',bg:'rgba(16,185,129,.08)',border:'rgba(16,185,129,.22)',hdr:'rgba(16,185,129,.05)'},
+  apps:        {color:'#f59e0b',bg:'rgba(245,158,11,.08)',border:'rgba(245,158,11,.22)',hdr:'rgba(245,158,11,.05)'},
+};
+const CANVA_FEATURES=[
+  /* ── design ── */
+  {id:'magic-switch',   name:'Magic Switch（マジック変換）',icon:'🔄',category:'design',
+   description:'1つのデザインをボタン一つで「インスタ正方形」→「YouTubeサムネイル」→「Xの横長」→「リール縦長」へ自動リサイズ。SNS横展開の必須機能。',
+   operationSteps:['デザイン上部「サイズを変更」をクリック','変換先SNSフォーマットを選択（TikTok/Stories/YouTube等）','「マジック変換」で自動変換を実行','AIが要素の配置・フォントサイズを自動最適化','「コピーを保存」で元デザインを保持したまま別サイズを作成']},
+  {id:'custom-size',    name:'カスタムサイズ',icon:'📐',category:'design',
+   description:'XヘッダーやYouTubeバナーなど媒体仕様変更に即対応。px・cm・mm単位でピクセルパーフェクトなキャンバスを作成できる。',
+   operationSteps:['トップページ「デザインを作成」→「カスタムサイズ」を選択','幅・高さを数値入力（例：1500×500px でXヘッダー）','単位（px/cm/mm）を切り替えて確定','テンプレートを適用するかゼロからデザイン開始','各SNSの推奨サイズをメモしてブックマーク登録しておく']},
+  {id:'magic-animate',  name:'Magic Animate（アニメーション）',icon:'✨',category:'design',
+   description:'静止画デザインをワンクリックでアニメーション化。フェード・スライド・バウンス等の動きをAIが自動提案。インスタストーリー・リール用に最適。',
+   operationSteps:['デザインを開き上部「アニメート」をクリック','ページ全体 or 要素単体をアニメート対象に選択','「Magic Animate」でAIが最適なアニメを自動提案','フェード/スライド/バウンスなどから好みのスタイルを選択','プレビューで確認後 MP4 または GIF で書き出し']},
+  {id:'video-editor',   name:'動画エディター',icon:'🎬',category:'design',
+   description:'YouTube・リール・ショート動画をCanva上で完結編集。テロップ挿入・トランジション・BGM追加・クロップまで一気通貫で対応。',
+   operationSteps:['「動画」テンプレートまたはカスタムサイズで新規作成','動画素材をアップロードしてタイムラインに配置','テロップは「テキスト」→フォント・サイズ・アニメーションを設定','「トランジション」タブでシーン切り替え効果を追加','BGMをアップロードまたはCanva内蔵音源から選択してバランス調整']},
+  {id:'frames',         name:'フレーム機能',icon:'🖼️',category:'design',
+   description:'丸・角丸・多角形などのフレームに写真を自動フィット。サムネイルの人物切り抜きや複数画像グリッドを美しく整列できる。',
+   operationSteps:['サイドパネル「素材」→「フレーム」で形を検索','フレームをキャンバスに配置','使いたい写真をフレームの上にドラッグ&ドロップ','フレーム内で写真をドラッグして位置・ズームを調整','複数フレームを並べてグリッドコラージュを作成']},
+  {id:'grid-layout',    name:'グリッド＆レイアウト',icon:'⊞',category:'design',
+   description:'カルーセル投稿やコラージュを整列グリッドで均等配置。ガイド線・スナップ機能で整ったレイアウトを素早く実現。',
+   operationSteps:['「素材」→「グリッド」から列数を選択してキャンバスに配置','各セルに写真・動画・テキストをドラッグ','上部「位置」で要素間のマージン・パディングを数値指定','ガイド線（表示→ガイド線）をオンにしてスナップ整列','カルーセル用に複数ページへコピーして統一感を出す']},
+  /* ── ai-magic ── */
+  {id:'bg-remover',     name:'背景リムーバ',icon:'✂️',category:'ai-magic',
+   description:'人物・商品の背景をワンクリックで透過。YouTubeサムネイルの人物切り抜きに必須。動画背景もワンクリックで透過可能（Pro限定）。',
+   operationSteps:['画像をキャンバスに配置して選択','上部ツールバー「背景を削除」をクリック','AIが被写体と背景を自動分離（数秒）','「消去」「復元」ブラシで髪の毛など細部を手動修正','透明PNGとして保存またはそのまま他デザインへ合成']},
+  {id:'magic-eraser',   name:'Magic Eraser（消しゴム）',icon:'🧹',category:'ai-magic',
+   description:'写り込んだ不要な人・モノ・文字をブラシでなぞるだけで自然消去。背景をAIが自動補完するので継ぎ目が出ない。',
+   operationSteps:['画像を選択→上部「画像を編集」→「Magic Eraser」を開く','ブラシサイズを消去対象の大きさに合わせて調整','消去したい部分を塗りつぶすようになぞる','「消去」ボタンでAIが背景を自動補完','仕上がりが不満な箇所は繰り返しなぞってリファイン']},
+  {id:'magic-expand',   name:'Magic Expand（マジック拡張）',icon:'↔️',category:'ai-magic',
+   description:'縦長で撮った写真をYouTube横長サムネイルに使いたい時、足りない背景をAIが自動生成して違和感なく継ぎ足す機能。',
+   operationSteps:['画像を選択→「画像を編集」→「Magic Expand」を開く','拡張したい方向・比率を指定（例：縦長→16:9横長）','プロンプトで拡張エリアの背景内容を指示（任意）','「拡張」で4つの候補を生成','最適な結果を選択してキャンバスに適用']},
+  {id:'magic-write',    name:'Magic Write（AI文章生成）',icon:'✍️',category:'ai-magic',
+   description:'キーワードや箇条書きを入力するだけで投稿キャプション・見出し・スクリプトをAIが自動生成。日本語にも対応。',
+   operationSteps:['テキストボックスを選択し「Magic Write」をクリック（または/コマンド）','トピック・トーン（フォーマル/カジュアル等）を入力','文章の長さ（短め/普通/長め）を指定','「生成」で複数候補を作成','好みの案を選択してそのまま編集・流用']},
+  {id:'magic-edit',     name:'Magic Edit（AI画像編集）',icon:'🖌️',category:'ai-magic',
+   description:'画像の一部をブラシでなぞりプロンプトを入力すると、その部分だけをAIが別の物に置き換える。背景や服・小道具の差し替えに。',
+   operationSteps:['画像を選択→「画像を編集」→「Magic Edit」を開く','置き換えたいエリアをブラシで塗りつぶす','テキストで置き換えたい内容を入力（例：「青い空」）','「生成」で複数候補を生成','ベストな結果を選択して適用']},
+  {id:'magic-morph',    name:'Magic Morph（テキスト変形）',icon:'🌀',category:'ai-magic',
+   description:'テキストや図形をプロンプトのテクスチャ・素材感でAI変形。「炎」「金属」「花」など独自の文字デザインをSNS投稿に活用。',
+   operationSteps:['テキストまたは図形を選択','上部「エフェクト」→「Magic Morph」を選択','変形させたいテクスチャをテキストで入力（例：「溶岩」「水滴」）','「生成」で複数候補を作成','候補から最適なスタイルを選択してサイズ調整']},
+  {id:'magic-design',   name:'Magic Design（AI自動デザイン）',icon:'🪄',category:'ai-magic',
+   description:'テーマや写真をアップロードするだけで、デザイン全体をAIが自動生成。テンプレート選びに迷う時間をゼロにする時短機能。',
+   operationSteps:['トップページ「デザインを作成」からフォーマットを選択','「Magic Design」ボタンをクリック','キーワードまたは写真をアップロードして指示を入力','AIが複数のデザイン案を自動生成','好みのデザインを選択してカスタマイズ開始']},
+  {id:'magic-media',    name:'Magic Media（AI画像・動画生成）',icon:'🤖',category:'ai-magic',
+   description:'テキストプロンプトから高品質な画像・短尺動画をAI生成。理想のフリー素材が見つからない時に独自素材を即座に作れる。',
+   operationSteps:['サイドパネル「アプリ」→「Magic Media」を開く','「画像を生成」または「動画を生成」を選択','スタイル（フォト/アニメ/水彩/3D等）を選択','プロンプトを入力（英語推奨、日本語も可）','「生成」で4枚の候補を作成してキャンバスに追加']},
+  {id:'photo-enhancer', name:'写真補正（Photo Enhancer）',icon:'🌟',category:'ai-magic',
+   description:'暗い・ぼけた写真をAIが自動補正して高品質化。明るさ・コントラスト・シャープネスをワンクリックで最適化。',
+   operationSteps:['写真を選択→上部「画像を編集」を開く','「自動補正」でAIが明るさ・色を自動最適化','「調整」スライダーで明るさ/コントラスト/彩度を手動微調整','「フィルター」でトーンをInstagram風・フィルム風等に変更','完了後そのまま書き出しまたはデザインに配置']},
+  {id:'translate',      name:'Magic Translate（翻訳）',icon:'🌐',category:'ai-magic',
+   description:'デザイン内のテキスト全体を一括で他言語に翻訳。英語・韓国語・中国語版SNSコンテンツを瞬時に量産できる（Pro機能）。',
+   operationSteps:['デザインを開き上部「ファイル」→「翻訳」を選択','翻訳先言語を選択（英語/中国語/韓国語等100言語以上）','「翻訳」でテキスト全体を一括変換','レイアウトが崩れた箇所を手動で微調整','言語ごとに保存して多言語展開を効率化']},
+  {id:'beat-sync',      name:'Beat Sync（音楽同期）',icon:'🎵',category:'ai-magic',
+   description:'動画のカット切り替えをBGMのビートに自動同期。リールやショートで「音ハメ」動画をワンクリックで作成できるPro機能。',
+   operationSteps:['動画デザインを開きタイムラインでBGMを配置','上部「BGMを同期する」→「Beat Sync」をクリック','AIがBGMのビートを検出してカット点を自動生成','生成されたトランジション点を確認・手動微調整','プレビューで確認後 MP4 で書き出し']},
+  /* ── brand ── */
+  {id:'brand-kit',      name:'ブランドキット',icon:'🎯',category:'brand',
+   description:'テーマカラー・決まったフォント・ロゴを登録。どのテンプレートを選んでもワンクリックで自分のブランドカラーに染め直せる。',
+   operationSteps:['「ブランドハブ」または設定からブランドキットを開く','ブランドカラーをHEXコードで最大100色登録','ブランドフォントをアップロードまたはGoogle Fontsから選択','ロゴ（SVG/PNG透過）をライト・ダーク版それぞれアップロード','デザイン作成時にサイドパネル「ブランドキット」から一括適用']},
+  {id:'magic-layers',   name:'レイヤー機能',icon:'🗂️',category:'brand',
+   description:'文字・画像・図形などの重なり順を視覚的に管理・ロック。複雑なサムネイルや図解を作る際に奥の画像だけを動かせる。',
+   operationSteps:['右パネル「位置」タブからレイヤーパネルを開く','ドラッグして重なり順を変更（前面/背面）','複数要素をCtrl+クリックで選択してグループ化','グループを折りたたんで整理','誤って動かしたくない要素はロックアイコンでロック']},
+  {id:'styles',         name:'スタイル（AI統一デザイン）',icon:'🎨',category:'brand',
+   description:'カラーパレットとフォントの組み合わせをワンクリックでデザイン全体に適用。世界観の統一を秒で実現するPro機能。',
+   operationSteps:['デザインを開き右パネル「スタイル」タブを開く','用意されたカラー＆フォントの組み合わせ一覧から選択','「適用」でデザイン全体のカラー・フォントを一括変更','ブランドキットのスタイルも候補として表示される','カスタムスタイルを保存してチームで共有']},
+  {id:'shared-folder',  name:'共有フォルダ・チーム管理',icon:'👥',category:'brand',
+   description:'デザイン・素材・ブランドキットをチームメンバーと共有フォルダで一元管理。外注ライターや編集者への権限付与も可能。',
+   operationSteps:['ホーム「チームを管理」→「フォルダを作成」','作成したフォルダにデザインや素材を移動','「共有」からメンバーをメールアドレスで招待','権限を「編集可」「コメントのみ」「閲覧のみ」で設定','ブランドキットもチームメンバー全員が利用できるよう共有']},
+  /* ── productivity ── */
+  {id:'bulk-create',    name:'一括作成 (Bulk Create)',icon:'⚡',category:'productivity',
+   description:'CSVのデータと連携し、名言bot・クイズ・用語解説などの画像を数十枚一気に自動生成。1テンプレートで何百バリエーションも作れる。',
+   operationSteps:['テンプレートを作成して変数にしたいテキスト・画像を設定','上部「アプリ」→「Bulk Create」を開く','CSVをアップロードまたはGoogleスプレッドシートを接続','各列をデザイン内の変数フィールドにマッピング','プレビューして問題なければ一括生成・まとめてダウンロード']},
+  {id:'content-planner',name:'コンテンツプランナー',icon:'📅',category:'productivity',
+   description:'作ったデザインをCanvaから直接XやInstagram・Facebookに予約投稿できるカレンダー機能。ダウンロード不要で運用を効率化。',
+   operationSteps:['ホーム「コンテンツプランナー」を開く','カレンダービューで投稿したい日時をクリック','使用するデザインを選択または新規作成','投稿先SNSアカウントを接続（初回のみ）','キャプション・ハッシュタグを入力してスケジュール設定']},
+  {id:'resize',         name:'リサイズ（複数サイズ一括）',icon:'↕️',category:'productivity',
+   description:'1つのデザインから複数SNS用サイズを同時に書き出し。Instagram正方形・縦型・Stories・Xカードを一度の操作で量産。',
+   operationSteps:['デザインを開き上部「サイズを変更」をクリック','必要な全サイズにチェックを入れる（複数選択可）','「コピーを作成してサイズ変更」で各サイズのコピーを生成','各サイズデザインを微調整して完成度を確認','「一括ダウンロード」でフォルダにまとめて書き出し']},
+  {id:'charts',         name:'グラフ・チャート作成',icon:'📊',category:'productivity',
+   description:'棒グラフ・円グラフ・折れ線グラフをデザイン内に挿入。データを貼り付けるだけでインフォグラフィック投稿を作れる。',
+   operationSteps:['「素材」→「グラフ」からグラフ種類を選択','キャンバスに配置後「データを編集」をクリック','数値・ラベルを直接入力またはCSVからインポート','グラフの色・フォント・スタイルをブランドカラーに変更','背景・テキストと組み合わせてインフォグラフィックとして完成']},
+  {id:'qr-code',        name:'QRコード生成',icon:'📷',category:'productivity',
+   description:'URLからQRコードをCanva内で直接生成してデザインに埋め込み。LINE・ランディングページへの誘導画像を素早く作れる。',
+   operationSteps:['「アプリ」→「QRコード」を検索して追加','遷移先のURLを入力','QRコードのサイズ・カラーをブランドカラーに変更','キャンバスのデザインに配置してサイズ調整','投稿画像や名刺・チラシに埋め込んで書き出し']},
+  {id:'canva-docs',     name:'Canva Docs（ドキュメント）',icon:'📝',category:'productivity',
+   description:'企画書・台本・マーケティング資料をCanvaのデザイン素材と組み合わせて作成。SNS運用計画書やスクリプトに最適。',
+   operationSteps:['トップページ「ドキュメント」を選択して新規作成','テンプレートを選択またはブランクで開始','テキスト・見出し・箇条書きを入力','「デザインを埋め込む」でCanvaの他デザインをそのまま挿入','PDF・Wordまたは共有リンクで書き出し']},
+  {id:'canva-website',  name:'Canva Websites（ウェブサイト）',icon:'🌐',category:'productivity',
+   description:'作ったデザインをそのまま無料のウェブページとして公開。SNSプロフィールリンクに設定する「リンクまとめページ」にも活用できる。',
+   operationSteps:['「ウェブサイト」テンプレートを選択して新規作成','各セクションのテキスト・画像をカスタマイズ','SNSリンク・お問い合わせボタンを設置','「公開」→独自ドメインまたはCanvaサブドメインで公開','SNSプロフィールのリンク欄に公開URLを設定']},
+  /* ── design (追加) ── */
+  {id:'text-on-curve',  name:'テキストのカーブ配置',icon:'〰️',category:'design',
+   description:'文字を円弧・波・らせん状に沿って配置できる機能。ロゴ風デザインやバッジ型サムネイルテキストに使われるプロ技。',
+   operationSteps:['テキストボックスを選択','上部「エフェクト」→「カーブ」を選択','スライダーでカーブの強さ・向きを調整（上反り/下反り）','フォント・サイズをサムネイルに合わせて調整','他の要素とグループ化して配置']},
+  {id:'whiteboard',     name:'ホワイトボード＆マインドマップ',icon:'🗒️',category:'design',
+   description:'無限キャンバスでコンテンツ企画のアイデア出しやSNS戦略のマインドマップを作成。チームとのリアルタイム共同作業にも対応。',
+   operationSteps:['トップページ「ホワイトボード」を選択','付箋・図形・矢印でアイデアを自由に配置','「マインドマップ」テンプレートでコンテンツ戦略を構造化','チームメンバーを招待してリアルタイムで同時編集','完成したらPDFまたは画像でエクスポートして共有']},
+  {id:'presentation-rec',name:'プレゼン録画（Presenter View）',icon:'🎥',category:'design',
+   description:'スライドを発表しながら自分の顔をワイプで映して動画録画。YouTube解説動画やウェビナー素材をCanva内で完結して作れる。',
+   operationSteps:['プレゼンテーションデザインを開き「発表」→「録画」を選択','カメラ・マイクをオンにして画面に自分を表示','スライドを進めながら解説を録音・録画','録画完了後プレビューして必要なら再録画','MP4でダウンロードしてYouTubeやSNSにアップロード']},
+  /* ── ai-magic (追加) ── */
+  {id:'magic-grab',     name:'Magic Grab（被写体の切り離し）',icon:'✋',category:'ai-magic',
+   description:'写真内の被写体だけをAIが認識して切り離し、自由に移動・リサイズ・前面配置できる機能。背景テキストの前に人物を配置するプロ技が簡単に。',
+   operationSteps:['写真を選択→上部「画像を編集」→「Magic Grab」を開く','AIが被写体を自動検出してハイライト表示','被写体をドラッグして好きな位置に移動','前面・背面のレイヤーを調整して奥行きを演出','必要に応じて背景リムーバーと組み合わせて仕上げ']},
+  {id:'magic-design-video',name:'Magic Design for Video',icon:'🎞️',category:'ai-magic',
+   description:'写真や動画クリップをアップロードするだけで、音楽に合わせたSNS用ショート動画をAIが自動生成。リール・ショート用ハイライト動画を瞬時に作成。',
+   operationSteps:['トップページ「動画を作成」→「Magic Design for Video」を選択','使いたい写真・動画クリップを複数アップロード','テーマ・雰囲気（エネルギッシュ/おだやか等）を選択','AIがBGMに合わせて自動編集した動画案を複数生成','気に入った案を選んでテキスト・ロゴを追加して書き出し']},
+  {id:'auto-focus',     name:'オートフォーカス（背景ぼかし）',icon:'🔍',category:'ai-magic',
+   description:'被写体を際立たせるために背景を自然にぼかす機能。一眼レフ風のボケ表現でサムネイルや商品写真のクオリティを即アップ。',
+   operationSteps:['写真を選択→「画像を編集」を開く','「フォーカス」または「ぼかし」ツールを選択','スライダーでぼかしの強さを調整','被写体の境界を「復元ブラシ」で細部修正','完成後そのまま書き出しまたはデザインに配置']},
+  {id:'face-retouch',   name:'顔レタッチ（スムーズ・美肌）',icon:'💄',category:'ai-magic',
+   description:'プロフィール写真やサムネイルの顔を自動補正。肌荒れの軽減・歯のホワイトニング・顔のスムーズ化をワンクリックで適用できる。',
+   operationSteps:['人物写真を選択→「画像を編集」を開く','「顔のレタッチ」ツールを選択','「スムーズ」スライダーで肌を均一化','「ホワイトニング」で歯を明るく補正','自然な仕上がりになるよう強度は控えめに設定']},
+  {id:'duotone',        name:'デュオトーン（2色変換）',icon:'🎭',category:'ai-magic',
+   description:'写真を2色のオシャレなグラデーションに変換するフィルター。ブランドカラー2色でアイキャッチ画像を統一するとトンマナが締まる。',
+   operationSteps:['写真を選択→「画像を編集」→「エフェクト」を開く','「デュオトーン」を選択','ハイライト色・シャドウ色をブランドカラーで設定','強度スライダーで適用量を調整','複数枚に同じ設定を適用してシリーズ投稿の統一感を出す']},
+  {id:'color-palette',  name:'カラーパレット自動抽出',icon:'🎨',category:'ai-magic',
+   description:'写真からブランドに合う色を自動抽出し、テキスト・図形・背景の配色にそのまま適用。写真と文字の色を自動で統一できる。',
+   operationSteps:['写真を選択→右パネル「カラーパレットを抽出」をクリック','写真から5〜6色が自動抽出されてパレット表示','テキストや図形の色を変更する際に抽出パレットから選択','ブランドキットに追加して他デザインでも使い回し','統一感のある投稿シリーズを簡単に量産']},
+  /* ── brand (追加) ── */
+  {id:'custom-font',    name:'カスタムフォントアップロード',icon:'🔤',category:'brand',
+   description:'自社指定フォントやダウンロードした有料フォントをCanvaにアップロードして使用。モリサワ等日本語有料フォントもそのまま適用できる（Pro限定）。',
+   operationSteps:['「ブランドキット」→「フォント」→「フォントをアップロード」をクリック','OTF・TTF・WOFF形式のフォントファイルを選択','アップロード後「ブランドフォント」として登録','デザイン作成時にフォント選択欄の「アップロード済み」から使用','チームメンバー全員が同じフォントを使えるよう共有設定']},
+  {id:'brand-template', name:'ブランドテンプレート作成',icon:'📋',category:'brand',
+   description:'チームで使い回すデザインのフォーマットを作成・保護。ロゴ・フォント・カラーを固定したひな形を共有し、誰が作っても同じ品質を保てる。',
+   operationSteps:['デザインを完成させてブランドカラー・ロゴを配置','上部「共有」→「テンプレートとして公開」を選択','チームへ共有するかパブリックにするかを設定','テンプレートを使う側は「使用する」でコピーを作成（元は変更不可）','定期的に更新してチーム全体のデザイン品質を統一']},
+  {id:'team-comment',   name:'チームコメント＆承認フロー',icon:'💬',category:'brand',
+   description:'デザインの特定箇所にコメントを付けてフィードバック。管理者が確認・承認してから投稿できる承認フローでSNS投稿ミスを防ぐ（Pro機能）。',
+   operationSteps:['デザインを開き右上「コメント」アイコンをクリック','フィードバックしたい箇所をクリックしてコメントを入力','@メンションで担当者に通知','承認フローを設定している場合は管理者が「承認」または「修正依頼」','承認済みデザインのみコンテンツプランナーで投稿可能にする']},
+  {id:'version-history', name:'バージョン履歴＆復元',icon:'🕓',category:'brand',
+   description:'デザインの編集履歴を自動保存。誤って要素を消した・大幅に変えすぎたという時に過去の状態にいつでも一発で戻せる安心機能（Pro限定）。',
+   operationSteps:['デザインを開き右上「ファイル」→「バージョン履歴を表示」をクリック','タイムライン上で過去の保存ポイントを確認','戻したいバージョンを選択してプレビュー','「このバージョンを復元」で過去の状態に戻す','重要な節目は「このバージョンに名前をつける」で手動保存しておく']},
+  /* ── productivity (追加) ── */
+  {id:'bg-music',       name:'プレミアムBGM・効果音',icon:'🎶',category:'productivity',
+   description:'商用利用可能なプレミアムBGM数万曲・効果音をCanva内から検索して動画に追加。YouTubeの著作権問題なしで使えるBGM素材が揃っている。',
+   operationSteps:['動画デザインのタイムラインを開く','「オーディオ」タブからジャンル・テンポ・気分で検索','プレビュー再生して動画の雰囲気に合うBGMを選択','タイムラインにドラッグしてフェードイン・アウトを設定','音量を映像の声・ナレーションより小さめに調整して完成']},
+  {id:'narration-rec',  name:'アフレコ・ナレーション録音',icon:'🎙️',category:'productivity',
+   description:'Canva上で直接マイク録音してナレーションを追加。動画に解説音声を重ねたり、リールのナレーション入り動画をCanvaだけで完結して作れる。',
+   operationSteps:['動画デザインのタイムラインを開く','「録音」ボタンをクリックしてカウントダウン後に収録開始','動画を再生しながらタイミングに合わせてナレーションを話す','「停止」で録音終了し、波形エディターでトリミング','BGMと組み合わせて音量バランスを調整']},
+  {id:'hd-export',      name:'高画質書き出し（4K・PDF CMYK）',icon:'📤',category:'productivity',
+   description:'SNS投稿用PNG/JPEGからYouTube用4K動画、印刷用PDF（CMYK）まで用途に合わせた高品質書き出し。画質を落とさない出力がPro機能の強み。',
+   operationSteps:['デザイン完成後「共有」→「ダウンロード」をクリック','ファイル形式を選択（PNG/JPEG/MP4/PDF等）','「品質」でSNS用圧縮 or 高画質を切り替え','動画は「解像度」で1080p・4Kを選択','「透明な背景」チェックでロゴをPNG透過書き出し（PNG選択時のみ）']},
+  {id:'sns-analytics',  name:'SNSインサイト確認',icon:'📈',category:'productivity',
+   description:'コンテンツプランナーと連携して、Canva上からInstagram・Facebook等の投稿パフォーマンス（いいね・リーチ等）を確認できる機能。',
+   operationSteps:['コンテンツプランナーを開く','投稿済みコンテンツをクリック','「インサイトを見る」で各SNSのリーチ・エンゲージメントを確認','よく伸びた投稿のデザインパターンを分析','次回のコンテンツ制作に反映（色・テキスト量・構図等）']},
+  {id:'svg-upload',     name:'SVGアップロード＆カラー編集',icon:'🖊️',category:'productivity',
+   description:'自作ロゴやアイコンをSVG形式でアップしてCanva内で色変更できる。Illustrator等で作ったベクター素材を自在にカスタマイズして使い回せる（Pro限定）。',
+   operationSteps:['「アップロード」→「ファイルをアップロード」でSVGファイルを選択','キャンバスに配置後SVGを選択','右パネルで各パーツの色を個別に変更','ブランドカラーに統一してサイズ調整','PNG透過またはSVGのまま書き出して再利用']},
+  /* ── apps ── */
+  {id:'dall-e-imagen',  name:'DALL·E / Imagen',icon:'🌅',category:'apps',
+   description:'OpenAIのDALL·E・GoogleのImagenをCanva内で直接使用。Magic Mediaとは別エンジンで、より高品質な独自画像生成が可能。',
+   operationSteps:['「アプリ」から「DALL·E」または「Imagen」を検索して追加','スタイルと詳細プロンプト（英語推奨）を入力','解像度とアスペクト比を設定','「生成」で複数候補を生成してベストを選択','背景リムーバ等のMagic Studio機能と組み合わせて加工']},
+  {id:'heygen-did',     name:'HeyGen / D-ID（AIアバター）',icon:'🎭',category:'apps',
+   description:'顔出しせずに喋るアバター動画を生成。スクリプトを入力するだけで口が動く動画が完成。YouTubeショートやリールに活用。',
+   operationSteps:['「アプリ」から「HeyGen」または「D-ID」を検索して追加','AIアバターを選択または自分の顔写真をアップロード','スクリプトテキストを入力（日本語対応）','声のスタイル・言語・話速を設定して生成','生成動画をCanvaデザインに埋め込んで仕上げてMP4書き出し']},
+  {id:'mockups',        name:'Mockups（モックアップ）',icon:'📱',category:'apps',
+   description:'自分の商品・電子書籍の表紙を実際のスマホ画面や本・タブレットのリアル写真にはめ込み、説得力ある告知画像を作成。',
+   operationSteps:['「アプリ」→「Mockups」を開く','スマホ・PC・本・パッケージ等のカテゴリでフィルタ検索','モックアップをキャンバスに配置','プレースホルダーに自分のデザインをドラッグ&ドロップ','背景色・角度・シャドウをカスタマイズして書き出し']},
+  {id:'type-gradient',  name:'TypeGradient（グラデ文字）',icon:'🌈',category:'apps',
+   description:'YouTubeサムネイルのタイトル文字などにグラデーションをかけ、視認性とクリック率を高める文字装飾アプリ。',
+   operationSteps:['「アプリ」→「TypeGradient」を検索して追加','グラデーション適用したいテキストをキャンバスで選択','開始色・終了色をブランドカラーで設定','方向（水平/垂直/斜め45°等）と強度を調整','完了したらグループ化してPNG透過で書き出し']},
+  {id:'pexels-pixabay', name:'Pexels / Pixabay（無料素材）',icon:'🖼️',category:'apps',
+   description:'商用利用可能な高品質フリー写真・動画素材をCanva内から直接検索・挿入。素材サイトを行き来する手間をゼロに。',
+   operationSteps:['「アプリ」→「Pexels」または「Pixabay」を追加','キーワードで素材を検索（英語推奨で精度UP）','画像または動画素材をキャンバスに直接ドラッグ','背景リムーバやフィルターで加工','商用利用OKのライセンスを確認してから使用']},
+  {id:'lottie-anim',    name:'Lottie Animations（動くイラスト）',icon:'💫',category:'apps',
+   description:'プロ制作のアニメーションGIF素材をCanvaデザインに挿入。リール・ストーリーのアクセントやローディングアニメに。',
+   operationSteps:['「アプリ」→「Lottie Animations」を追加','カテゴリ（ビジネス/感情/テクノロジー等）で素材を検索','気に入ったアニメーションをキャンバスに追加','サイズ・位置を調整して他の要素と組み合わせ','GIF または MP4 で書き出してSNSへ投稿']},
+  {id:'storyset',       name:'Storyset（イラスト素材）',icon:'🎨',category:'apps',
+   description:'統一デザインのベクターイラストを色・スタイル変更して使えるアプリ。カルーセル投稿の図解・説明用イラストに最適。',
+   operationSteps:['「アプリ」→「Storyset」を追加','テーマ（ビジネス/テクノロジー/ライフスタイル等）で検索','スタイル（フラット/キュート/ポップ等）を選択','ブランドカラーに合わせてメインカラーを変更','SVGとして挿入しテキストと組み合わせて図解コンテンツに']},
+  {id:'brandfetch',     name:'Brandfetch（企業ロゴ取得）',icon:'🏷️',category:'apps',
+   description:'企業・ブランドの公式ロゴを検索してデザインに貼り付けられるアプリ。提携先紹介や実績掲載の投稿に便利。',
+   operationSteps:['「アプリ」→「Brandfetch」を追加','企業名または公式ドメインで検索','企業ロゴの一覧から使いたい形式（横長/正方形/アイコン等）を選択','キャンバスに追加してサイズ・位置を調整','商用利用の可否は各ブランドのガイドラインで必ず確認']},
+];
+
+/* ─── Ideas Parser ────────────────────────────────────────── */
+const _CIRCLE='①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳';
+const _GNUMS=[..._CIRCLE];
+function _bldIdea(i,label,title,body){return{index:i+1,genreNumber:_GNUMS[i]||String(i+1),genreLabel:label.slice(0,60),title:(title||label).slice(0,80),format:'instagram-carousel',sources:[],essence:'',content:body.replace(/\s+/g,' ').trim().slice(0,200),cta:''};}
+function _parseSection(text,idx){
+  try{
+    const hm=text.match(new RegExp(`^## ([${_CIRCLE}])\\s*(.+)`,'m'));if(!hm)return null;
+    const tm=text.match(/^### テーマ[：:]\s*(.+)$/m);
+    const fm=text.match(/\*\*フォーマット[：:]\s*(.+?)\*\*/);
+    const sm=text.match(/\*\*掛け合わせ元\*\*[：:]\s*\n([\s\S]*?)(?=\n\n\*\*|\n\*\*)/);
+    const em=text.match(/\*\*切り口の核心\*\*[：:]\s*(.+)/);
+    return{index:idx,genreNumber:hm[1],genreLabel:hm[2].trim(),title:tm?tm[1].trim():hm[2].trim(),
+      format:(fm&&(fm[1].includes('Xスレッド')||fm[1].includes('X スレッド')))?'x-thread':'instagram-carousel',
+      sources:sm?sm[1].split('\n').map(l=>l.replace(/^[-・]\s*/,'')).filter(Boolean):[],
+      essence:em?em[1].trim():'',content:hm[2].trim(),cta:''};
+  }catch{return null;}
+}
+function _parseFallback(md){
+  const lines=md.split(/\r?\n/);
+  const h2=lines.map((l,i)=>/^## /.test(l)?i:-1).filter(i=>i>=0);
+  if(h2.length>0)return h2.slice(0,20).map((s,i)=>{
+    const e=h2[i+1]||lines.length,hdr=lines[s].replace(/^##\s+/,'').replace(/^[①-⑳]\s*/,'').trim();
+    const body=lines.slice(s+1,e).filter(l=>!/^#{1,6}\s/.test(l)).join(' ');
+    const tm=lines.slice(s+1,e).join('\n').match(/^###\s+(?:テーマ[：:]?\s*)?(.+)$/m);
+    return _bldIdea(i,hdr,tm?tm[1].trim():hdr,body);
+  });
+  const h1=lines.map((l,i)=>/^# [^#]/.test(l)?i:-1).filter(i=>i>=0);
+  if(h1.length>1)return h1.slice(0,20).map((s,i)=>{
+    const e=h1[i+1]||lines.length,t=lines[s].replace(/^#\s+/,'').trim();
+    return _bldIdea(i,t,t,lines.slice(s+1,e).filter(l=>l.trim()).join(' '));
+  });
+  const nums=lines.map((l,i)=>/^\d+[.)]\s+\S/.test(l)?i:-1).filter(i=>i>=0);
+  if(nums.length>0)return nums.slice(0,20).map((s,i)=>{
+    const e=nums[i+1]||Math.min(lines.length,s+15),t=lines[s].replace(/^\d+[.)]\s+/,'').trim();
+    return _bldIdea(i,t,t,lines.slice(s+1,e).filter(l=>l.trim()).join(' '));
+  });
+  const paras=md.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean);
+  if(paras.length>0)return paras.slice(0,20).map((p,i)=>{
+    const first=p.split('\n')[0].replace(/^[#\-*•・]\s*/,'').trim()||`アイディア ${i+1}`;
+    return _bldIdea(i,first,first,p);
+  });
+  if(md.trim()){const first=lines.find(l=>l.trim()&&!/^---$/.test(l))?.replace(/^[#\-*•・]\s*/,'').trim()||'アイディア';return[_bldIdea(0,first,first,md)];}
+  return[];
+}
+function parseIdeasMarkdown(md,date){
+  const lines=md.split(/\r?\n/),re=new RegExp(`^## [${_CIRCLE}]`);
+  const starts=lines.map((l,i)=>re.test(l)?i:-1).filter(i=>i>=0);
+  const ideas=starts.length>0?starts.map((s,i)=>_parseSection(lines.slice(s,starts[i+1]||lines.length).join('\n'),i+1)).filter(Boolean):_parseFallback(md);
+  return{date,ideas};
+}
+
+/* ─── Feature Suggest ─────────────────────────────────────── */
+const _SRULES=[
+  {kw:['サイズ変換','縦型','リール','tiktok','stories','フォーマット変換','横長','縦長','リサイズ'],ids:['magic-switch','resize']},
+  {kw:['カスタムサイズ','1080','キャンバスサイズ','アスペクト比','ヘッダー','バナー'],ids:['custom-size']},
+  {kw:['アニメーション','動き','animate','gif','ストーリー','リール'],ids:['magic-animate']},
+  {kw:['動画','video','youtube','ショート','テロップ','bgm','編集'],ids:['video-editor','beat-sync']},
+  {kw:['フレーム','切り抜き','コラージュ','丸型','円形'],ids:['frames']},
+  {kw:['グリッド','整列','カルーセル','コラージュ','レイアウト'],ids:['grid-layout']},
+  {kw:['背景削除','背景除去','透過','被写体','サムネイル','人物'],ids:['bg-remover']},
+  {kw:['消しゴム','消去','不要','eraser','写り込み'],ids:['magic-eraser']},
+  {kw:['拡張','expand','アウトペイント','ワイド','横長変換'],ids:['magic-expand']},
+  {kw:['文章生成','キャプション','テキスト生成','write','コピーライティング','文字'],ids:['magic-write']},
+  {kw:['置き換え','edit','画像編集','差し替え'],ids:['magic-edit']},
+  {kw:['テクスチャ','morph','変形','炎','金属','文字デザイン'],ids:['magic-morph']},
+  {kw:['自動デザイン','テンプレート生成','magic design'],ids:['magic-design']},
+  {kw:['ai生成','画像生成','magic media','プロンプト','ai画像','素材'],ids:['magic-media']},
+  {kw:['写真補正','明るさ','コントラスト','フィルター','画質'],ids:['photo-enhancer']},
+  {kw:['翻訳','多言語','英語','韓国語','中国語','海外'],ids:['translate']},
+  {kw:['音ハメ','bgm','ビート','beat sync','音楽同期','リズム'],ids:['beat-sync']},
+  {kw:['ブランドカラー','ブランドフォント','ロゴ','ブランドキット','世界観','統一'],ids:['brand-kit']},
+  {kw:['レイヤー','重なり','グループ','ロック','layers'],ids:['magic-layers']},
+  {kw:['スタイル','カラーパレット','トンマナ','統一感'],ids:['styles']},
+  {kw:['チーム','共有','外注','メンバー','権限'],ids:['shared-folder']},
+  {kw:['一括作成','bulk','csv','大量生成','バリエーション','名言bot','クイズ'],ids:['bulk-create']},
+  {kw:['スケジュール','予約投稿','コンテンツ計画','カレンダー'],ids:['content-planner']},
+  {kw:['複数サイズ','まとめて','一括書き出し'],ids:['resize']},
+  {kw:['グラフ','チャート','データ','図表','インフォグラフィック','統計'],ids:['charts']},
+  {kw:['qr','二次元コード','line登録','リンク'],ids:['qr-code']},
+  {kw:['資料','企画書','スクリプト','台本','ドキュメント'],ids:['canva-docs']},
+  {kw:['ウェブサイト','ランディングページ','lp','リンクまとめ','プロフリンク'],ids:['canva-website']},
+  {kw:['dall-e','dalle','imagen','openai','google ai'],ids:['dall-e-imagen']},
+  {kw:['アバター','リップシンク','heygen','d-id','ai動画','顔出しなし'],ids:['heygen-did']},
+  {kw:['モックアップ','mockup','スマホ','デバイス','商品紹介','電子書籍'],ids:['mockups']},
+  {kw:['グラデーション','テキスト装飾','gradient','文字デザイン','サムネイル文字'],ids:['type-gradient']},
+  {kw:['フリー素材','pexels','pixabay','写真素材','無料画像'],ids:['pexels-pixabay']},
+  {kw:['lottie','アニメーション素材','動くイラスト'],ids:['lottie-anim']},
+  {kw:['イラスト','図解','vector','storyset','説明画像'],ids:['storyset']},
+  {kw:['企業ロゴ','brandfetch','会社ロゴ','実績','提携'],ids:['brandfetch']},
+  {kw:['カーブ','アーチ','ロゴ風','バッジ','円形テキスト'],ids:['text-on-curve']},
+  {kw:['ホワイトボード','マインドマップ','企画','アイデア出し','ブレスト'],ids:['whiteboard']},
+  {kw:['プレゼン録画','解説動画','ウェビナー','発表','ナレーター'],ids:['presentation-rec']},
+  {kw:['被写体移動','切り離し','magic grab','前面配置','奥行き'],ids:['magic-grab']},
+  {kw:['ハイライト動画','スライドショー','自動編集','クリップ'],ids:['magic-design-video']},
+  {kw:['ぼかし','ボケ','背景ぼかし','一眼','フォーカス'],ids:['auto-focus']},
+  {kw:['レタッチ','美肌','肌補正','歯','ホワイトニング','顔補正'],ids:['face-retouch']},
+  {kw:['デュオトーン','2色','フィルター','色変換','統一感'],ids:['duotone']},
+  {kw:['カラー抽出','色抽出','パレット','配色','カラーピッカー'],ids:['color-palette']},
+  {kw:['カスタムフォント','フォントアップロード','モリサワ','指定フォント','日本語フォント'],ids:['custom-font']},
+  {kw:['テンプレート作成','ひな形','フォーマット統一','品質統一'],ids:['brand-template']},
+  {kw:['コメント','フィードバック','承認','チェック','確認フロー','修正依頼'],ids:['team-comment']},
+  {kw:['バージョン','履歴','元に戻す','復元','undo','保存履歴'],ids:['version-history']},
+  {kw:['bgm','音楽','効果音','著作権フリー','サウンド'],ids:['bg-music']},
+  {kw:['録音','ナレーション','アフレコ','音声','マイク'],ids:['narration-rec']},
+  {kw:['4k','高画質','書き出し','エクスポート','cmyk','pdf印刷'],ids:['hd-export']},
+  {kw:['インサイト','アナリティクス','リーチ','分析','パフォーマンス'],ids:['sns-analytics']},
+  {kw:['svg','ベクター','illustrator','アイコン','ロゴ素材'],ids:['svg-upload']},
+  {kw:['sns','発信','コンテンツ','マーケティング'],ids:['content-planner','bulk-create','magic-write']},
+  {kw:['商品','プロモーション','ec','製品紹介','告知'],ids:['mockups','bg-remover','qr-code']},
+  {kw:['youtube','サムネイル','動画投稿'],ids:['bg-remover','type-gradient','video-editor','frames']},
+];
+function suggestFeatureIds(ideas){
+  const txt=ideas.flatMap(a=>[a.genreLabel,a.title,a.content,a.essence,...(a.sources||[])]).join(' ').toLowerCase();
+  const s=new Set();
+  _SRULES.forEach(r=>{if(r.kw.some(k=>txt.includes(k)))r.ids.forEach(id=>s.add(id));});
+  return s;
+}
+
+/* ─── Gemini Prompts ──────────────────────────────────────── */
+const SYSTEM_PROMPT=`あなたはCanva Proの全機能に精通したプロのSNSデザインコンサルタントです。SNS投稿アイディアと選択されたCanva Pro機能をもとに、初心者でも即実践できる詳細なデザイン操作マニュアルを日本語で生成してください。
+
+【出力フォーマット（厳守）】
+---
+# 【テーマタイトル】Canva Pro デザインマニュアル
+## 概要
+（このSNSデザインの目的・ターゲット・完成イメージを3〜5行で説明）
+## 事前準備チェックリスト
+- [ ] 必要な素材・画像・テキスト内容
+- [ ] Canva Proの設定・ブランドキット等
+## キャンバス設定
+（推奨サイズ・フォーマット・アスペクト比を具体的に説明）
+## 使用する機能と操作手順
+### ① [機能名]
+**目的：** （この機能を使う理由）
+**操作手順：**
+1. 具体的な操作
+**Canva Proのポイント：** （効果を最大化するアドバイス）
+## 仕上げ〜SNS投稿までのフロー
+1. 最終確認
+2. 書き出し設定（SNS別推奨設定）
+3. 各SNSへのアップロード
+## Tips & よくある落とし穴
+- **Tips：** クオリティを上げる実践的なアドバイス
+- **注意：** 初心者がハマりやすいミスと対処法
+---
+複数アイディアがある場合は「---」で区切って出力。Canva Proならではの差別化ポイントを強調してください。`;
+
+const _SNS_SPECS={'instagram-carousel':'Instagramカルーセル（1080×1080px 正方形 or 1080×1350px 縦型、最大10枚）','x-thread':'Xスレッド（1200×675px 横型推奨 or 1080×1920px 縦型、テキスト可読性重視）'};
+function buildUserPrompt(ideas,features){
+  const fSec=features.map(f=>`### ${f.name}（${f.icon}）\n${f.description}\n操作手順：\n${f.operationSteps.map((s,i)=>`${i+1}. ${s}`).join('\n')}`).join('\n\n');
+  const iSec=ideas.map(a=>`### アイディア${a.index}：${a.title}\n- ジャンル：${a.genreNumber} ${a.genreLabel}\n- SNSフォーマット：${_SNS_SPECS[a.format]||a.format}\n- 掛け合わせ元：${(a.sources||[]).join(' / ')}\n- 切り口の核心：${a.essence}\n- 内容：${a.content}`).join('\n\n');
+  return`## 使用するCanva Pro機能（${features.length}件）\n\n${fSec}\n\n---\n\n## 対象SNSアイディア（${ideas.length}件）\n\n${iSec}\n\n---\n\nCanva Proデザインマニュアルを生成してください。Canva Pro限定のAI機能については無料版との違いと活用メリットを明記してください。`;
+}
+
+/* ─── Gemini Streaming ────────────────────────────────────── */
+async function callGeminiStream(apiKey,sysPr,userPr,onChunk,onDone,onError){
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`;
+  try{
+    const resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({system_instruction:{parts:[{text:sysPr}]},contents:[{role:'user',parts:[{text:userPr}]}],generationConfig:{temperature:0.7,maxOutputTokens:8192}})});
+    if(!resp.ok){let msg=`HTTP ${resp.status}`;try{const e=await resp.json();msg=e.error?.message||msg;}catch{}onError(msg);return;}
+    const reader=resp.body.getReader(),dec=new TextDecoder();let buf='';
+    while(true){
+      const{done,value}=await reader.read();if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n');buf=lines.pop()||'';
+      for(const line of lines){
+        if(!line.startsWith('data: '))continue;
+        const d=line.slice(6).trim();if(!d)continue;
+        try{const p=JSON.parse(d);const t=p?.candidates?.[0]?.content?.parts?.[0]?.text;if(t)onChunk(t);}catch{}
+      }
+    }
+    onDone();
+  }catch(err){onError(err.message);}
+}
+</script>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const{useState,useCallback,useMemo,useRef}=React;
+
+/* ── ApiKeyBar ───────────────────────────────────── */
+function ApiKeyBar({apiKey,onChange}){
+  const[val,setVal]=useState(apiKey);
+  const[saved,setSaved]=useState(!!apiKey);
+  const[show,setShow]=useState(false);
+  const save=()=>{onChange(val.trim());localStorage.setItem('gemini_api_key',val.trim());setSaved(true);setTimeout(()=>setSaved(false),2000);};
+  return(
+    <div className="flex items-center gap-1.5">
+      <span className="text-xs font-medium hidden sm:block" style={{color:'#64748b'}}>🔑 Gemini API</span>
+      <div className="relative flex items-center">
+        <input type={show?'text':'password'} value={val} onChange={e=>{setVal(e.target.value);setSaved(false);}}
+          placeholder="APIキーを入力..." onKeyDown={e=>e.key==='Enter'&&save()}
+          className="pl-3 pr-20 py-1.5 text-xs rounded-lg border focus:outline-none"
+          style={{width:210,background:'rgba(255,255,255,.85)',border:'1.5px solid rgba(0,0,0,.12)',color:'#1e293b'}}/>
+        <button onClick={()=>setShow(v=>!v)} className="absolute right-14 text-xs px-1" style={{color:'#94a3b8'}}>{show?'🙈':'👁️'}</button>
+        <button onClick={save} className="absolute right-1 text-[11px] px-2 py-0.5 rounded-md font-bold"
+          style={{background:val.trim()?'linear-gradient(135deg,#00C4CC,#5A32FA)':'rgba(0,0,0,.08)',color:val.trim()?'white':'#94a3b8'}}>
+          {saved?'✓ 保存済':'保存'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── IdeaCard ────────────────────────────────────── */
+function IdeaCard({idea,selected,onToggle}){
+  const[exp,setExp]=useState(false);
+  const fmtLabel=idea.format==='x-thread'?'X スレッド':'Instagram';
+  const fmtStyle=idea.format==='x-thread'?{background:'rgba(56,189,248,.1)',color:'#0284c7'}:{background:'rgba(236,72,153,.1)',color:'#db2777'};
+  return(
+    <div className="rounded-xl border-2 transition-all duration-150"
+      style={selected?{borderColor:'#00C4CC',background:'rgba(0,196,204,.06)',boxShadow:'0 2px 8px rgba(0,196,204,.18)'}:{borderColor:'rgba(0,0,0,.08)',background:'rgba(255,255,255,.85)',boxShadow:'0 1px 3px rgba(0,0,0,.07)'}}>
+      <div className="flex items-start gap-2.5 p-3">
+        <input type="checkbox" checked={selected} onChange={()=>onToggle(idea.index)} className="mt-0.5 h-4 w-4 cursor-pointer shrink-0" style={{accentColor:'#00C4CC'}}/>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+            <span className="text-sm font-bold" style={{color:'#00C4CC'}}>{idea.genreNumber}</span>
+            <span className="text-xs truncate" style={{color:'#94a3b8'}}>{idea.genreLabel}</span>
+            <span className="text-xs px-1.5 py-0.5 rounded-full font-medium" style={fmtStyle}>{fmtLabel}</span>
+          </div>
+          <p className="text-sm font-semibold leading-snug" style={{color:'#1e293b'}}>{idea.title}</p>
+        </div>
+        <button onClick={()=>setExp(v=>!v)} className="text-xs shrink-0 mt-0.5" style={{color:'#94a3b8'}}>{exp?'▲':'▼'}</button>
+      </div>
+      {exp&&(
+        <div className="px-3 pb-3 border-t pt-2 space-y-1.5" style={{borderColor:'rgba(0,0,0,.06)'}}>
+          {idea.sources.length>0&&(
+            <div>
+              <p className="text-xs font-semibold mb-1" style={{color:'#94a3b8'}}>掛け合わせ元</p>
+              {idea.sources.map((s,i)=><p key={i} className="text-xs flex gap-1.5"><span style={{color:'#00C4CC'}}>–</span><span style={{color:'#475569'}}>{s}</span></p>)}
+            </div>
+          )}
+          {idea.essence&&<div><p className="text-xs font-semibold mb-0.5" style={{color:'#94a3b8'}}>切り口の核心</p><p className="text-xs leading-relaxed" style={{color:'#475569'}}>{idea.essence}</p></div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── FeatureCard ─────────────────────────────────── */
+function FeatureCard({feature,selected,onToggle}){
+  const acc=CATEGORY_ACCENT[feature.category]||CATEGORY_ACCENT.design;
+  return(
+    <label className="fcard flex flex-col gap-2 p-3 rounded-2xl border-2 select-none"
+      style={selected?{background:acc.bg,borderColor:acc.color,boxShadow:`0 4px 14px ${acc.color}28`,transform:'translateY(-2px)'}:{background:'rgba(255,255,255,.85)',borderColor:'rgba(0,0,0,.07)',boxShadow:'0 1px 4px rgba(0,0,0,.07)'}}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{background:selected?acc.bg:'rgba(0,0,0,.04)'}}>{feature.icon}</div>
+        <input type="checkbox" checked={selected} onChange={()=>onToggle(feature.id)} className="mt-0.5 h-4 w-4 shrink-0" style={{accentColor:acc.color}}/>
+      </div>
+      <p className="text-xs font-bold leading-snug" style={{color:selected?acc.color:'#1e293b'}}>{feature.name}</p>
+      <p className="text-[11px] leading-relaxed line-clamp-2" style={{color:'#64748b'}}>{feature.description}</p>
+      {selected&&<div className="text-[10px] font-bold px-2 py-0.5 rounded-full self-start" style={{background:acc.color,color:'white'}}>✓ 選択中</div>}
+    </label>
+  );
+}
+
+/* ── FeatureSelector ─────────────────────────────── */
+function FeatureSelector({selectedIds,onToggle,onSelectAll,onClearAll}){
+  const[query,setQuery]=useState('');
+  const[collapsed,setCollapsed]=useState({});
+  const filtered=useMemo(()=>{if(!query.trim())return CANVA_FEATURES;const q=query.toLowerCase();return CANVA_FEATURES.filter(f=>f.name.toLowerCase().includes(q)||f.description.toLowerCase().includes(q));},[query]);
+  const grouped=useMemo(()=>{const g={};CATEGORY_ORDER.forEach(c=>{g[c]=filtered.filter(f=>f.category===c);});return g;},[filtered]);
+  const toggleCatAll=cat=>{const fs=grouped[cat];const allSel=fs.every(f=>selectedIds.has(f.id));fs.forEach(f=>{if(allSel===selectedIds.has(f.id))onToggle(f.id);});};
+  return(
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h2 className="text-base font-black" style={{color:'#0f172a'}}>Canva Pro 機能</h2>
+          <span className="text-xs" style={{color:'#94a3b8'}}>({CANVA_FEATURES.length}機能)</span>
+          {selectedIds.size>0&&<span className="canva-badge">{selectedIds.size} 個選択中</span>}
+        </div>
+        <div className="flex gap-1.5">
+          <button onClick={onSelectAll} className="text-xs font-bold px-2.5 py-1 rounded-lg" style={{color:'#00C4CC',background:'rgba(0,196,204,.08)'}}>全選択</button>
+          <button onClick={onClearAll} className="text-xs px-2 py-1 rounded-lg" style={{color:'#94a3b8'}}>解除</button>
+        </div>
+      </div>
+      <div className="relative mb-4">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs" style={{color:'#94a3b8'}}>🔍</span>
+        <input type="text" value={query} onChange={e=>setQuery(e.target.value)} placeholder="機能名・説明で検索..."
+          className="w-full pl-8 pr-8 py-2 text-sm rounded-xl focus:outline-none"
+          style={{background:'rgba(255,255,255,.85)',border:`2px solid ${query?'#00C4CC':'rgba(0,0,0,.10)'}`,boxShadow:query?'0 0 0 3px rgba(0,196,204,.12)':'0 1px 4px rgba(0,0,0,.06)',color:'#1e293b'}}/>
+        {query&&<button onClick={()=>setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style={{color:'#94a3b8'}}>✕</button>}
+      </div>
+      <div className="space-y-3">
+        {CATEGORY_ORDER.map(cat=>{
+          const fs=grouped[cat];if(!fs||!fs.length)return null;
+          const acc=CATEGORY_ACCENT[cat],isColl=collapsed[cat],allSel=fs.every(f=>selectedIds.has(f.id)),someSel=fs.some(f=>selectedIds.has(f.id));
+          return(
+            <div key={cat} className="rounded-2xl overflow-hidden border" style={{borderColor:acc.border,boxShadow:'0 2px 8px rgba(0,0,0,.06)'}}>
+              <div className="flex items-center justify-between px-4 py-2.5 cursor-pointer select-none" style={{background:acc.hdr}} onClick={()=>setCollapsed(p=>({...p,[cat]:!p[cat]}))}>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold" style={{color:'#1e293b'}}>{FEATURE_CATEGORY_LABELS[cat]}</span>
+                  <span className="text-xs" style={{color:'#94a3b8'}}>({fs.length})</span>
+                  {someSel&&<span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{background:acc.color,color:'white'}}>{fs.filter(f=>selectedIds.has(f.id)).length} 選択</span>}
+                </div>
+                <div className="flex items-center gap-2" onClick={e=>e.stopPropagation()}>
+                  <button onClick={()=>toggleCatAll(cat)} className="text-xs font-medium" style={{color:allSel?'#94a3b8':acc.color}}>{allSel?'解除':'全選択'}</button>
+                  <span className="text-xs" style={{color:'#94a3b8'}}>{isColl?'▶':'▼'}</span>
+                </div>
+              </div>
+              {!isColl&&(
+                <div className="p-3 grid gap-2" style={{gridTemplateColumns:'repeat(auto-fill,minmax(165px,1fr))',background:'rgba(255,255,255,.55)'}}>
+                  {fs.map(f=><FeatureCard key={f.id} feature={f} selected={selectedIds.has(f.id)} onToggle={onToggle}/>)}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {filtered.length===0&&<div className="text-center py-10 rounded-2xl border" style={{background:'rgba(255,255,255,.6)',borderColor:'rgba(0,0,0,.08)'}}><p className="text-2xl mb-2 opacity-30">🔍</p><p className="text-sm" style={{color:'#94a3b8'}}>「{query}」に一致する機能はありません</p></div>}
+      </div>
+    </div>
+  );
+}
+
+/* ── ManualViewer ────────────────────────────────── */
+function ManualViewer({content,isGenerating}){
+  const[copied,setCopied]=useState(false);
+  const html=useMemo(()=>content?marked.parse(content):'',[content]);
+  const copy=async()=>{await navigator.clipboard.writeText(content);setCopied(true);setTimeout(()=>setCopied(false),2000);};
+  const dl=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:'text/markdown'}));a.download=`canva-manual-${Date.now()}.md`;a.click();};
+  if(!content&&!isGenerating)return(
+    <div className="flex flex-col items-center justify-center h-40 rounded-xl border-2 border-dashed" style={{borderColor:'rgba(0,196,204,.25)',background:'rgba(255,255,255,.6)'}}>
+      <span className="text-3xl mb-2 opacity-20">🎨</span>
+      <p className="text-sm text-center" style={{color:'#94a3b8'}}>アイディアと機能を選択して生成ボタンを押してください</p>
+    </div>
+  );
+  return(
+    <div className="rounded-xl border overflow-hidden" style={{borderColor:'rgba(0,196,204,.2)',background:'rgba(255,255,255,.92)'}}>
+      <div className="flex items-center justify-between px-4 py-2 border-b" style={{background:'rgba(0,196,204,.05)',borderColor:'rgba(0,196,204,.15)'}}>
+        <span className="text-sm font-semibold flex items-center gap-2" style={{color:'#1e293b'}}>
+          🎨 生成マニュアル{isGenerating&&<span className="text-xs animate-pulse" style={{color:'#5A32FA'}}>生成中...</span>}
+        </span>
+        {content&&<div className="flex gap-2">
+          <button onClick={copy} className="text-xs px-2.5 py-1 rounded-md border" style={{background:'white',borderColor:'rgba(0,0,0,.1)',color:'#475569'}}>{copied?'✅ 済':'📋 コピー'}</button>
+          <button onClick={dl} className="text-xs px-2.5 py-1 rounded-md font-bold" style={{background:'linear-gradient(135deg,#00C4CC,#5A32FA)',color:'white'}}>⬇ .md保存</button>
+        </div>}
+      </div>
+      <div className="p-5 prose max-w-none overflow-y-auto" style={{maxHeight:'48vh'}}
+        dangerouslySetInnerHTML={{__html:html+(isGenerating?'<span class="blink"></span>':'')}}/>
+    </div>
+  );
+}
+
+/* ── App ─────────────────────────────────────────── */
+function App(){
+  const[apiKey,setApiKey]=useState(()=>localStorage.getItem('gemini_api_key')||'');
+  const[ideas,setIdeas]=useState([]);
+  const[fileName,setFileName]=useState(null);
+  const[selIdeas,setSelIdeas]=useState(new Set());
+  const[selFeats,setSelFeats]=useState(new Set());
+  const[manual,setManual]=useState('');
+  const[isGen,setIsGen]=useState(false);
+  const[error,setError]=useState(null);
+  const[isDrag,setIsDrag]=useState(false);
+  const fileRef=useRef(null);
+
+  const readFile=useCallback(file=>{
+    if(!file.name.match(/\.(md|txt)$/i)){setError('.md または .txt ファイルを選択してください');return;}
+    setError(null);
+    const r=new FileReader();
+    r.onload=e=>{const p=parseIdeasMarkdown(e.target.result,file.name.replace(/\.[^.]+$/,''));setIdeas(p.ideas);setFileName(file.name);setSelIdeas(new Set());setManual('');};
+    r.onerror=()=>setError('ファイルの読み込みに失敗しました');
+    r.readAsText(file,'utf-8');
+  },[]);
+
+  const toggleIdea=useCallback(idx=>setSelIdeas(p=>{const n=new Set(p);n.has(idx)?n.delete(idx):n.add(idx);return n;}),[]);
+  const toggleFeat=useCallback(id=>setSelFeats(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;}),[]);
+  const autoSuggest=useCallback(()=>{if(!ideas.length)return;const s=suggestFeatureIds(ideas);setSelFeats(p=>new Set([...p,...s]));},[ideas]);
+
+  const generate=async()=>{
+    if(!apiKey){setError('Gemini APIキーを入力して「保存」してください');return;}
+    const sIdeas=ideas.filter(i=>selIdeas.has(i.index));
+    const sFeats=CANVA_FEATURES.filter(f=>selFeats.has(f.id));
+    if(!sIdeas.length||!sFeats.length){setError('アイディアとCanva機能を1件以上選択してください');return;}
+    setIsGen(true);setManual('');setError(null);
+    callGeminiStream(apiKey,SYSTEM_PROMPT,buildUserPrompt(sIdeas,sFeats),
+      chunk=>setManual(p=>p+chunk),
+      ()=>setIsGen(false),
+      msg=>{setError(`APIエラー: ${msg}`);setIsGen(false);}
+    );
+  };
+
+  const canGen=selIdeas.size>0&&selFeats.size>0&&!isGen;
+
+  return(
+    <div style={{display:'flex',flexDirection:'column',height:'100vh',overflow:'hidden'}}>
+
+      {/* Header */}
+      <header style={{background:'rgba(255,255,255,.88)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(0,196,204,.15)',boxShadow:'0 2px 12px rgba(90,50,250,.06)',flexShrink:0}}>
+        <div className="flex items-center justify-between gap-4 px-5 py-3">
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm" style={{background:'linear-gradient(135deg,#00C4CC,#5A32FA)',color:'white'}}>C</div>
+            <div className="hidden sm:block">
+              <p className="text-sm font-black leading-tight" style={{color:'#0f172a'}}>Canva Pro</p>
+              <p className="text-[10px] leading-tight" style={{color:'#00C4CC'}}>マニュアル生成ポータル</p>
+            </div>
+          </div>
+          <p className="text-xs flex-1 text-center hidden md:block" style={{color:'#64748b'}}>SNSアイディアファイルを読み込み、Canva機能を選択してデザインマニュアルを自動生成</p>
+          <ApiKeyBar apiKey={apiKey} onChange={setApiKey}/>
+        </div>
+      </header>
+
+      {/* Error */}
+      {error&&<div className="mx-4 mt-2 px-4 py-2 rounded-xl text-sm flex items-center gap-2 border" style={{background:'rgba(248,113,113,.08)',borderColor:'rgba(248,113,113,.25)',color:'#dc2626',flexShrink:0}}>⚠️ {error}<button onClick={()=>setError(null)} className="ml-auto text-xs opacity-60">✕</button></div>}
+
+      {/* Body */}
+      <div style={{flex:1,display:'flex',overflow:'hidden'}}>
+
+        {/* Left pane */}
+        <div style={{width:285,flexShrink:0,display:'flex',flexDirection:'column',overflow:'hidden',background:'rgba(255,255,255,.72)',backdropFilter:'blur(8px)',borderRight:'1px solid rgba(0,196,204,.15)'}}>
+          {/* Upload */}
+          <div className="p-4 border-b" style={{borderColor:'rgba(0,0,0,.06)',flexShrink:0}}>
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{color:'#94a3b8'}}>📂 アイディアファイル</p>
+            {fileName?(
+              <div className="rounded-xl border p-3" style={{borderColor:'rgba(0,196,204,.3)',background:'rgba(0,196,204,.05)'}}>
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{background:'rgba(0,196,204,.12)'}}>📄</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate" style={{color:'#1e293b'}}>{fileName}</p>
+                    <p className="text-xs" style={{color:ideas.length>0?'#00a8ae':'#dc2626'}}>{ideas.length>0?`${ideas.length}件のアイディアを読み込み`:'アイディアが見つかりませんでした'}</p>
+                  </div>
+                  <button onClick={()=>{setIdeas([]);setFileName(null);setSelIdeas(new Set());setManual('');}} className="text-xs px-2 py-1 rounded-md" style={{color:'#94a3b8'}}>変更</button>
+                </div>
+              </div>
+            ):(
+              <div onDrop={e=>{e.preventDefault();setIsDrag(false);const f=e.dataTransfer.files[0];if(f)readFile(f);}}
+                onDragOver={e=>{e.preventDefault();setIsDrag(true);}} onDragLeave={()=>setIsDrag(false)}
+                onClick={()=>fileRef.current?.click()}
+                className="rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all"
+                style={{borderColor:isDrag?'#00C4CC':'rgba(0,196,204,.35)',background:isDrag?'rgba(0,196,204,.06)':'rgba(255,255,255,.6)'}}>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-xl">📂</span>
+                  <div className="text-left">
+                    <p className="text-sm font-semibold" style={{color:'#1e293b'}}>ドラッグ＆ドロップ</p>
+                    <p className="text-xs" style={{color:'#94a3b8'}}>または<span style={{color:'#00C4CC'}}>クリックして選択</span>（.md/.txt）</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            <input ref={fileRef} type="file" accept=".md,.txt" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)readFile(f);e.target.value='';}}/>
+          </div>
+
+          {/* Idea list */}
+          <div style={{flex:1,overflowY:'auto',padding:'1rem'}}>
+            {ideas.length===0?(
+              <div className="flex flex-col items-center justify-center py-10 gap-2"><span className="text-3xl opacity-20">💡</span><p className="text-xs text-center" style={{color:'#94a3b8'}}>ファイルをアップロードしてください</p></div>
+            ):(
+              <>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2"><span className="text-sm font-bold" style={{color:'#475569'}}>アイディア一覧</span><span className="canva-badge">{ideas.length}件</span></div>
+                  <div className="flex gap-2">
+                    <button onClick={()=>setSelIdeas(new Set(ideas.map(i=>i.index)))} className="text-xs" style={{color:'#00C4CC'}}>全選択</button>
+                    <span style={{color:'#cbd5e1'}}>|</span>
+                    <button onClick={()=>setSelIdeas(new Set())} className="text-xs" style={{color:'#94a3b8'}}>解除</button>
+                  </div>
+                </div>
+                <div className="space-y-2">{ideas.map(idea=><IdeaCard key={idea.index} idea={idea} selected={selIdeas.has(idea.index)} onToggle={toggleIdea}/>)}</div>
+                {selIdeas.size>0&&<p className="text-xs text-center mt-2 font-medium" style={{color:'#00C4CC'}}>{selIdeas.size}件選択中</p>}
+              </>
+            )}
+          </div>
+
+          {/* Auto suggest */}
+          {ideas.length>0&&(
+            <div className="p-3 border-t" style={{borderColor:'rgba(0,0,0,.06)',flexShrink:0}}>
+              <button onClick={autoSuggest} className="w-full canva-btn text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5">
+                ✨ アイディアからおすすめのCanva機能を自動選択
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Right pane */}
+        <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
+          {/* Feature area */}
+          <div style={{overflowY:'auto',padding:'1.25rem',borderBottom:'1px solid rgba(0,196,204,.12)',maxHeight:'60%'}}>
+            <FeatureSelector selectedIds={selFeats} onToggle={toggleFeat}
+              onSelectAll={()=>setSelFeats(new Set(CANVA_FEATURES.map(f=>f.id)))}
+              onClearAll={()=>setSelFeats(new Set())}/>
+            {/* Generate button */}
+            <div className="flex flex-col items-center gap-2.5 py-5">
+              {(selIdeas.size>0||selFeats.size>0)&&(
+                <div className="flex items-center gap-2">
+                  <span className="canva-badge">{selIdeas.size} アイディア</span>
+                  <span style={{color:'#cbd5e1'}}>×</span>
+                  <span className="canva-badge">{selFeats.size} 機能</span>
+                </div>
+              )}
+              <button onClick={generate} disabled={!canGen} className="canva-btn flex items-center gap-2.5 px-10 py-3.5 rounded-full text-base shadow-lg">
+                {isGen?(
+                  <><svg className="spin" style={{width:'1.25rem',height:'1.25rem'}} viewBox="0 0 24 24" fill="none"><circle style={{opacity:.25}} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path style={{opacity:.75}} fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>マニュアル生成中...</>
+                ):'🎨 Canvaマニュアルを生成する'}
+              </button>
+              {!canGen&&!isGen&&<p className="text-xs" style={{color:'#94a3b8'}}>{selIdeas.size===0?'アイディアを選択してください':'Canva機能を選択してください'}</p>}
+            </div>
+          </div>
+          {/* Output area */}
+          <div style={{flex:1,overflowY:'auto',padding:'1.25rem',background:'rgba(255,255,255,.40)'}}>
+            <ManualViewer content={manual} isGenerating={isGen}/>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
