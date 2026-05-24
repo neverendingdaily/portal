@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎬 Filmora マニュアル生成</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    #manualOutput h1 {
+      font-size: 1.35rem; font-weight: 700; margin: 1.4rem 0 0.6rem;
+      color: #1e1b4b; border-bottom: 2px solid #ddd6fe; padding-bottom: 0.3rem;
+    }
+    #manualOutput h2 {
+      font-size: 1.1rem; font-weight: 700; margin: 1.1rem 0 0.4rem; color: #4c1d95;
+    }
+    #manualOutput h3 {
+      font-size: 0.95rem; font-weight: 600; margin: 0.9rem 0 0.3rem; color: #5b21b6;
+    }
+    #manualOutput p { margin: 0.4rem 0; line-height: 1.75; color: #374151; font-size: 0.875rem; }
+    #manualOutput ul {
+      list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0;
+    }
+    #manualOutput ol {
+      list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0;
+    }
+    #manualOutput li {
+      margin: 0.25rem 0; font-size: 0.875rem; color: #374151;
+      line-height: 1.65; list-style: inherit;
+    }
+    #manualOutput li > ul { list-style-type: circle; margin: 0.2rem 0; }
+    #manualOutput li > ol { margin: 0.2rem 0; }
+    #manualOutput .task-list-item { list-style: none; padding-left: 0; }
+    #manualOutput .task-list-item input[type="checkbox"] {
+      margin-right: 0.45rem; width: 0.9rem; height: 0.9rem;
+      accent-color: #7c3aed; cursor: default; vertical-align: middle; flex-shrink: 0;
+    }
+    #manualOutput .contains-task-list { list-style: none; padding-left: 0.25rem; }
+    #manualOutput table {
+      border-collapse: collapse; min-width: 100%; margin: 0.7rem 0;
+      font-size: 0.8rem; display: block; overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    #manualOutput thead { background: #ede9fe; }
+    #manualOutput th {
+      color: #4c1d95; font-weight: 600; padding: 0.4rem 0.75rem;
+      text-align: left; border: 1px solid #c4b5fd; white-space: nowrap;
+    }
+    #manualOutput td {
+      padding: 0.35rem 0.75rem; border: 1px solid #e5e7eb;
+      color: #374151; white-space: normal; word-break: break-word;
+    }
+    #manualOutput tr:nth-child(even) td { background: #faf5ff; }
+    #manualOutput hr { border: none; border-top: 2px solid #ede9fe; margin: 1.4rem 0; }
+    #manualOutput code {
+      background: #f3f4f6; padding: 0.1rem 0.35rem; border-radius: 3px;
+      font-size: 0.8rem; color: #7c3aed; word-break: break-all;
+    }
+    #manualOutput pre {
+      background: #f3f4f6; border-radius: 6px; padding: 0.75rem 1rem;
+      overflow-x: auto; margin: 0.5rem 0;
+    }
+    #manualOutput pre code { background: none; padding: 0; word-break: normal; }
+    #manualOutput strong { color: #1e1b4b; font-weight: 700; }
+    #manualOutput em { color: #4b5563; font-style: italic; }
+    #manualOutput blockquote {
+      border-left: 3px solid #c4b5fd; padding-left: 0.75rem;
+      color: #6b7280; font-style: italic; margin: 0.5rem 0;
+    }
+    #manualOutput.streaming::after {
+      content: '▌'; color: #7c3aed; animation: blink 0.8s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    @media (min-width: 1024px) {
+      #mainLayout   { height: calc(100vh - var(--header-h, 57px)); overflow: hidden; }
+      #ideasCol     { overflow: hidden; }
+      #ideasContainer { flex: 1 1 0; overflow-y: auto; min-height: 0; }
+      #rightCol     { overflow: hidden; }
+      #outputSection { flex: 1 1 0; min-height: 0; overflow: hidden; }
+      #manualOutput  { flex: 1 1 0; overflow-y: auto; min-height: 0; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-900">
+
+  <header id="appHeader" class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-20 shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+      <h1 class="text-base font-bold text-violet-700 leading-tight whitespace-nowrap">
+        🎬 Filmora マニュアル生成
+      </h1>
+      <div class="flex items-center gap-2 sm:flex-1 sm:max-w-xs sm:ml-auto">
+        <label for="apiKeyInput" class="text-xs text-gray-500 font-medium whitespace-nowrap">
+          🔑 <span class="hidden sm:inline">Gemini API キー</span><span class="sm:hidden">API キー</span>
+        </label>
+        <div class="flex flex-1 rounded-lg border border-gray-300 overflow-hidden
+                    focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 transition-all">
+          <input
+            id="apiKeyInput"
+            type="password"
+            placeholder="AIza..."
+            autocomplete="off"
+            class="flex-1 px-3 py-1.5 text-sm outline-none bg-white min-w-0"
+          />
+          <button id="toggleApiKey"
+            class="px-2.5 text-gray-400 hover:text-gray-600 bg-white border-l border-gray-200 transition-colors"
+            aria-label="APIキー表示切替">👁</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div id="mainLayout" class="max-w-7xl mx-auto p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 lg:flex-row lg:gap-4">
+
+    <div id="ideasCol" class="flex flex-col gap-3 lg:w-72 lg:shrink-0">
+      <div class="bg-white rounded-xl border border-gray-200 p-3 flex flex-col gap-2 shrink-0">
+        <div class="flex items-center justify-between">
+          <h2 class="font-bold text-sm text-gray-700">📋 SNS アイディア</h2>
+          <span id="ideaCount" class="text-xs text-gray-400"></span>
+        </div>
+        <label
+          id="fileLabel"
+          class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg
+                 border-2 border-dashed border-violet-300 text-violet-600 text-xs font-medium
+                 cursor-pointer hover:bg-violet-50 active:bg-violet-100 transition-colors"
+        >
+          📂 テキストファイルを選択
+          <input id="fileInput" type="file" accept=".md,.txt,.text" class="hidden" />
+        </label>
+        <p class="text-xs text-gray-400 text-center leading-relaxed">
+          .md / .txt どちらでも可<br>Discordのコピペを保存したファイルもOK
+        </p>
+      </div>
+
+      <div id="ideasContainer"
+        class="flex flex-col gap-2 max-h-56 overflow-y-auto pr-0.5 sm:max-h-64 lg:max-h-none">
+      </div>
+    </div>
+
+    <div id="rightCol" class="flex flex-col gap-3 lg:flex-1 lg:min-w-0">
+
+      <div class="bg-white rounded-xl border border-gray-200 p-3 flex flex-col gap-2.5 shrink-0">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h2 class="font-bold text-sm text-gray-700">⚙️ Filmora Pro 機能</h2>
+          <div class="flex items-center gap-1.5">
+            <span id="featureCount" class="text-xs text-gray-400 mr-1"></span>
+            <button id="selectAllFeatures"
+              class="text-xs px-2.5 py-1 rounded-md border border-violet-300 text-violet-600
+                     hover:bg-violet-50 active:bg-violet-100 transition-colors">全選択</button>
+            <button id="clearAllFeatures"
+              class="text-xs px-2.5 py-1 rounded-md border border-gray-200 text-gray-500
+                     hover:bg-gray-50 active:bg-gray-100 transition-colors">解除</button>
+          </div>
+        </div>
+
+        <input
+          id="featureSearch"
+          type="search"
+          placeholder="🔍 機能を検索..."
+          class="w-full px-3 py-2 text-sm rounded-lg border border-gray-200
+                 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition-all"
+        />
+
+        <div id="categoryTabs"
+          class="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-0.5 px-0.5">
+          <button data-category="all"
+            class="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border
+                   bg-violet-600 text-white border-violet-600">すべて</button>
+          <button data-category="ai"
+            class="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border
+                   bg-white text-gray-600 border-gray-200 hover:border-violet-300">🤖 AI</button>
+          <button data-category="editing"
+            class="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border
+                   bg-white text-gray-600 border-gray-200 hover:border-violet-300">✂️ 編集</button>
+          <button data-category="transition"
+            class="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border
+                   bg-white text-gray-600 border-gray-200 hover:border-violet-300">🎬 TR</button>
+          <button data-category="effect"
+            class="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border
+                   bg-white text-gray-600 border-gray-200 hover:border-violet-300">✨ エフェクト</button>
+          <button data-category="filter"
+            class="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border
+                   bg-white text-gray-600 border-gray-200 hover:border-violet-300">🎨 フィルター</button>
+          <button data-category="title"
+            class="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border
+                   bg-white text-gray-600 border-gray-200 hover:border-violet-300">💬 タイトル</button>
+          <button data-category="audio"
+            class="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border
+                   bg-white text-gray-600 border-gray-200 hover:border-violet-300">🎵 Audio</button>
+          <button data-category="sticker"
+            class="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border
+                   bg-white text-gray-600 border-gray-200 hover:border-violet-300">🌟 ステッカー</button>
+          <button data-category="template"
+            class="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border
+                   bg-white text-gray-600 border-gray-200 hover:border-violet-300">📋 テンプレート</button>
+        </div>
+
+        <div id="featuresContainer"
+          class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 sm:max-h-52 overflow-y-auto pr-0.5">
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-gray-200 p-3 shrink-0">
+        <p id="selectionSummary" class="text-sm text-center text-gray-400 mb-2 min-h-[1.25rem]"></p>
+        <button
+          id="generateBtn"
+          disabled
+          class="w-full py-3 rounded-xl font-bold text-sm
+                 bg-gray-100 text-gray-400 cursor-not-allowed transition-all"
+        >
+          🎬 マニュアルを生成する
+        </button>
+      </div>
+
+      <div id="outputSection"
+        class="flex flex-col gap-2 hidden bg-white rounded-xl border border-gray-200 p-3">
+        <div class="flex items-center justify-between shrink-0">
+          <h2 class="font-bold text-sm text-gray-700">📄 生成マニュアル</h2>
+          <div class="flex gap-2">
+            <button id="copyBtn"
+              class="hidden text-xs px-3 py-1.5 rounded-lg border border-violet-300 text-violet-600
+                     hover:bg-violet-50 active:bg-violet-100 transition-colors font-medium">📋 コピー</button>
+            <button id="downloadBtn"
+              class="hidden text-xs px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 active:bg-violet-800
+                     text-white transition-colors font-medium">⬇ .md 保存</button>
+          </div>
+        </div>
+        <div
+          id="manualOutput"
+          class="text-sm leading-relaxed rounded-lg bg-gray-50 border border-gray-100 p-3
+                 min-h-48 overflow-y-auto lg:min-h-0"
+        ></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+  // ═══════════════════════════════════════════════════════
+  // features.js — Filmora Pro 機能データ
+  // ═══════════════════════════════════════════════════════
+  const FILMORA_FEATURES = [
+  
+    // ────────────────────────────────────────────────────────────
+    // 🤖 AI機能（ツールボックス）
+    // ────────────────────────────────────────────────────────────
+    {
+      id: 'ai-voice-clone', name: 'AIボイスクローン', icon: '🎙️', category: 'ai',
+      description: '声サンプルから話者を再現してナレーションを生成。3〜10秒の音声があればOK。',
+      operationSteps: [
+        'ツールボックス → AIボイスクローンを選択',
+        '3〜10秒の声サンプルをドラッグ&ドロップ',
+        'クローンしたいテキストを入力',
+        '生成ボタンを押してクローン音声を書き出し',
+        '生成された音声クリップをタイムラインに追加',
+      ],
+    },
+    {
+      id: 'ai-tts', name: 'テキスト読み上げ', icon: '🔊', category: 'ai',
+      description: 'テキストをAI音声で自動読み上げ。多言語・多スタイル対応。',
+      operationSteps: [
+        'ツールボックス → テキスト読み上げを選択',
+        '読み上げテキストを入力欄に貼り付け',
+        '声のスタイル（ナチュラル/アニメ/ニュース等）を選択',
+        '読み上げ速度・ピッチを調整',
+        '生成ボタンを押してオーディオクリップをタイムラインに挿入',
+      ],
+    },
+    {
+      id: 'ai-music', name: 'AI音楽', icon: '🎵', category: 'ai',
+      description: 'ムードと長さを指定してオリジナルBGMを自動生成。',
+      operationSteps: [
+        'オーディオタブ → AI オーディオ → AI音楽を選択',
+        'ムード（明るい/切ない/壮大/ポップ等）を選択',
+        '動画の長さに合わせて秒数を指定',
+        '生成ボタンを押してBGMを作成（30秒程度待機）',
+        'タイムラインのオーディオレーンにドラッグ',
+      ],
+    },
+    {
+      id: 'smart-short-clip', name: 'スマートショートクリップ', icon: '⚡', category: 'ai',
+      description: '長尺動画からSNS用ショートをAIが自動カット・編集。',
+      operationSteps: [
+        'ツールボックス → スマートショートクリップを選択',
+        '元の長尺動画をインポート',
+        'ターゲットSNS（Reels/TikTok/Shorts）と最大秒数を設定',
+        'AIが自動でハイライトクリップを生成',
+        '候補から採用するものを選んで書き出し',
+      ],
+    },
+    {
+      id: 'script-to-video', name: 'スクリプトから動画生成', icon: '📝', category: 'ai',
+      description: 'テキストスクリプトから映像・ナレーション・BGMを自動構成。',
+      operationSteps: [
+        'ツールボックス → スクリプトから動画生成を選択',
+        'テキストスクリプトを入力欄に貼り付け',
+        '映像スタイル・アスペクト比・長さを設定',
+        '生成ボタンを押して待機（30秒〜2分）',
+        '生成映像をプレビューしタイムラインに追加',
+      ],
+    },
+    {
+      id: 'smart-scene-cut', name: 'スマートシーンカット', icon: '✂️', category: 'ai',
+      description: 'AIが映像を自動解析してシーンごとに最適なカットを提案。',
+      operationSteps: [
+        'ツールボックス → スマートシーンカットを選択',
+        '対象動画をインポートしてAI解析を開始',
+        'シーン変化点が自動でマーキングされる',
+        '不要なカット点を削除して編集内容を確認',
+        'タイムラインに反映して書き出し',
+      ],
+    },
+    {
+      id: 'text-to-video', name: 'テキストから動画生成', icon: '💡', category: 'ai',
+      description: '短いテキストプロンプトからAIが映像クリップを生成。',
+      operationSteps: [
+        'ツールボックス → テキストから動画生成を選択',
+        '生成したい映像の説明を日本語で入力',
+        '映像スタイル・解像度・長さを設定',
+        '生成ボタンを押して待機',
+        '生成された映像をタイムラインに配置',
+      ],
+    },
+    {
+      id: 'image-to-video', name: '画像から動画生成', icon: '🖼️', category: 'ai',
+      description: '静止画をAIが動きのある映像クリップに変換。',
+      operationSteps: [
+        'ツールボックス → 画像から動画生成を選択',
+        '変換したい静止画をインポート',
+        'モーションスタイルと動きの方向を指定',
+        '長さ（2〜8秒）を設定して生成',
+        '生成されたクリップをタイムラインに追加',
+      ],
+    },
+    {
+      id: 'smart-bgm', name: 'スマートBGMジェネレーター', icon: '🎼', category: 'ai',
+      description: '映像の雰囲気を解析して最適なBGMを自動生成・マッチング。',
+      operationSteps: [
+        'ツールボックス → スマートBGMジェネレーターを選択',
+        'BGMを追加したい映像クリップを選択',
+        'AIが映像のムード・テンポを解析',
+        'BGM候補を複数提案 → 気に入ったものを選択',
+        'タイムラインに適用して長さを自動調整',
+      ],
+    },
+    {
+      id: 'auto-reframe', name: 'オートリフレーム', icon: '📐', category: 'ai',
+      description: 'AIが被写体を追跡してアスペクト比を自動変換（16:9→9:16等）。',
+      operationSteps: [
+        'ツールボックス → オートリフレームを選択',
+        '変換元クリップを選択してターゲット比率を指定',
+        'AIが主被写体を自動追跡してフレームを最適化',
+        '追跡が外れた箇所を手動修正',
+        'SNS別フォーマットに一括変換して書き出し',
+      ],
+    },
+    {
+      id: 'ai-portrait', name: 'AIポートレート', icon: '🧑', category: 'ai',
+      description: '人物を自動検出して美肌・背景分離・ポートレート最適化を適用。',
+      operationSteps: [
+        'ツールボックス → AIポートレートを選択',
+        '対象の人物映像クリップをインポート',
+        'AIが自動で人物と背景を分離',
+        '美肌・明るさ・ぼかし等のポートレート補正を調整',
+        'タイムラインに反映してプレビュー確認',
+      ],
+    },
+    {
+      id: 'ai-translation', name: 'AI翻訳', icon: '🌐', category: 'ai',
+      description: '音声・字幕を自動翻訳して多言語版動画を素早く生成。',
+      operationSteps: [
+        'ツールボックス → AI翻訳を選択',
+        '翻訳元の言語と翻訳先の言語を設定',
+        'AIが音声を自動認識して字幕テキストを生成',
+        '翻訳された字幕を確認・修正',
+        '字幕スタイルを設定してタイムラインに適用',
+      ],
+    },
+    {
+      id: 'ai-copywriting', name: 'AIコピーライティング', icon: '✍️', category: 'ai',
+      description: '動画の内容からキャプション・説明文・ハッシュタグをAIが自動生成。',
+      operationSteps: [
+        'ツールボックス → AIコピーライティングを選択',
+        '動画のジャンル・ターゲット・トーンを指定',
+        'AIが投稿キャプション・説明文の候補を複数生成',
+        '気に入ったコピーを選択してカスタマイズ',
+        'ハッシュタグ提案も一括コピーして投稿に活用',
+      ],
+    },
+    {
+      id: 'ai-video-enhance', name: 'AI動画補正', icon: '🔆', category: 'ai',
+      description: 'AIが解像度・明るさ・ノイズを自動補正して映像品質を向上。',
+      operationSteps: [
+        'ツールボックス → AI動画補正を選択',
+        '補正したいクリップをインポート',
+        '補正項目（解像度向上/ノイズ除去/手ブレ補正）を選択',
+        'AIが自動解析して最適な補正を適用',
+        'ビフォー/アフターを比較してプレビュー確認',
+      ],
+    },
+  
+    // ────────────────────────────────────────────────────────────
+    // ✂️ 編集
+    // ────────────────────────────────────────────────────────────
+    {
+      id: 'motion-tracking', name: 'モーショントラッキング', icon: '🎯', category: 'editing',
+      description: '動く被写体にテキストやエフェクトを自動追従させる。',
+      operationSteps: [
+        'テキスト or ステッカークリップをタイムラインに追加',
+        'クリップを選択してモーショントラッキングパネルを開く',
+        'トラッキング対象を画面上でクリック指定',
+        'トラッキング開始ボタンを押してAIが自動解析',
+        'テキストが被写体に追従することをプレビューで確認',
+      ],
+    },
+    {
+      id: 'planar-tracking', name: '平面トラッキング', icon: '📌', category: 'editing',
+      description: '看板・スクリーン等の平面にグラフィックをARで合成追従。',
+      operationSteps: [
+        'ツールボックス → 平面トラッキングを選択',
+        'トラッキングしたい平面の四隅をピンで指定',
+        'トラッキング開始で平面の動きをAIが解析',
+        '合成したい画像・動画を平面レイヤーに指定',
+        'プレビューで合成が自然に追従しているか確認',
+      ],
+    },
+    {
+      id: 'speed-ramp', name: 'スピードランプ', icon: '🚀', category: 'editing',
+      description: '映画的な速度変化カーブでダイナミックな演出を追加。',
+      operationSteps: [
+        'クリップを右クリック → スピードグラフを開く',
+        'グラフ上でキーフレームを追加（スロー→通常→スロー等）',
+        'ベジェカーブで速度変化をなめらかに調整',
+        'フリーズフレームを挿入して印象的な静止効果を追加',
+        'オーディオのピッチ補正をオンにして音の歪みを防ぐ',
+      ],
+    },
+    {
+      id: 'beat-sync', name: 'ビート同期', icon: '🥁', category: 'editing',
+      description: 'BGMのビートポイントに映像カットを自動同期。',
+      operationSteps: [
+        'タイムラインにBGMを配置してビート同期パネルを開く',
+        'AIが自動でビートポイントを検出（黄色マーカーで表示）',
+        '不要なマーカーを削除し重要なビートのみ残す',
+        '「クリップをビートに合わせる」を実行して自動カット',
+        'プレビューで映像とビートのズレを微調整',
+      ],
+    },
+    {
+      id: 'multicam', name: 'マルチカメラ編集', icon: '🎥', category: 'editing',
+      description: '複数カメラ映像を同期してライブ切り替え編集。',
+      operationSteps: [
+        '複数カメラのクリップをすべてインポート',
+        'クリップを選択して右クリック → マルチカメラクリップを作成',
+        '同期基準（音声/タイムコード）を選択して自動同期',
+        'マルチカメラビューアでアングルをリアルタイム切り替え',
+        '切り替えポイントを細かく調整してFX・テキストを追加',
+      ],
+    },
+    {
+      id: 'pip', name: 'PIP（ピクチャーインピクチャー）', icon: '📺', category: 'editing',
+      description: 'メイン映像の上にサブ映像を重ねて表示。',
+      operationSteps: [
+        'サブ映像クリップをV2トラックにドラッグ',
+        'クリップを選択してトランスフォームパネルを開く',
+        '位置・サイズを調整してメイン映像の隅に配置',
+        '枠線・角丸・シャドウを設定して見やすく整える',
+        'PIP映像に個別でカラー補正・エフェクトを適用可能',
+      ],
+    },
+    {
+      id: 'mask', name: 'マスク', icon: '🎭', category: 'editing',
+      description: '形状マスクで映像の一部だけを表示・非表示に。',
+      operationSteps: [
+        'クリップを選択してビデオパネル → マスクを開く',
+        'マスク形状（矩形/円形/多角形/カスタム）を選択',
+        'マスク範囲をプレビュー画面でドラッグして調整',
+        'フェザリングで境界線をなめらかにぼかす',
+        'キーフレームでマスクをアニメーション化（追従も可能）',
+      ],
+    },
+    {
+      id: 'chroma-key', name: 'クロマキー（グリーンバック）', icon: '🟢', category: 'editing',
+      description: '特定色を透過して背景を合成するグリーンバック処理。',
+      operationSteps: [
+        'グリーンバック映像クリップを選択',
+        'ビデオパネル → クロマキーをオンにする',
+        'スポイトで除去したい色をピッカーでクリック',
+        '類似度・エッジ幅・フェザリングを調整して細部を整える',
+        '下レーンに背景映像を配置してプレビューで合成確認',
+      ],
+    },
+    {
+      id: 'freeze-reverse', name: 'フリーズ＆逆再生', icon: '⏪', category: 'editing',
+      description: '静止フレームの挿入と映像の逆再生でユニークな演出。',
+      operationSteps: [
+        'フリーズ：クリップを右クリック → フリーズフレームを挿入',
+        'フリーズ時間（デフォルト3秒）を設定',
+        '逆再生：クリップを右クリック → スピード → 逆再生をオン',
+        '逆再生とフォワード再生を組み合わせてブーメラン効果',
+        '速度変化と組み合わせることでドラマチックな演出に',
+      ],
+    },
+  
+    // ────────────────────────────────────────────────────────────
+    // 🎬 トランジション（スクリーンショットで確認した実名称）
+    // ────────────────────────────────────────────────────────────
+    {
+      id: 'cross-dissolve', name: 'ディゾルブ', icon: '🌫️', category: 'transition',
+      description: 'シーンを滑らかにフェードでつなぐ定番トランジション。',
+      operationSteps: [
+        'トランジションタブ → フェード＆ディゾルブカテゴリを開く',
+        'ディゾルブを2クリップの境界にドラッグ',
+        'トランジションの長さを0.5〜1.5秒に設定',
+        'ダブルクリックでイーズイン/アウトを調整',
+        'プレビューで自然なつながりを確認',
+      ],
+    },
+    {
+      id: 'fade-transition', name: 'フェード', icon: '⬛', category: 'transition',
+      description: 'ブラックまたはホワイトへフェードアウト/インするシンプルなつなぎ。',
+      operationSteps: [
+        'トランジションタブ → フェード＆ディゾルブカテゴリを開く',
+        'フェード（黒/白）を選択してクリップ境界にドラッグ',
+        '長さを0.5〜1.0秒に設定',
+        '最初/最後のクリップに適用するとシネマティックに',
+        'プレビューで確認',
+      ],
+    },
+    {
+      id: 'warp-zoom', name: 'ワープズーム', icon: '🔍', category: 'transition',
+      description: 'ズームしながら歪んで切り替わる迫力のトランジション。',
+      operationSteps: [
+        'トランジションタブ → ズームカテゴリを選択',
+        'ワープズームをクリップ境界にドラッグ',
+        '長さを0.4〜0.8秒に設定（短いほどインパクト大）',
+        'ブラー量を調整して動きの勢いを演出',
+        'アクション映像・Reels動画に特に効果的',
+      ],
+    },
+    {
+      id: 'glitch-block', name: 'グリッチブロック', icon: '📡', category: 'transition',
+      description: 'ブロックノイズ風のグリッチでシーンを切り替える。',
+      operationSteps: [
+        'トランジションタブ → グリッチカテゴリを選択',
+        'グリッチブロックをクリップ境界にドラッグ',
+        '長さを0.2〜0.5秒に短く設定',
+        'グリッチ強度・色収差量を調整',
+        'テック系・ゲーム系コンテンツに特に効果的',
+      ],
+    },
+    {
+      id: 'page-curl', name: 'ページカール', icon: '📄', category: 'transition',
+      description: 'ページをめくるようにシーンが切り替わる。',
+      operationSteps: [
+        'トランジションタブ → ページカテゴリを選択',
+        'ページカールをクリップ境界にドラッグ',
+        '長さを0.6〜1.0秒に設定',
+        'めくる方向（左/右/上下）を設定',
+        '教育・レシピ・ハウツー系動画に効果的',
+      ],
+    },
+    {
+      id: 'light-leak-tr', name: '光漏れトランジション', icon: '☀️', category: 'transition',
+      description: 'フィルムの光漏れでシーンを幻想的に切り替える。',
+      operationSteps: [
+        'トランジションタブ → 人気/プレミアムカテゴリを確認',
+        '光漏れトランジションをクリップ境界にドラッグ',
+        '長さを0.8〜1.2秒に設定',
+        '光の色調・強度をカスタマイズ',
+        'Vlog・ウェディング・旅行映像に特に合う',
+      ],
+    },
+    {
+      id: 'speed-blur-tr', name: 'スピードブラートランジション', icon: '💨', category: 'transition',
+      description: '高速移動のブラーでシーンを切り替えるダイナミックな演出。',
+      operationSteps: [
+        'トランジションタブ → スピードブラーカテゴリを選択',
+        'スピードブラートランジションをクリップ境界にドラッグ',
+        '長さを0.3〜0.6秒に設定',
+        'ブラーの方向（水平/垂直/回転）を指定',
+        'スポーツ・アクション系映像に特に効果的',
+      ],
+    },
+    {
+      id: 'cinematic-tr', name: 'シネマティックトランジション', icon: '🎞️', category: 'transition',
+      description: 'デジタルノイズと光彩を融合させた映画風のシーン切り替え。',
+      operationSteps: [
+        'トランジションタブ → 人気/プレミアムカテゴリを確認',
+        'シネマティック系トランジションをクリップ境界にドラッグ',
+        '長さを0.6〜1.0秒に設定',
+        'エフェクト強度を好みに調整',
+        'シネマティックLUTと組み合わせると映画感がさらに増す',
+      ],
+    },
+  
+    // ────────────────────────────────────────────────────────────
+    // ✨ エフェクト（スクリーンショットで確認した実名称）
+    // ────────────────────────────────────────────────────────────
+    {
+      id: 'rgb-stroke', name: 'RGB ストローク', icon: '🌈', category: 'effect',
+      description: 'RGB 3色がずれてにじむ色収差系グリッチエフェクト。',
+      operationSteps: [
+        'エフェクトタブ → 動画エフェクト → 人気/ユーティリティを選択',
+        'RGB ストロークをクリップにドラッグ',
+        'FXアイコンで色ずれの量・方向を調整',
+        '強度を10〜30%に設定して自然な仕上がりに',
+        'グリッチ系BGMと組み合わせると効果的',
+      ],
+    },
+    {
+      id: 'blur-effect', name: '基本的なぼかし', icon: '🌁', category: 'effect',
+      description: 'ガウスブラーで映像をぼかす汎用エフェクト。マスクと組み合わせ可能。',
+      operationSteps: [
+        'エフェクトタブ → 動画エフェクト → ユーティリティを選択',
+        '基本的なぼかし（またはスクエアブラー）をクリップにドラッグ',
+        'ぼかし強度を用途に合わせて調整',
+        'マスクと組み合わせて被写体以外だけをぼかす',
+        'キーフレームでブラーのアニメーションを設定',
+      ],
+    },
+    {
+      id: 'old-film', name: '古いフィルム', icon: '📽️', category: 'effect',
+      description: 'フィルムグレイン・褪色・スクラッチでレトロな映像感を演出。',
+      operationSteps: [
+        'エフェクトタブ → 動画エフェクト → カメラ/ユーティリティを選択',
+        '古いフィルムをクリップにドラッグ',
+        'グレイン量・傷・色の褪色度を調整',
+        '強度を20〜40%に抑えて自然に',
+        'ビンテージフィルターと組み合わせてよりレトロに',
+      ],
+    },
+    {
+      id: 'chromatic-aberration', name: 'クロマティックアベレーション', icon: '🔴', category: 'effect',
+      description: 'レンズの色収差を再現して独特のサイケデリック感を演出。',
+      operationSteps: [
+        'エフェクトタブ → 動画エフェクト → ユーティリティ/人気を選択',
+        'クロマティックアベレーションをクリップにドラッグ',
+        'ずれ量（X/Y軸）を調整して効果を設定',
+        'アニメーション時のみ強くする場合はキーフレームを活用',
+        'グリッチBGMとの組み合わせが特に効果的',
+      ],
+    },
+    {
+      id: 'zoom-effect', name: 'ズーム効果', icon: '🔎', category: 'effect',
+      description: '映像にダイナミックなズームイン/アウトの動きを加えるエフェクト。',
+      operationSteps: [
+        'エフェクトタブ → 動画エフェクト → カメラカテゴリを選択',
+        'ズーム効果をクリップにドラッグ',
+        'ズーム方向（イン/アウト）と速度を設定',
+        'キーフレームで任意の位置からズームを開始',
+        'スピードランプと組み合わせると映画的な演出に',
+      ],
+    },
+    {
+      id: 'cinematic-bar', name: 'シネマティックバー', icon: '🎬', category: 'effect',
+      description: '上下に黒帯を追加して映画的なシネスコ比率に変換。',
+      operationSteps: [
+        'エフェクトタブ → 動画エフェクト → ユーティリティを選択',
+        'レターボックス（黒帯）エフェクトをクリップにドラッグ',
+        '帯の太さ（アスペクト比）を選択：2.35:1 or 2.39:1 が映画的',
+        'フェードインアニメーションを設定してドラマチックに',
+        'カラーグレーディングと組み合わせて映画感を最大化',
+      ],
+    },
+    {
+      id: 'glow-effect', name: 'グローエフェクト', icon: '✨', category: 'effect',
+      description: '光が滲むグロー効果でドリーミーな雰囲気を演出。',
+      operationSteps: [
+        'エフェクトタブ → 動画エフェクト → ライト/キラキラを選択',
+        'グローエフェクトを対象クリップにドラッグ',
+        'FXアイコンをクリックしてグロー半径を調整（15〜30px推奨）',
+        'グロー強度を調整して自然な光感を出す',
+        'カラーグレーディングと組み合わせてより効果的に',
+      ],
+    },
+    {
+      id: 'light-leak', name: 'ライトリーク（光漏れ）', icon: '🌟', category: 'effect',
+      description: 'フィルムカメラの光漏れを再現した幻想的なオーバーレイ。',
+      operationSteps: [
+        'エフェクトタブ → 動画エフェクト → ライトを選択',
+        'ライトリーク素材をV2トラックに配置',
+        'ブレンドモードを「スクリーン」または「加算」に変更',
+        '不透明度を30〜60%に調整して自然な光感を出す',
+        'シーンの冒頭・終わりに配置してドラマチックな演出に',
+      ],
+    },
+  
+    // ────────────────────────────────────────────────────────────
+    // 🎨 フィルター（スクリーンショットで確認した実名称）
+    // ────────────────────────────────────────────────────────────
+    {
+      id: 'teal-orange', name: 'ティール＆オレンジ', icon: '🎬', category: 'filter',
+      description: 'ハリウッド映画定番のシアン＋オレンジの対比色調補正。',
+      operationSteps: [
+        'フィルタータブ → ベーシック/シネマティックカテゴリを選択',
+        'ティールオレンジフィルターをクリップにドラッグ',
+        '強度スライダーで効果量を60〜80%に調整',
+        '肌色が自然に見えるよう色相の微調整',
+        'シャドウをティール、ハイライトをオレンジに振り分けると映画的',
+      ],
+    },
+    {
+      id: 'vintage-wash', name: 'ヴィンテージウォッシュ', icon: '📷', category: 'filter',
+      description: 'フィルム写真風の褪色・温かみのあるヴィンテージカラー。',
+      operationSteps: [
+        'フィルタータブ → レトロカテゴリを選択',
+        'ヴィンテージウォッシュをクリップにドラッグ',
+        '強度スライダーで効果量を50〜70%に調整',
+        'コントラストをわずかに下げてフィルム感を出す',
+        'フィルムグレインエフェクトと組み合わせると更に効果的',
+      ],
+    },
+    {
+      id: 'warm-tone', name: 'ウォームトーン（晴れの日）', icon: '🌅', category: 'filter',
+      description: '温かみのある黄金色・オレンジ系の色調に補正。',
+      operationSteps: [
+        'フィルタータブ → ベーシック/ライフスタイルカテゴリを選択',
+        '晴れの日 or ウォームトーンのフィルターをドラッグ',
+        '色温度スライダーを右（暖色）方向に+20〜40移動',
+        '彩度を少し上げて（+10〜15）暖色を鮮やかに',
+        'シャドウをわずかに橙色に染めてゴールデンアワー感を演出',
+      ],
+    },
+    {
+      id: 'ai-color-enhance', name: 'AIカラーエンハンス', icon: '🤖', category: 'filter',
+      description: 'AIが映像を解析して自動的に最適なカラーバランスに補正。',
+      operationSteps: [
+        'フィルタータブ → ベーシックカテゴリでAIカラーエンハンスを選択',
+        'クリップにドラッグして適用',
+        'AIが自動で露出・コントラスト・彩度を最適化',
+        '強度スライダーで補正量を調整（50〜80%推奨）',
+        '必要に応じて個別パラメータを微調整',
+      ],
+    },
+    {
+      id: 'monochrome', name: 'モノクローム', icon: '⬛', category: 'filter',
+      description: 'モノクロームのフィルム風グレースケールで芸術的な雰囲気に。',
+      operationSteps: [
+        'フィルタータブ → モノカテゴリを選択',
+        'モノクロームフィルターをクリップにドラッグ',
+        'ハイライト・シャドウ・コントラストを調整',
+        '特定の色相を残す部分カラー効果も可能（マスクを使用）',
+        'ドキュメンタリー・ポートレート系映像に効果的',
+      ],
+    },
+    {
+      id: 'cool-tone', name: 'クールトーン（ダークインク）', icon: '❄️', category: 'filter',
+      description: 'クールでモダンなブルー・シアン系の色調に補正。',
+      operationSteps: [
+        'フィルタータブ → ベーシック/シネマティックカテゴリを選択',
+        'ダークインク or クールトーン系フィルターをドラッグ',
+        '色温度スライダーを左（寒色）方向に-20〜40移動',
+        '彩度を下げて（-5〜10）落ち着いたトーンに',
+        'テック系・ビジネス・冬テーマコンテンツに最適',
+      ],
+    },
+  
+    // ────────────────────────────────────────────────────────────
+    // 💬 タイトル・字幕（スクリーンショットで確認した実名称）
+    // ────────────────────────────────────────────────────────────
+    {
+      id: 'animated-text', name: 'アニメーションテキスト', icon: '💬', category: 'title',
+      description: 'フェード・スライド・バウンスなど多彩なテキストアニメーション。',
+      operationSteps: [
+        'タイトルタブ → 人気/字幕カテゴリからスタイルを選ぶ',
+        'タイムラインにドラッグして配置',
+        'テキスト内容・フォント・サイズ・色を設定',
+        'アニメーションタブでイン/アウトのスタイルを選択',
+        'プレビューで文字の動きを確認して速度を調整',
+      ],
+    },
+    {
+      id: 'neon-title', name: 'ネオンタイトル', icon: '💡', category: 'title',
+      description: 'ネオンサイン風に光るテキストでインパクトある見出しを作成。',
+      operationSteps: [
+        'タイトルタブ → ネオンカテゴリを選択',
+        'ネオンタイトルスタイルをタイムラインにドラッグ',
+        'テキスト内容・フォント・ネオン色を設定',
+        '発光強度・ブラーを調整してリアルなネオン感を出す',
+        'ダーク系背景との組み合わせで最大効果を発揮',
+      ],
+    },
+    {
+      id: '3d-title', name: '3Dタイトル', icon: '🏆', category: 'title',
+      description: '奥行きのある3D立体テキストでインパクトを演出。',
+      operationSteps: [
+        'タイトルタブ → 3Dタイトルカテゴリを選択',
+        '3Dテキストスタイルをタイムラインにドラッグ',
+        'テキスト内容・フォントを設定',
+        '照明方向・反射・影の強さを調整',
+        '回転アニメーションを加えて立体感をアピール',
+      ],
+    },
+    {
+      id: 'lower-third', name: 'ローワーサード', icon: '📛', category: 'title',
+      description: '画面下部に名前・役職・解説を表示するニュース風テロップ。',
+      operationSteps: [
+        'タイトルタブ → ローワーサードカテゴリを選択',
+        'スタイルをタイムラインにドラッグ',
+        '名前・役職テキストをカスタマイズ',
+        'アニメーションのイン/アウトを設定（スライドイン推奨）',
+        '映像の下1/3の領域に配置して視認性を確認',
+      ],
+    },
+    {
+      id: 'auto-caption', name: 'AIキャプション自動生成', icon: '📝', category: 'title',
+      description: '音声をAIが自動認識して字幕テキストを生成・スタイル適用。',
+      operationSteps: [
+        'タイトルタブ → AIキャプションを選択（またはツールボックスから）',
+        '音声の言語（日本語/英語等）を選択',
+        'AIが音声を自動認識して字幕を生成',
+        '誤認識箇所を字幕エディタで修正',
+        'フォント・サイズ・色・アニメーションをテンプレートから適用',
+      ],
+    },
+  
+    // ────────────────────────────────────────────────────────────
+    // 🎵 オーディオ
+    // ────────────────────────────────────────────────────────────
+    {
+      id: 'audio-ducking', name: 'オーディオダッキング', icon: '🔉', category: 'audio',
+      description: 'ナレーション検出時にBGMを自動的に音量を下げる。',
+      operationSteps: [
+        'オーディオパネル → オーディオダッキングをオン',
+        'ナレーションクリップを選択してダッキング対象に指定',
+        'BGMの下げ量（デフォルト-12dB）を調整',
+        'フェードイン/アウトの速さを設定',
+        'プレビューで会話とBGMのバランスを確認',
+      ],
+    },
+    {
+      id: 'ai-vocal-remover', name: 'AIボーカルリムーバー', icon: '🎤', category: 'audio',
+      description: 'AIが楽曲からボーカルのみを分離・除去してインスト版を生成。',
+      operationSteps: [
+        'ツールボックス → AIボーカルリムーバーを選択',
+        'ボーカルを除去したい楽曲ファイルをインポート',
+        'AIが自動でボーカルとインスト音源を分離',
+        '分離されたインスト版をタイムラインに適用',
+        '著作権フリーの楽曲に使用することで自分だけのBGMに',
+      ],
+    },
+    {
+      id: 'pitch-correction', name: 'ピッチ補正', icon: '🎶', category: 'audio',
+      description: 'ボイスのピッチを補正してロボット声から自然な声まで調整。',
+      operationSteps: [
+        'オーディオクリップを選択してオーディオパネルを開く',
+        'ピッチシフターをオンにして半音単位で上下に調整',
+        'ピッチ補正（オートチューン）で音程を自動修正',
+        '「ロボット」「深い声」などのプリセットも利用可',
+        'ナレーションのトーンを統一したい場合に特に有効',
+      ],
+    },
+    {
+      id: 'ai-sound-effect', name: 'AIサウンドエフェクト生成', icon: '🎛️', category: 'audio',
+      description: 'テキストプロンプトから世界に一つだけのSE・効果音を生成。',
+      operationSteps: [
+        'オーディオタブ → AI オーディオ → AIサウンドエフェクトを選択',
+        'テキストプロンプトで生成したいSEを説明（例：宇宙的な浮遊感）',
+        '長さを設定（5秒以内推奨）',
+        '生成ボタンを押して待機',
+        '生成されたSEをタイムラインのオーディオトラックに配置',
+      ],
+    },
+    {
+      id: 'audio-visualizer', name: 'オーディオビジュアライザー', icon: '📊', category: 'audio',
+      description: '音楽に合わせて動くビジュアライザーグラフィックを追加。',
+      operationSteps: [
+        'エフェクトタブ → 「オーディオビジュアライザー」を検索',
+        'スタイル（バー/波形/サークル等）を選んでV2トラックに配置',
+        '対応するオーディオクリップとリンク設定',
+        'ビジュアライザーの色・サイズ・位置をカスタマイズ',
+        'BGMのリズムに合わせて動くことをプレビューで確認',
+      ],
+    },
+  
+    // ────────────────────────────────────────────────────────────
+    // 🌟 ステッカー（スクリーンショットから抽出した新カテゴリ）
+    // ────────────────────────────────────────────────────────────
+    {
+      id: 'sns-sticker', name: 'SNS 反応ステッカー', icon: '👍', category: 'sticker',
+      description: 'Subscribe・Like・Views などSNS向けのアニメーションステッカー。',
+      operationSteps: [
+        'ステッカータブ → SNS/人気カテゴリを選択',
+        'Subscribe・いいね等のステッカーをV2トラックに配置',
+        '表示したいタイミングにクリップを移動',
+        'サイズ・位置を調整して視認しやすい場所に配置',
+        'アニメーションの速度をFXパネルで調整',
+      ],
+    },
+    {
+      id: 'manga-sticker', name: '漫画風ステッカー', icon: '💥', category: 'sticker',
+      description: 'WOW・びっくりマーク等の漫画・アニメ風エモーションステッカー。',
+      operationSteps: [
+        'ステッカータブ → 漫画風カテゴリを選択',
+        '使いたい表情・感情ステッカーをV2トラックに配置',
+        'キーフレームでポップアップ登場アニメーションを設定',
+        'テキストクリップと組み合わせてリアクション演出',
+        'モーショントラッキングで被写体に追従させることも可能',
+      ],
+    },
+    {
+      id: 'arrow-sticker', name: '矢印・フレームステッカー', icon: '➡️', category: 'sticker',
+      description: '手書き風矢印・丸囲み・強調フレームで視線誘導を演出。',
+      operationSteps: [
+        'ステッカータブ → 矢印/縦形カテゴリを選択',
+        '矢印またはフレームステッカーをV2トラックに配置',
+        '指し示したい方向・被写体に合わせて回転・サイズ調整',
+        '色・透明度をカスタマイズ',
+        'ハウツー・解説動画で特定の場所を強調するのに有効',
+      ],
+    },
+    {
+      id: 'glitter-sticker', name: 'キラキラ・パーティクルステッカー', icon: '✨', category: 'sticker',
+      description: '花火・星・光の粒子など華やかなパーティクルステッカー。',
+      operationSteps: [
+        'ステッカータブ → キラキラ/花火大会/パーティクルカテゴリを選択',
+        'キラキラステッカーをV2トラックに配置',
+        'サイズ・透明度を調整して映像に馴染ませる',
+        'ブレンドモードを「スクリーン」にするとより自然',
+        '祝い・発表・ハイライトシーンに特に効果的',
+      ],
+    },
+    {
+      id: 'ai-sticker', name: 'AIステッカー', icon: '🤖', category: 'sticker',
+      description: 'テキストプロンプトから世界に一つのカスタムステッカーをAI生成。',
+      operationSteps: [
+        'ステッカータブ → AI ステッカーカテゴリを選択',
+        'テキストプロンプトで生成したいステッカーを説明',
+        'スタイル（漫画/リアル/ミニマル等）を選択',
+        '生成ボタンを押してAIがステッカーを作成',
+        '生成されたステッカーをタイムラインに配置・サイズ調整',
+      ],
+    },
+  
+    // ────────────────────────────────────────────────────────────
+    // 📋 テンプレート（スクリーンショットから抽出した新カテゴリ）
+    // ────────────────────────────────────────────────────────────
+    {
+      id: 'countdown-tmpl', name: 'カウントダウンテンプレート', icon: '⏱️', category: 'template',
+      description: 'ネオン・シネマティック等のカウントダウンイントロテンプレート。',
+      operationSteps: [
+        'テンプレートタブ → カウントダウンカテゴリを選択',
+        '使用するテンプレートをダブルクリックしてプレビュー',
+        'タイムラインにドラッグして配置',
+        '数字・テキスト・色をカスタマイズ',
+        'イベント・セール・発表動画のオープニングに活用',
+      ],
+    },
+    {
+      id: 'vlog-tmpl', name: '旅行Vlogテンプレート', icon: '✈️', category: 'template',
+      description: '旅行・Vlog向けの洗練されたシーン構成テンプレート。',
+      operationSteps: [
+        'テンプレートタブ → 旅行Vlogカテゴリを選択',
+        'テンプレートをタイムラインにドラッグ',
+        '用意した旅行映像クリップを各プレースホルダーに差し替え',
+        'テキスト（場所名・日付等）をカスタマイズ',
+        'BGMを差し替えて書き出し',
+      ],
+    },
+    {
+      id: 'cinematic-intro-tmpl', name: 'シネマティックイントロ', icon: '🎥', category: 'template',
+      description: '映画予告編風の迫力あるイントロシーンテンプレート。',
+      operationSteps: [
+        'テンプレートタブ → シネマティックカテゴリを選択',
+        'テンプレートをタイムラインにドラッグ',
+        '映像クリップを各プレースホルダーに差し替え',
+        'タイトル・サブタイトルテキストをカスタマイズ',
+        'ダイナミックなBGMと組み合わせて迫力を最大化',
+      ],
+    },
+    {
+      id: 'sns-promo-tmpl', name: 'SNSプロモーションテンプレート', icon: '📢', category: 'template',
+      description: 'Instagram・X向けのサービス・商品紹介テンプレート。',
+      operationSteps: [
+        'テンプレートタブ → 人気/UGCカテゴリを選択',
+        'テンプレートをタイムラインにドラッグ',
+        '商品・サービスの映像/画像を差し替え',
+        'キャッチコピー・CTAテキストをカスタマイズ',
+        'アスペクト比をターゲットSNSに合わせて変換',
+      ],
+    },
+    {
+      id: 'minimal-tmpl', name: 'ミニマリストテンプレート', icon: '🪶', category: 'template',
+      description: 'シンプルでスタイリッシュなミニマルデザインのテンプレート。',
+      operationSteps: [
+        'テンプレートタブ → ミニマリスト/アニメ風カテゴリを選択',
+        'テンプレートをタイムラインにドラッグ',
+        '映像・テキストを差し替え',
+        'カラーパレットをブランドカラーに合わせて調整',
+        '洗練されたビジネス・ライフスタイル系動画に最適',
+      ],
+    },
+  ];
+  
+  const FEATURE_CATEGORIES = [
+    { id: 'all',        label: 'すべて',           icon: '📋' },
+    { id: 'ai',         label: 'AI機能',           icon: '🤖' },
+    { id: 'editing',    label: '編集',             icon: '✂️' },
+    { id: 'transition', label: 'トランジション',    icon: '🎬' },
+    { id: 'effect',     label: 'エフェクト',        icon: '✨' },
+    { id: 'filter',     label: 'フィルター',        icon: '🎨' },
+    { id: 'title',      label: 'タイトル・字幕',   icon: '💬' },
+    { id: 'audio',      label: 'オーディオ',       icon: '🎵' },
+    { id: 'sticker',    label: 'ステッカー',        icon: '🌟' },
+    { id: 'template',   label: 'テンプレート',      icon: '📋' },
+  ];
+
+
+  // ═══════════════════════════════════════════════════════
+  // parser.js — AI抽出方式（あらゆる形式のテキストに対応）
+  // ═══════════════════════════════════════════════════════
+  async function parseIdeasMarkdown(text, apiKey) {
+    if (!apiKey) {
+      throw new Error('Gemini APIキーが設定されていません。ヘッダーのAPIキー欄に入力してから再度ファイルを選択してください。');
+    }
+
+    const prompt = `あなたはSNS投稿アイディアを抽出するアシスタントです。
+以下のテキストは、Discordのコピペ・Markdownメモ・箇条書きなど、あらゆる形式のSNS投稿アイディアのメモです。
+
+このテキストの中から「SNS投稿のアイディア」として読み取れるものを最大6件抽出し、以下のJSONスキーマで返してください。
+
+【JSONスキーマ】
+{
+  "date": "テキスト内に日付が含まれる場合はYYYYMMDD形式で（なければ空文字）",
+  "rawDate": "同日付をYYYY-MM-DD形式で（なければ空文字）",
+  "ideas": [
+    {
+      "index": 1,
+      "genreNumber": "①〜⑥のような番号記号があれば（なければ空文字）",
+      "genreLabel": "ジャンルやカテゴリ名（推測でもOK。例：ライフハック、旅行、グルメ等）",
+      "title": "投稿テーマのタイトル（1文で）",
+      "format": "instagram-carousel または x-thread（X/Twitter投稿・スレッド系ならx-thread、それ以外はinstagram-carousel）",
+      "sources": ["参考にした情報・掛け合わせ元・ハッシュタグ等の配列（なければ空配列）"],
+      "essence": "この投稿の核心・ポイント（1〜2文で要約）",
+      "content": "投稿内容・本文の抜粋（最大200文字）",
+      "caption": "投稿キャプション文（あれば最大300文字、なければ空文字）",
+      "cta": "フォロー誘導・保存促進などの行動喚起文（あれば最大300文字、なければ空文字）"
+    }
+  ]
+}
+
+【抽出ルール】
+- フォーマットが崩れていたり、口語・メモ書き程度のものでも、意味が読み取れればアイディアとして抽出する
+- 明らかに投稿アイディアでない雑談・日付・URLのみの行は無視する
+- 複数のアイディアが混在する場合は別々のエントリに分ける
+- 必ずJSONのみを返す（前後に説明テキストを付けない）
+
+【テキスト】
+${text.slice(0, 8000)}`;
+
+    const url =
+      'https://generativelanguage.googleapis.com/v1beta/models/' +
+      'gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.1,
+          maxOutputTokens: 4096,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      let errMsg = 'Gemini APIエラー: ' + response.status + ' ' + response.statusText;
+      try {
+        const errJson = await response.json();
+        if (errJson?.error?.message) errMsg += ' — ' + errJson.error.message;
+      } catch {}
+      throw new Error(errMsg);
+    }
+
+    const data = await response.json();
+    const responseText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+
+    let parsed;
+    try {
+      parsed = JSON.parse(responseText);
+    } catch {
+      // Markdown記法・挨拶文が混入してもJSON部分だけ強引に抽出して再試行
+      const match = responseText.match(/\{[\s\S]*\}/);
+      if (match) {
+        try {
+          parsed = JSON.parse(match[0]);
+        } catch {
+          throw new Error(
+            'AIからのレスポンスをJSONとして解析できませんでした。\n\n' +
+            '【抽出後テキスト（先頭500文字）】\n' + match[0].slice(0, 500) + '\n\n' +
+            '【元テキスト（先頭500文字）】\n' + responseText.slice(0, 500)
+          );
+        }
+      } else {
+        throw new Error(
+          'AIのレスポンスにJSON部分が見つかりませんでした。\n\n' +
+          '【AIレスポンス生データ（先頭500文字）】\n' + responseText.slice(0, 500)
+        );
+      }
+    }
+
+    const ideas = (parsed.ideas ?? []).slice(0, 6).map((idea, i) => ({
+      index: i + 1,
+      genreNumber: idea.genreNumber ?? '',
+      genreLabel: idea.genreLabel ?? '',
+      title: idea.title ?? '',
+      format: idea.format === 'x-thread' ? 'x-thread' : 'instagram-carousel',
+      sources: Array.isArray(idea.sources) ? idea.sources : [],
+      essence: idea.essence ?? '',
+      content: idea.content ?? '',
+      caption: idea.caption ?? '',
+      cta: idea.cta ?? '',
+    }));
+
+    return {
+      date: parsed.date ?? '',
+      rawDate: parsed.rawDate ?? '',
+      ideas,
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // prompts.js — プロンプト構築
+  // ═══════════════════════════════════════════════════════
+  const SYSTEM_PROMPT = `あなたはFilmora Proの全機能に精通したプロの動画編集講師です。
+SNS投稿アイディアと選択されたFilmora Pro機能をもとに、初心者でも実践できる詳細な動画編集マニュアルを日本語で生成してください。
+
+【出力フォーマット（厳守）】
+各アイディアに対して以下の構造でマニュアルを生成してください：
+
+---
+
+# [テーマタイトル] × Filmora Pro 編集マニュアル
+
+## 概要
+（動画の目的・ターゲット視聴者・完成イメージを3〜5行で説明）
+
+## 素材準備チェックリスト
+- [ ] （必要な素材・機材・ファイル形式等）
+
+## 編集ステップ（タイムライン順）
+### Step N: [使用機能名]を使った[処理名]
+**操作手順**
+1. （具体的な操作手順）
+2. ...
+**タイムコード目安**：00:00〜00:XX
+**Tips**：（効果を高める実践的なアドバイス）
+
+## エクスポート設定（プラットフォーム別）
+| プラットフォーム | 解像度 | アスペクト比 | 推奨ビットレート |
+|---|---|---|---|
+
+## 完成チェックリスト
+- [ ] （投稿前に確認すべき項目）
+
+---
+
+複数アイディアがある場合は「---」で区切って各アイディアのマニュアルを続けて出力してください。`;
+
+  const VIDEO_SPECS = {
+    'instagram-carousel': '縦型動画 9:16（1080×1920px）、60秒以内、Instagram Reels/ストーリーズ最適化',
+    'x-thread': '横型動画 16:9（1920×1080px）、30秒以内（またはYouTube Shorts用 9:16縦型）',
+  };
+
+  function buildUserPrompt(ideas, features) {
+    const featuresSection = features
+      .map(f => '### ' + f.name + '（' + f.icon + '）\n' + f.description + '\n操作手順：\n' + f.operationSteps.map((s, i) => (i + 1) + '. ' + s).join('\n'))
+      .join('\n\n');
+
+    const ideasSection = ideas
+      .map(idea => {
+        const spec = VIDEO_SPECS[idea.format] || '';
+        return '### アイディア' + idea.index + '：' + idea.title + '\n' +
+          '- ジャンル：' + idea.genreNumber + ' ' + idea.genreLabel + '\n' +
+          '- SNSフォーマット：' + (idea.format === 'instagram-carousel' ? 'Instagramカルーセル → ' : 'Xスレッド → ') + spec + '\n' +
+          '- 掛け合わせ元：' + idea.sources.join(' / ') + '\n' +
+          '- 切り口の核心：' + idea.essence + '\n' +
+          '- 内容抜粋：' + idea.content + '\n' +
+          '- 投稿指示文：' + idea.cta;
+      })
+      .join('\n\n');
+
+    return '## 使用するFilmora Pro機能（' + features.length + '件）\n\n' +
+      featuresSection + '\n\n---\n\n' +
+      '## 対象SNSアイディア（' + ideas.length + '件）\n\n' +
+      ideasSection + '\n\n---\n\n' +
+      '上記のアイディアと機能を組み合わせた動画編集マニュアルを生成してください。\n' +
+      '各アイディアに対して、選択された' + features.length + '個の機能を適切なステップとして組み込んでください。';
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // gemini.js — ストリーミングクライアント
+  // ═══════════════════════════════════════════════════════
+  async function* streamGemini(apiKey, systemPrompt, userPrompt) {
+    const url =
+      'https://generativelanguage.googleapis.com/v1beta/models/' +
+      'gemini-2.5-flash:streamGenerateContent?key=' + encodeURIComponent(apiKey) + '&alt=sse';
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        generationConfig: { maxOutputTokens: 8192, temperature: 0.7 },
+      }),
+    });
+
+    if (!response.ok) {
+      let errMsg = 'Gemini API エラー: ' + response.status + ' ' + response.statusText;
+      try {
+        const errJson = await response.json();
+        if (errJson?.error?.message) errMsg += ' — ' + errJson.error.message;
+      } catch {}
+      throw new Error(errMsg);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const jsonStr = trimmed.slice(5).trim();
+        if (!jsonStr || jsonStr === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+          if (text) yield text;
+        } catch {}
+      }
+    }
+
+    if (buffer.trim().startsWith('data:')) {
+      const jsonStr = buffer.trim().slice(5).trim();
+      if (jsonStr && jsonStr !== '[DONE]') {
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+          if (text) yield text;
+        } catch {}
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // app.js — 状態管理・イベントハンドラ・レンダリング
+  // ═══════════════════════════════════════════════════════
+  const AppState = {
+    apiKey: localStorage.getItem('gemini_api_key') ?? '',
+    ideas: [],
+    selectedIdeaIds: new Set(),
+    selectedFeatureIds: new Set(),
+    manualMarkdown: '',
+    isGenerating: false,
+    activeCategory: 'all',
+    featureSearch: '',
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    restoreApiKey();
+    renderFeatures();
+    renderIdeas();
+    updateGenerateButton();
+
+    document.getElementById('apiKeyInput').addEventListener('input', onApiKeyInput);
+    document.getElementById('toggleApiKey').addEventListener('click', toggleApiKeyVisibility);
+    document.getElementById('fileInput').addEventListener('change', onFileChange);
+    document.getElementById('featureSearch').addEventListener('input', onFeatureSearch);
+    document.getElementById('generateBtn').addEventListener('click', onGenerate);
+    document.getElementById('copyBtn').addEventListener('click', onCopy);
+    document.getElementById('downloadBtn').addEventListener('click', onDownload);
+    document.getElementById('selectAllFeatures').addEventListener('click', () => selectAllFeatures(true));
+    document.getElementById('clearAllFeatures').addEventListener('click', () => selectAllFeatures(false));
+
+    document.getElementById('categoryTabs').addEventListener('click', e => {
+      const btn = e.target.closest('[data-category]');
+      if (!btn) return;
+      AppState.activeCategory = btn.dataset.category;
+      renderCategoryTabs();
+      renderFeatures();
+    });
+  });
+
+  function restoreApiKey() {
+    const input = document.getElementById('apiKeyInput');
+    if (AppState.apiKey) input.value = AppState.apiKey;
+  }
+
+  function onApiKeyInput(e) {
+    AppState.apiKey = e.target.value.trim();
+    localStorage.setItem('gemini_api_key', AppState.apiKey);
+    updateGenerateButton();
+  }
+
+  function toggleApiKeyVisibility() {
+    const input = document.getElementById('apiKeyInput');
+    const btn = document.getElementById('toggleApiKey');
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+    else { input.type = 'password'; btn.textContent = '👁'; }
+  }
+
+  function onFileChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const container = document.getElementById('ideasContainer');
+    container.innerHTML = `
+      <div class="text-center py-10 text-violet-500">
+        <span class="inline-block w-8 h-8 border-2 border-violet-400 border-t-transparent rounded-full animate-spin mb-3"></span>
+        <p class="text-sm font-medium">AI がアイディアを解析中…</p>
+      </div>`;
+
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      const text = ev.target.result;
+      try {
+        const { ideas } = await parseIdeasMarkdown(text, AppState.apiKey);
+        AppState.ideas = ideas;
+        AppState.selectedIdeaIds = new Set();
+        renderIdeas();
+        updateGenerateButton();
+        document.getElementById('fileLabel').textContent = '📄 ' + file.name;
+      } catch (err) {
+        AppState.ideas = [];
+        AppState.selectedIdeaIds = new Set();
+        updateGenerateButton();
+        container.innerHTML = `
+          <div class="flex items-start gap-2 p-3 bg-red-50 rounded-lg border border-red-200">
+            <span class="text-red-500 text-lg shrink-0">❌</span>
+            <div>
+              <p class="text-red-700 font-medium text-sm">読み込みエラー</p>
+              <p class="text-red-600 text-xs mt-1">${escHtml(err.message)}</p>
+            </div>
+          </div>`;
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  function renderIdeas() {
+    const container = document.getElementById('ideasContainer');
+    if (AppState.ideas.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-12 text-gray-400">
+          <p class="text-4xl mb-3">📂</p>
+          <p class="text-sm">テキストファイルをアップロードしてください</p>
+          <p class="text-xs mt-1 text-gray-300">.md / .txt どちらでも可</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = AppState.ideas.map(idea => {
+      const checked = AppState.selectedIdeaIds.has(idea.index);
+      const formatLabel = idea.format === 'instagram-carousel' ? '📸 Instagram' : '🐦 X スレッド';
+      return `
+        <div class="idea-card rounded-lg border cursor-pointer select-none transition-all
+                    ${checked ? 'border-violet-500 bg-violet-50' : 'border-gray-200 bg-white hover:border-gray-300'}"
+             data-idea-index="${idea.index}" onclick="toggleIdea(${idea.index})">
+          <div class="p-3 flex items-start gap-3">
+            <input type="checkbox" class="mt-0.5 accent-violet-600 w-4 h-4 shrink-0"
+                   ${checked ? 'checked' : ''} onclick="event.stopPropagation(); toggleIdea(${idea.index})">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap mb-1">
+                ${idea.genreNumber ? `<span class="text-xs font-bold text-violet-700">${idea.genreNumber} ${escHtml(idea.genreLabel)}</span>` : `<span class="text-xs font-bold text-violet-700">${escHtml(idea.genreLabel)}</span>`}
+                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">${formatLabel}</span>
+              </div>
+              <p class="text-sm font-semibold text-gray-800 leading-snug">${escHtml(idea.title)}</p>
+              ${idea.essence ? `<p class="text-xs text-gray-500 mt-1 leading-relaxed line-clamp-2">${escHtml(idea.essence)}</p>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    updateIdeaCount();
+  }
+
+  function toggleIdea(index) {
+    if (AppState.selectedIdeaIds.has(index)) AppState.selectedIdeaIds.delete(index);
+    else AppState.selectedIdeaIds.add(index);
+    renderIdeas();
+    updateGenerateButton();
+  }
+
+  function updateIdeaCount() {
+    const el = document.getElementById('ideaCount');
+    if (el) el.textContent = AppState.selectedIdeaIds.size + ' / ' + AppState.ideas.length + ' 件選択中';
+  }
+
+  function renderCategoryTabs() {
+    const tabs = document.getElementById('categoryTabs');
+    tabs.querySelectorAll('[data-category]').forEach(btn => {
+      const isActive = btn.dataset.category === AppState.activeCategory;
+      btn.className = 'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border ' +
+        (isActive ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-gray-600 border-gray-200 hover:border-violet-300');
+    });
+  }
+
+  function getFilteredFeatures() {
+    let list = FILMORA_FEATURES;
+    if (AppState.activeCategory !== 'all') list = list.filter(f => f.category === AppState.activeCategory);
+    if (AppState.featureSearch.trim()) {
+      const q = AppState.featureSearch.trim().toLowerCase();
+      list = list.filter(f => f.name.toLowerCase().includes(q) || f.description.toLowerCase().includes(q));
+    }
+    return list;
+  }
+
+  function renderFeatures() {
+    const container = document.getElementById('featuresContainer');
+    const features = getFilteredFeatures();
+    if (features.length === 0) {
+      container.innerHTML = '<p class="text-center text-gray-400 text-sm py-8">該当する機能がありません</p>';
+      return;
+    }
+    container.innerHTML = features.map(f => {
+      const checked = AppState.selectedFeatureIds.has(f.id);
+      return `
+        <div class="feature-card rounded-lg border cursor-pointer select-none transition-all
+                    ${checked ? 'border-violet-500 bg-violet-50' : 'border-gray-200 bg-white hover:border-gray-300'}"
+             data-feature-id="${f.id}" onclick="toggleFeature('${f.id}')">
+          <div class="p-2.5 flex items-start gap-2.5">
+            <input type="checkbox" class="mt-0.5 accent-violet-600 w-4 h-4 shrink-0"
+                   ${checked ? 'checked' : ''} onclick="event.stopPropagation(); toggleFeature('${f.id}')">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-800">${f.icon} ${escHtml(f.name)}</p>
+              <p class="text-xs text-gray-500 mt-0.5 leading-relaxed line-clamp-2">${escHtml(f.description)}</p>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+    updateFeatureCount();
+  }
+
+  function toggleFeature(id) {
+    if (AppState.selectedFeatureIds.has(id)) AppState.selectedFeatureIds.delete(id);
+    else AppState.selectedFeatureIds.add(id);
+    renderFeatures();
+    updateGenerateButton();
+  }
+
+  function selectAllFeatures(select) {
+    const features = getFilteredFeatures();
+    features.forEach(f => { if (select) AppState.selectedFeatureIds.add(f.id); else AppState.selectedFeatureIds.delete(f.id); });
+    renderFeatures();
+    updateGenerateButton();
+  }
+
+  function onFeatureSearch(e) {
+    AppState.featureSearch = e.target.value;
+    renderFeatures();
+  }
+
+  function updateFeatureCount() {
+    const el = document.getElementById('featureCount');
+    if (el) el.textContent = AppState.selectedFeatureIds.size + ' 個選択中';
+  }
+
+  function updateGenerateButton() {
+    const btn = document.getElementById('generateBtn');
+    const summaryEl = document.getElementById('selectionSummary');
+    const ideaCount = AppState.selectedIdeaIds.size;
+    const featureCount = AppState.selectedFeatureIds.size;
+    const hasKey = AppState.apiKey.length > 0;
+    const canGenerate = hasKey && ideaCount > 0 && featureCount > 0 && !AppState.isGenerating;
+
+    btn.disabled = !canGenerate;
+    btn.className = 'w-full py-3 rounded-xl font-bold text-sm transition-all ' +
+      (canGenerate ? 'bg-violet-600 hover:bg-violet-700 text-white shadow-md hover:shadow-lg' : 'bg-gray-100 text-gray-400 cursor-not-allowed');
+
+    if (summaryEl) {
+      if (ideaCount > 0 && featureCount > 0) {
+        summaryEl.textContent = '✅ ' + ideaCount + '件のアイディア × ' + featureCount + '個の機能を選択中';
+        summaryEl.className = 'text-sm text-center text-violet-700 font-medium mb-2';
+      } else {
+        const missing = [];
+        if (!hasKey) missing.push('APIキー');
+        if (ideaCount === 0) missing.push('アイディア');
+        if (featureCount === 0) missing.push('機能');
+        summaryEl.textContent = missing.length ? missing.join('・') + 'を選択してください' : '';
+        summaryEl.className = 'text-sm text-center text-gray-400 mb-2';
+      }
+    }
+  }
+
+  async function onGenerate() {
+    if (AppState.isGenerating) return;
+    const selectedIdeas = AppState.ideas.filter(i => AppState.selectedIdeaIds.has(i.index));
+    const selectedFeatures = FILMORA_FEATURES.filter(f => AppState.selectedFeatureIds.has(f.id));
+    if (!AppState.apiKey || selectedIdeas.length === 0 || selectedFeatures.length === 0) return;
+
+    AppState.isGenerating = true;
+    AppState.manualMarkdown = '';
+    updateGenerateButton();
+
+    const outputSection = document.getElementById('outputSection');
+    const outputEl = document.getElementById('manualOutput');
+    outputSection.classList.remove('hidden');
+    outputEl.innerHTML = '<p class="text-violet-600 text-sm flex items-center gap-2"><span class="inline-block w-4 h-4 border-2 border-violet-400 border-t-transparent rounded-full animate-spin"></span>マニュアルを生成しています…</p>';
+
+    function scrollToBottom() {
+      if (window.innerWidth >= 1024) outputEl.scrollTop = outputEl.scrollHeight;
+      else outputEl.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+    let renderPending = false;
+    function scheduleRender() {
+      if (renderPending) return;
+      renderPending = true;
+      requestAnimationFrame(() => {
+        outputEl.innerHTML = marked.parse(AppState.manualMarkdown);
+        scrollToBottom();
+        renderPending = false;
+      });
+    }
+
+    const userPrompt = buildUserPrompt(selectedIdeas, selectedFeatures);
+    outputEl.classList.add('streaming');
+
+    try {
+      for await (const chunk of streamGemini(AppState.apiKey, SYSTEM_PROMPT, userPrompt)) {
+        AppState.manualMarkdown += chunk;
+        scheduleRender();
+      }
+      outputEl.classList.remove('streaming');
+      outputEl.innerHTML = marked.parse(AppState.manualMarkdown);
+      scrollToBottom();
+    } catch (err) {
+      outputEl.classList.remove('streaming');
+      outputEl.innerHTML = `
+        <div class="flex items-start gap-2 p-3 bg-red-50 rounded-lg border border-red-200">
+          <span class="text-red-500 text-lg">❌</span>
+          <div>
+            <p class="text-red-700 font-medium text-sm">生成エラー</p>
+            <p class="text-red-600 text-xs mt-1">${escHtml(err.message)}</p>
+          </div>
+        </div>`;
+    } finally {
+      AppState.isGenerating = false;
+      updateGenerateButton();
+      document.getElementById('copyBtn').classList.remove('hidden');
+      document.getElementById('downloadBtn').classList.remove('hidden');
+    }
+  }
+
+  async function onCopy() {
+    if (!AppState.manualMarkdown) return;
+    try {
+      await navigator.clipboard.writeText(AppState.manualMarkdown);
+      const btn = document.getElementById('copyBtn');
+      const original = btn.textContent;
+      btn.textContent = '✅ コピー済み';
+      setTimeout(() => { btn.textContent = original; }, 2000);
+    } catch {
+      alert('クリップボードへのコピーに失敗しました。');
+    }
+  }
+
+  function onDownload() {
+    if (!AppState.manualMarkdown) return;
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const blob = new Blob([AppState.manualMarkdown], { type: 'text/markdown; charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'filmora-manual-' + date + '.md';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // marked.js 設定
+  marked.setOptions({ breaks: true, gfm: true });
+
+  // デスクトップレイアウト：ヘッダー高さをCSS変数にセット
+  function setHeaderHeight() {
+    const h = document.getElementById('appHeader').offsetHeight;
+    document.documentElement.style.setProperty('--header-h', h + 'px');
+  }
+  setHeaderHeight();
+  window.addEventListener('resize', setHeaderHeight);
+  </script>
+</body>
+</html>
