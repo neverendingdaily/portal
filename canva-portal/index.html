@@ -6,6 +6,8 @@
   <title>Canva Pro マニュアル生成ポータル</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <style>
     body { min-height:100vh; background:linear-gradient(135deg,#edfffe 0%,#f2eeff 55%,#fce8ff 100%); background-attachment:fixed; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
     ::-webkit-scrollbar{width:6px;height:6px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.14);border-radius:3px}
@@ -214,7 +216,7 @@ const CANVA_FEATURES=[
    operationSteps:['「アプリ」→「Pexels」または「Pixabay」を追加','キーワードで素材を検索（英語推奨で精度UP）','画像または動画素材をキャンバスに直接ドラッグ','背景リムーバやフィルターで加工','商用利用OKのライセンスを確認してから使用']},
   {id:'lottie-anim',    name:'Lottie Animations（動くイラスト）',icon:'💫',category:'apps',
    description:'プロ制作のアニメーションGIF素材をCanvaデザインに挿入。リール・ストーリーのアクセントやローディングアニメに。',
-   operationSteps:['「アプリ」→「Lottie Animations」を追加','カテゴリ（ビジネス/感情/テクノロジー等）で素材を検索','気に入ったアニメーションをキャンバスに追加','サイズ・位置を調整して他の要素と組み合わせ','GIF または MP4 で書き出してSNSへ投稿']},
+   operationSteps:['「アプリ」→「Lottie Animations」を追加','カテゴリ（ビジネス/感情/テクノロジー等）で検索','気に入ったアニメーションをキャンバスに追加','サイズ・位置を調整して他の要素と組み合わせ','GIF または MP4 で書き出してSNSへ投稿']},
   {id:'storyset',       name:'Storyset（イラスト素材）',icon:'🎨',category:'apps',
    description:'統一デザインのベクターイラストを色・スタイル変更して使えるアプリ。カルーセル投稿の図解・説明用イラストに最適。',
    operationSteps:['「アプリ」→「Storyset」を追加','テーマ（ビジネス/テクノロジー/ライフスタイル等）で検索','スタイル（フラット/キュート/ポップ等）を選択','ブランドカラーに合わせてメインカラーを変更','SVGとして挿入しテキストと組み合わせて図解コンテンツに']},
@@ -405,7 +407,24 @@ async function callGeminiStream(apiKey,sysPr,userPr,onChunk,onDone,onError){
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
 <script type="text/babel">
-const{useState,useCallback,useMemo,useRef}=React;
+/* ─── Firebase 初期設定 ──────────────────────────────────── */
+const firebaseConfig = {
+  apiKey: "AIzaSyCJwQooL2MHQq2fg8aeXWGDD2s8VfzKZ04",
+  authDomain: "portal-app-25359.firebaseapp.com",
+  projectId: "portal-app-25359",
+  storageBucket: "portal-app-25359.firebasestorage.app",
+  messagingSenderId: "148295764653",
+  appId: "1:148295764653:web:fe588512833f88852a9424",
+  measurementId: "G-MLM10WJPGN"
+};
+
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+const db = typeof firebase !== 'undefined' ? firebase.firestore() : null;
+
+
+const {useState,useCallback,useMemo,useRef,useEffect} = React;
 
 /* ── ApiKeyBar ───────────────────────────────────── */
 function ApiKeyBar({apiKey,onChange}){
@@ -583,6 +602,22 @@ function App(){
   const[isDrag,setIsDrag]=useState(false);
   const fileRef=useRef(null);
 
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    if (!db) return;
+    const fetchHistory = async () => {
+      try {
+        const snapshot = await db.collection('canva_manuals').orderBy('createdAt', 'desc').limit(20).get();
+        const historyData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setHistory(historyData);
+      } catch (err) {
+        console.error("履歴取得エラー:", err);
+      }
+    };
+    fetchHistory();
+  }, []);
+
   const readFile=useCallback(file=>{
     if(!file.name.match(/\.(md|txt)$/i)){setError('.md または .txt ファイルを選択してください');return;}
     setError(null);
@@ -602,9 +637,36 @@ function App(){
     const sFeats=CANVA_FEATURES.filter(f=>selFeats.has(f.id));
     if(!sIdeas.length||!sFeats.length){setError('アイディアとCanva機能を1件以上選択してください');return;}
     setIsGen(true);setManual('');setError(null);
+    
+    let generatedContent = '';
+    
     callGeminiStream(apiKey,SYSTEM_PROMPT,buildUserPrompt(sIdeas,sFeats),
-      chunk=>setManual(p=>p+chunk),
-      ()=>setIsGen(false),
+      chunk => {
+        setManual(p=>p+chunk);
+        generatedContent += chunk;
+      },
+      async () => {
+        setIsGen(false);
+        if(db) {
+          try {
+            const docRef = await db.collection('canva_manuals').add({
+              content: generatedContent,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              ideaCount: sIdeas.length,
+              featureCount: sFeats.length
+            });
+            setHistory(prev => [{
+              id: docRef.id,
+              content: generatedContent,
+              createdAt: new Date(),
+              ideaCount: sIdeas.length,
+              featureCount: sFeats.length
+            }, ...prev]);
+          } catch(err) {
+            console.error("履歴保存エラー:", err);
+          }
+        }
+      },
       msg=>{setError(`APIエラー: ${msg}`);setIsGen(false);}
     );
   };
@@ -697,6 +759,33 @@ function App(){
               </button>
             </div>
           )}
+
+          {/* History */}
+          <div className="p-3 border-t overflow-y-auto" style={{borderColor:'rgba(0,0,0,.06)', maxHeight: '35vh', flexShrink: 0}}>
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{color:'#94a3b8'}}>🕒 履歴（過去の生成）</p>
+            {history.length === 0 ? (
+              <p className="text-xs text-center py-2" style={{color:'#94a3b8'}}>履歴はありません</p>
+            ) : (
+              <div className="space-y-2">
+                {history.map(item => (
+                  <div key={item.id} className="p-2 border rounded-xl cursor-pointer text-xs transition-all"
+                    style={{background:'rgba(255,255,255,0.7)', borderColor:'rgba(0,0,0,.08)'}}
+                    onClick={() => { setManual(item.content); setSelIdeas(new Set()); setSelFeats(new Set()); }}
+                  >
+                    <p className="font-bold text-[#1e293b] truncate">生成マニュアル</p>
+                    <p className="text-[#94a3b8]" style={{fontSize: '10px'}}>
+                      💡{item.ideaCount}機能 × 🎨{item.featureCount}機能
+                      <br/>
+                      {item.createdAt && item.createdAt.toDate
+                        ? item.createdAt.toDate().toLocaleString()
+                        : new Date(item.createdAt || Date.now()).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
 
         {/* Right pane */}
