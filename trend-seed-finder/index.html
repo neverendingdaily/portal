@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trend Seed Finder — 売れるコンテンツの種を見つける</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'></text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;700;900&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -303,6 +303,18 @@
     transform: none;
   }
   .btn-icon { font-size: 20px; }
+
+  /* ─── HISTORY UI ─── */
+  .hist-section { margin-top: 24px; }
+  .hist-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; max-height: 250px; overflow-y: auto; padding-right: 4px; }
+  .hist-item {
+    background: rgba(255,253,248,0.6); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 16px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .hist-item:hover { border-color: var(--amber); background: var(--surface); box-shadow: 0 2px 8px var(--shadow-sm); }
+  .hist-item-title { font-weight: 700; color: var(--brown); font-size: 14px; margin-bottom: 2px; display:flex; align-items:center; gap:6px; }
+  .hist-item-date { font-size: 11px; color: var(--brown-light); }
 
   /* ─── LOADING ─── */
   .loading-area {
@@ -617,10 +629,6 @@
   }
   .site-footer span { color: var(--amber); }
 
-  /* ─── SCROLLBAR ─── */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--cream); }
-  ::-webkit-scrollbar-thumb { background: var(--amber-pale); border-radius: 99px; }
 </style>
 </head>
 
@@ -636,7 +644,7 @@
   <div class="card api-section">
     <div class="api-toggle" id="apiToggle">
       <div class="api-toggle-left">
-        <div class="api-icon">🔑</div>
+        <div class="api-icon"></div>
         <div>
           <div class="api-label">Gemini APIキー設定</div>
           <div class="api-sublabel">クリックして展開 / ローカルに保存されます</div>
@@ -658,7 +666,7 @@
           <button class="btn-save" id="btnSaveKey">保存する</button>
         </div>
         <div class="api-hint">
-          <span>📎</span>
+          <span></span>
           <span>APIキーは <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> から取得できます（無料）</span>
         </div>
       </div>
@@ -666,18 +674,25 @@
   </div>
 
   <div class="card search-section">
-    <div class="section-label">🔍 調査キーワード</div>
+    <div class="section-label"> 調査キーワード</div>
     <div class="section-desc">ジャンル・商品カテゴリ・Xのトレンドワードなど、自由に入力してください</div>
     <textarea class="main-input" id="keywordInput"
       placeholder="例：花粉症 対策グッズ&#10;例：ChatGPT 副業&#10;例：韓国コスメ スキンケア"></textarea>
     <button class="btn-analyze" id="btnAnalyze">
-      <span class="btn-icon">🌱</span>
+      <span class="btn-icon"></span>
       コンテンツの種を発見する
     </button>
   </div>
 
+  <div class="card hist-section" id="histSection">
+    <div class="section-label">🕒 過去の分析履歴</div>
+    <div class="section-desc">過去に分析したトレンドシードをワンクリックで復元します</div>
+    <div class="hist-list" id="tsfHistoryContainer">
+      <div style="font-size: 12px; color: var(--brown-light); text-align: center;">読み込み中...</div>
+    </div>
+  </div>
   <div class="error-box" id="errorBox">
-    <div class="error-icon">⚠️</div>
+    <div class="error-icon"></div>
     <div class="error-text" id="errorText">
       <strong>エラーが発生しました</strong><br>
       APIキーを確認し、再度お試しください。
@@ -878,6 +893,12 @@ async function analyze() {
     setLoading(false);
     renderResult(keyword, parsed);
 
+    // ▼ 追加：生成成功時にFirebaseへ履歴保存する呼び出し ▼
+    if (window.saveTsfHistory) {
+      window.saveTsfHistory(keyword, parsed);
+    }
+    // ▲ ここまで ▲
+
   } catch (e) {
     setLoading(false);
     showError(`<strong>エラーが発生しました</strong><br>${e.message}`);
@@ -885,19 +906,20 @@ async function analyze() {
 }
 
 /* ─── RENDER ─── */
-function renderResult(keyword, d) {
+// windowに紐付けて外部(モジュール)から呼べるようにする
+window.renderResult = function renderResult(keyword, d) {
   const area = document.getElementById('resultArea');
   area.innerHTML = '';
 
   // keyword pill
   const pill = document.createElement('div');
   pill.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:13px;color:var(--brown-light);';
-  pill.innerHTML = `<span style="background:var(--amber-pale);color:var(--amber);padding:4px 14px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid rgba(184,115,51,0.25)">🔍 ${escHtml(keyword)}</span><span>の分析レポート</span>`;
+  pill.innerHTML = `<span style="background:var(--amber-pale);color:var(--amber);padding:4px 14px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid rgba(184,115,51,0.25)"> ${escHtml(keyword)}</span><span>の分析レポート</span>`;
   area.appendChild(pill);
 
   // 1. Trend
   area.appendChild(createCard({
-    icon: '📈', iconClass: 'ic-amber',
+    icon: '', iconClass: 'ic-amber',
     title: '需要予測とトレンド背景',
     subtitle: 'なぜ今このキーワードが熱いのか',
     body: `<div class="trend-text">${escHtml(d.trendBackground || '—')}</div>`
@@ -907,12 +929,12 @@ function renderResult(keyword, d) {
   const personasHtml = (d.personas || []).map(p => `
     <div class="persona-chip">
       <span class="persona-tag">${escHtml(p.tag)}</span>
-      <div class="persona-profile">👤 ${escHtml(p.profile)}</div>
+      <div class="persona-profile"> ${escHtml(p.profile)}</div>
       <div class="persona-pain">${escHtml(p.pain)}</div>
     </div>
   `).join('');
   area.appendChild(createCard({
-    icon: '🎯', iconClass: 'ic-sage',
+    icon: '', iconClass: 'ic-sage',
     title: 'ペルソナ設定案',
     subtitle: 'ターゲットユーザーの解像度を上げる',
     body: `<div class="persona-grid">${personasHtml}</div>`
@@ -929,7 +951,7 @@ function renderResult(keyword, d) {
     </div>
   `).join('');
   area.appendChild(createCard({
-    icon: '🛒', iconClass: 'ic-brown',
+    icon: '', iconClass: 'ic-brown',
     title: '売れる商品・サービス案',
     subtitle: 'Amazon / 楽天 / A8.net などで紹介すべきアイテム',
     body: `<div class="product-list">${productsHtml}</div>`
@@ -946,7 +968,7 @@ function renderResult(keyword, d) {
     </div>
   `).join('');
   area.appendChild(createCard({
-    icon: '⚡', iconClass: 'ic-rose',
+    icon: '', iconClass: 'ic-rose',
     title: 'キラーアングル（3つの切り口）',
     subtitle: 'SNSでバズる「目を引く切り口」とタイトル案',
     body: `<div class="angle-list">${anglesHtml}</div>`
@@ -990,7 +1012,8 @@ function showError(msg) {
 function hideError() {
   document.getElementById('errorBox').classList.remove('visible');
 }
-function escHtml(s) {
+// グローバルに関数を定義してモジュール内から呼べるようにする
+window.escHtml = function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
@@ -998,7 +1021,7 @@ function escHtml(s) {
 <div id="__xwg_anchor"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 /* ── ① Firebaseの設定 ── */
 const firebaseConfig = {
@@ -1014,6 +1037,68 @@ const firebaseConfig = {
 // Firebaseの初期化
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+/* ▼▼▼ 追加：トレンドシードのFirebase保存・復元処理 ▼▼▼ */
+const tsfCollection = collection(db, "trend_seed_history");
+window.tsfHistoryCache = {};
+
+window.loadTsfHistory = async () => {
+  const container = document.getElementById('tsfHistoryContainer');
+  try {
+    const q = query(tsfCollection, orderBy("createdAt", "desc"), limit(20));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      container.innerHTML = '<div style="font-size: 12px; color: var(--brown-light); text-align: center; padding: 10px;">履歴はありません</div>';
+      return;
+    }
+    let html = '';
+    window.tsfHistoryCache = {};
+    snap.forEach(doc => {
+      const d = doc.data();
+      window.tsfHistoryCache[doc.id] = d;
+      const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '最近';
+      const keyword = d.keyword || '不明なキーワード';
+
+      html += `
+        <div class="hist-item" onclick="restoreTsfHistory('${doc.id}')">
+          <div class="hist-item-title"><span style="color:var(--amber)">#</span> ${window.escHtml(keyword)}</div>
+          <div class="hist-item-date">${date}</div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (e) {
+    console.error("履歴取得エラー:", e);
+    container.innerHTML = '<div style="font-size: 12px; color: #c07070; text-align: center;">履歴の取得に失敗しました</div>';
+  }
+};
+
+window.saveTsfHistory = async (keyword, parsedData) => {
+  try {
+    await addDoc(tsfCollection, {
+      keyword: keyword,
+      parsedData: parsedData,
+      createdAt: serverTimestamp()
+    });
+    window.loadTsfHistory(); // リストを更新
+  } catch(e) {
+    console.error("履歴保存エラー:", e);
+  }
+};
+
+window.restoreTsfHistory = (id) => {
+  const d = window.tsfHistoryCache[id];
+  if(d && window.renderResult) {
+    document.getElementById('keywordInput').value = d.keyword;
+    window.renderResult(d.keyword, d.parsedData);
+    document.getElementById('resultArea').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+};
+
+// ページ読み込み時に履歴を取得
+setTimeout(() => { window.loadTsfHistory(); }, 500);
+/* ▲▲▲ ここまで追加 ▲▲▲ */
+
 
 /* ★★★【ここを改良】URLからサイト別の識別名を自動抽出 ★★★ */
 const getPageKey = () => {
