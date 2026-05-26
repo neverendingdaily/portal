@@ -241,6 +241,21 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* ─ 履歴UI追加分 ─ */
+  .hist-section {
+    margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--border);
+  }
+  .hist-card {
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 1px 2px rgba(30,50,100,0.03);
+    margin-bottom: 8px;
+  }
+  .hist-card:hover { border-color: var(--accent); background: var(--accent-light); }
+  .hist-title { font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hist-date { font-size: 10px; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+
+
   /* ══ RIGHT PANEL ═════════════════════ */
   .right-panel {
     display: flex; flex-direction: column;
@@ -581,7 +596,13 @@ Gemini AI がセクション分割し、
         LPワイヤーフレームを生成
       </button>
 
-    </div>
+      <div class="hist-section">
+        <div class="f-label"><i class="fa-solid fa-clock-rotate-left"></i>生成履歴（過去のLP）</div>
+        <div id="lpHistoryContainer" style="display: flex; flex-direction: column;">
+          <div style="font-size: 11px; color: var(--text-dim); text-align: center; padding: 10px;">読み込み中...</div>
+        </div>
+      </div>
+      </div>
   </aside>
 
   <section class="right-panel">
@@ -740,6 +761,13 @@ async function generateLP() {
     renderLP(data);
     document.getElementById('stagWrap').style.display = 'flex';
     document.getElementById('copyBtn').style.display  = 'inline-flex';
+
+    // ▼ 追加：生成成功時にFirebaseへ履歴保存する呼び出し ▼
+    if (window.saveLPHistory) {
+      window.saveLPHistory(data);
+    }
+    // ▲ ここまで ▲
+
   } catch(err) {
     showErr('エラー: ' + err.message);
   } finally {
@@ -825,7 +853,7 @@ document.getElementById('articleText').addEventListener('keydown', e=>{
 <div id="__xwg_anchor"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 /* ── ① Firebaseの設定 ── */
 const firebaseConfig = {
@@ -841,6 +869,67 @@ const firebaseConfig = {
 // Firebaseの初期化
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+/* ▼▼▼ 追加：LP履歴のFirebase保存・復元処理 ▼▼▼ */
+const lpCollection = collection(db, "lp_wireframes");
+window.lpHistoryCache = {};
+
+window.loadLPHistory = async () => {
+  const container = document.getElementById('lpHistoryContainer');
+  try {
+    const q = query(lpCollection, orderBy("createdAt", "desc"), limit(20));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      container.innerHTML = '<div style="font-size: 11px; color: var(--text-dim); text-align: center; padding: 10px;">履歴はありません</div>';
+      return;
+    }
+    let html = '';
+    window.lpHistoryCache = {};
+    snap.forEach(doc => {
+      const d = doc.data();
+      window.lpHistoryCache[doc.id] = d.lpData;
+      const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '最近';
+      const title = d.lpData?.hero?.catchphrase || '名称未設定LP';
+      html += `
+        <div class="hist-card" onclick="restoreLPHistory('${doc.id}')">
+          <div class="hist-title">${_esc(title)}</div>
+          <div class="hist-date">${date}</div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (e) {
+    console.error("履歴取得エラー:", e);
+    container.innerHTML = '<div style="font-size: 11px; color: #C53030; text-align: center;">履歴の取得に失敗しました</div>';
+  }
+};
+
+window.saveLPHistory = async (lpData) => {
+  try {
+    await addDoc(lpCollection, {
+      lpData: lpData,
+      createdAt: serverTimestamp()
+    });
+    window.loadLPHistory(); // リストを更新
+  } catch(e) {
+    console.error("履歴保存エラー:", e);
+  }
+};
+
+window.restoreLPHistory = (id) => {
+  const data = window.lpHistoryCache[id];
+  if(data) {
+    generatedData = data;
+    renderLP(data);
+    document.getElementById('stagWrap').style.display = 'flex';
+    document.getElementById('copyBtn').style.display  = 'inline-flex';
+  }
+};
+
+// ページ読み込み時に履歴を取得
+window.loadLPHistory();
+/* ▲▲▲ ここまで追加 ▲▲▲ */
+
 
 /* ★★★【ここを改良】URLからサイト別の識別名を自動抽出 ★★★ */
 const getPageKey = () => {
