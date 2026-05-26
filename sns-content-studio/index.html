@@ -219,7 +219,6 @@ a{color:var(--bl)}
 'use strict';
 var F=null,R=null,AP=0,AF='x',AT=null,AFFP='amazon',KEY='',currentFilename='';
 var CA={};
-var HIST_MAX=50;
 
 // ── Robust JSON parser ──
 function safeParseJSON(txt){
@@ -270,31 +269,35 @@ function loadState(){
   }catch(e){return false}
 }
 
-// ── History ──
-function getHistory(){
-  try{var s=localStorage.getItem('snsc_history');return s?JSON.parse(s):[]}catch(e){return[]}
-}
-function addToHistory(){
+// ── History (Firebase Edition) ──
+var memHist = [];
+async function addToHistory(){
   if(!R)return;
   try{
-    var hist=getHistory();
-    var entry={id:Date.now(),filename:currentFilename,topic:R.topic||'',R:R};
-    hist=hist.filter(function(h){return h.topic!==entry.topic});
-    hist.unshift(entry);
-    if(hist.length>HIST_MAX)hist=hist.slice(0,HIST_MAX);
-    localStorage.setItem('snsc_history',JSON.stringify(hist));
-    renderHistory();
-  }catch(e){}
+    var entry={filename:currentFilename,topic:R.topic||'',R:R};
+    if(window.addFbHistory) {
+      await window.addFbHistory(entry);
+      renderHistory();
+    }
+  }catch(e){ console.error(e); }
 }
-function renderHistory(){
-  var hist=getHistory();
+
+async function renderHistory(){
   var ce=document.getElementById('hist-count');
   var le=document.getElementById('hist-list');
-  if(ce)ce.textContent=hist.length+'件';
+  if(ce)ce.textContent='読み込み中...';
   if(!le)return;
-  if(hist.length===0){le.innerHTML='<div class="hist-empty">履歴はまだありません</div>';return}
-  le.innerHTML=hist.map(function(h){
-    var d=new Date(h.id);
+  
+  if(window.loadFbHistory){
+    memHist = await window.loadFbHistory();
+  } else {
+    return; // Wait for Firebase module
+  }
+  
+  if(ce)ce.textContent=memHist.length+'件';
+  if(memHist.length===0){le.innerHTML='<div class="hist-empty">履歴はまだありません</div>';return}
+  le.innerHTML=memHist.map(function(h){
+    var d=h.createdAt ? h.createdAt.toDate() : new Date();
     var ds=d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes());
     return '<div class="hist-item">'+
       '<div style="flex:1;min-width:0">'+
@@ -302,16 +305,16 @@ function renderHistory(){
         '<p class="hist-meta">'+esc(ds)+' &nbsp;·&nbsp; '+esc(h.filename||'（ファイルなし）')+'</p>'+
       '</div>'+
       '<div class="row" style="flex-shrink:0">'+
-        '<button class="btn" style="font-size:12px;padding:4px 10px" onclick="restoreHist('+h.id+')">復元</button>'+
-        '<button class="btn" style="font-size:12px;padding:4px 10px;color:var(--rd)" onclick="deleteHist('+h.id+')">削除</button>'+
+        '<button class="btn" style="font-size:12px;padding:4px 10px" onclick="restoreHist(\''+h.id+'\')">復元</button>'+
+        '<button class="btn" style="font-size:12px;padding:4px 10px;color:var(--rd)" onclick="deleteHist(\''+h.id+'\')">削除</button>'+
       '</div>'+
     '</div>';
   }).join('');
 }
+
 function restoreHist(id){
-  var hist=getHistory();
   var entry=null;
-  for(var i=0;i<hist.length;i++){if(hist[i].id===id){entry=hist[i];break}}
+  for(var i=0;i<memHist.length;i++){if(memHist[i].id===id){entry=memHist[i];break}}
   if(!entry||!entry.R)return;
   R=entry.R;AF='x';AP=0;AT=null;CA={};currentFilename=entry.filename||'';
   document.getElementById('pv').innerHTML=
@@ -332,23 +335,29 @@ function restoreHist(id){
   renderResults();
   saveState();
 }
-function deleteHist(id){
-  var hist=getHistory().filter(function(h){return h.id!==id});
-  localStorage.setItem('snsc_history',JSON.stringify(hist));
+
+async function deleteHist(id){
+  if(!confirm('この履歴を削除しますか？'))return;
+  if(window.delFbHistory) await window.delFbHistory(id);
   renderHistory();
 }
-function clearHistory(){
+
+async function clearHistory(){
   if(!confirm('解析履歴をすべて削除しますか？'))return;
-  localStorage.removeItem('snsc_history');
+  if(window.delFbHistory) {
+    for(var i=0; i<memHist.length; i++) {
+        await window.delFbHistory(memHist[i].id);
+    }
+  }
   renderHistory();
 }
+
 function exportHistory(){
-  var hist=getHistory();
-  if(hist.length===0){alert('エクスポートできる履歴がありません。');return}
-  var data=hist.map(function(h){
+  if(memHist.length===0){alert('エクスポートできる履歴がありません。');return}
+  var data=memHist.map(function(h){
     return{
       id:h.id,
-      timestamp:new Date(h.id).toISOString(),
+      timestamp:h.createdAt ? h.createdAt.toDate().toISOString() : new Date().toISOString(),
       filename:h.filename,
       topic:h.topic,
       summary:h.R?h.R.summary:'',
@@ -368,13 +377,16 @@ function exportHistory(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
 function toggleHist(){
   var body=document.getElementById('hist-body');
   var arrow=document.getElementById('hist-arrow');
   var open=body.style.display==='none';
   body.style.display=open?'block':'none';
   if(arrow)arrow.textContent=open?'▲':'▼';
+  if(open && memHist.length === 0) renderHistory();
 }
+
 function pad(n){return n<10?'0'+n:''+n}
 
 // ── API Key ──
@@ -453,7 +465,7 @@ async function analyze(){
     var parts=[{inline_data:{mime_type:F.type,data:b64}},{text:analPr()}];
     var txt=await gemini(parts,4000,true);
     R=safeParseJSON(txt);
-    addToHistory();
+    await addToHistory();
     saveState();
     renderResults();
   }catch(e){
@@ -473,7 +485,7 @@ function renderResults(){
   document.getElementById('rtopic').textContent=R.topic||'';
   document.getElementById('rsumm').textContent=R.summary||'';
   var rich={high:'豊富',medium:'標準',low:'シンプル'}[R.richness]||'標準';
-  var aff=R.isAffiliatable?'　💰 アフィリエイト対象の可能性あり（'+(R.productCategory||'')+(R.priceRange?' / '+R.priceRange:'')+')':'';
+  var aff=R.isAffiliatable?' 💰 アフィリエイト対象の可能性あり（'+(R.productCategory||'')+(R.priceRange?' / '+R.priceRange:'')+')':'';
   document.getElementById('rmeta').textContent='情報量: '+rich+' ／ キーワード: '+(R.keyPoints||[]).join('・')+aff;
   selFmt(AF||'x');
   if(AT){
@@ -709,7 +721,7 @@ function toolPr(tool,ctx){
   var base='テーマ: '+top+'\n要約: '+sum+'\n現在の記事形式: '+fmt;
   if(post)base+='\nX投稿アングル: '+ang+'\n投稿文:\n'+post+'\nハッシュタグ: '+tags;
   if(art)base+='\n記事冒頭:\n'+art+'...';
-  if(tool==='canva')return base+'\n\nCanvaで実際に操作できる詳細デザイン仕様書を日本語で（メニュー名・ボタン名も具体的に）。\n\n【Canva デザイン仕様書】\n\n■ 基本設定\n・用途（Xポスト画像/ストーリーズ/サムネイル/記事アイキャッチ）\n・キャンバスサイズ（px）\n・テーマカラー　メイン: #XXXXXX　サブ: #XXXXXX　アクセント: #XXXXXX\n・フォント　見出し: 〇〇（Canvaのフォント名）　本文: 〇〇\n・デザインコンセプト（2〜3行）\n・想定する読者層・ライトモード前提\n\n■ Magic Design用プロンプト（日本語）\n■ Magic Media用プロンプト（英語）\n\n■ レイアウト詳細（全エリア: 名称・位置・サイズ・内容・デザイン指示）\n■ 各テキスト要素（文字内容・フォントサイズ・カラー・太さ・配置・位置）\n■ 素材・図形・画像生成（※画像生成ツール NanoBanana2 向けのプロンプト指示等）の指示\n\n■ Canvaでの操作手順\nStep 1: 新規作成→「デザインを作成」→「カスタムサイズ」\nStep 2〜7: 各要素の追加\nStep 8: ダウンロード（「共有」→「PNG」→「最高品質」）\n\n■ 完成チェックポイント\n■ SNS投稿時の注意点';
+  if(tool==='canva')return base+'\n\nCanvaで実際に操作できる詳細デザイン仕様書を日本語で（メニュー名・ボタン名も具体的に）。\n\n【Canva デザイン仕様書】\n\n■ 基本設定\n・用途（Xポスト画像/ストーリーズ/サムネイル/記事アイキャッチ）\n・キャンバスサイズ（px）\n・テーマカラー メイン: #XXXXXX サブ: #XXXXXX アクセント: #XXXXXX\n・フォント 見出し: 〇〇（Canvaのフォント名） 本文: 〇〇\n・デザインコンセプト（2〜3行）\n・想定する読者層・ライトモード前提\n\n■ Magic Design用プロンプト（日本語）\n■ Magic Media用プロンプト（英語）\n\n■ レイアウト詳細（全エリア: 名称・位置・サイズ・内容・デザイン指示）\n■ 各テキスト要素（文字内容・フォントサイズ・カラー・太さ・配置・位置）\n■ 素材・図形・画像生成（※画像生成ツール NanoBanana2 向けのプロンプト指示等）の指示\n\n■ Canvaでの操作手順\nStep 1: 新規作成→「デザインを作成」→「カスタムサイズ」\nStep 2〜7: 各要素の追加\nStep 8: ダウンロード（「共有」→「PNG」→「最高品質」）\n\n■ 完成チェックポイント\n■ SNS投稿時の注意点';
   if(tool==='filmora')return base+'\n\nFilmoraのPC版（最新バージョン）の詳細マニュアルを日本語で（メニュー名・ボタン名・パネル名も具体的に）。\n\n【Filmora 動画作成マニュアル】\n\n■ 完成動画の仕様（プラットフォーム・長さ・アスペクト比・解像度・トーン）\n■ 必要な素材リスト（※動画素材は Veo、静止画は NanoBanana2 等で生成する想定のプロンプト案も含む）\n\n■ タイムライン構成（シーンごとに：時間・テロップ・エフェクト・BGM）\n\n■ Filmora操作手順\nPhase 1: プロジェクト設定（起動→「新しいプロジェクト」→「ファイル」→「プロジェクトの設定」→解像度・FPS・Safe Zone）\nPhase 2: 素材インポート\nPhase 3: タイムライン配置\nPhase 4: テロップ（「タイトル」タブ→スタイル→ドラッグ→ダブルクリック編集）\nPhase 5: BGM・SE（-16〜-14 LUFS）\nPhase 6: エフェクト・トランジション\nPhase 7: カラーグレーディング\nPhase 8: Auto Reframe\nPhase 9: AI字幕（STT）\nPhase 10: エクスポート（MP4/H.264/1080p）・命名規則（日付_プラットフォーム_v番号）\n\n■ AI機能活用Tips\n■ 完成チェックリスト\n■ トラブルシュート（プロキシ・バックグラウンドレンダリング）';
   if(tool==='veo')return base+'\n\nGoogle Veo向けプロンプト集を作成してください。プロンプト本文は英語、説明は日本語で。\n\n【Veo 動画生成プロンプト集】\n\n■ プロンプト1：メインビジュアル版\nプロンプト（英語）: [Shot Type] of [Subject+Action], [Environment], [Lighting], [Camera Movement], [Visual Style], [Mood], duration: Xs\nネガティブプロンプト:\n日本語訳:\n生成のコツ:\n\n■ プロンプト2：エモーション版（同形式）\n■ プロンプト3：テロップ入り動画版（同形式）\n■ プロンプト4：縦型ショートリール版9:16（同形式）\n\n■ Veoでの使用方法（Google AI Studio/Vertex AI）\n■ 生成後の活用フロー';
   if(tool==='nanobanana')return base+'\n\nNanoBanana2向けプロンプト集を作成してください。プロンプト本文は英語、説明は日本語で。\n\n【NanoBanana2 プロンプト集】\n\n■ 静止画1：縦型9:16\nプロンプト（英語）: [subject], [style], [lighting], [colors], [composition], [quality: masterpiece, best quality, ultra detailed, 4K]\nネガティブプロンプト: low quality, blurry, watermark, text, deformed\n推奨設定: Steps:30 / CFG Scale:8 / Sampler:DPM++ 2M Karras / Clip skip:2\n\n■ 静止画2：横型16:9（同形式）\n■ 静止画3：アイキャッチ強化版（同形式）\n\n■ 動画プロンプト（シーン1〜3：英語・モーション指定・推奨秒数）\n\n■ スタイル別派生（realistic/illustration/infographic）\n■ プロンプト入力のコツ\n■ 生成後の活用方法';
@@ -737,7 +749,7 @@ function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace
 
 // ── Init ──
 initKey();
-renderHistory();
+renderHistory(); // Loading表示のセット
 if(loadState()){
   // Restore UI from persisted state
   document.getElementById('pv').innerHTML=
@@ -763,7 +775,7 @@ if(loadState()){
 <div id="__xwg_anchor"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc as fsDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, getDocs, deleteDoc, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 /* ── ① Firebaseの設定 ── */
 const firebaseConfig = {
@@ -780,6 +792,32 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* ▼▼▼ 追加：SNS Content Studio 履歴のFirebase保存・復元処理 ▼▼▼ */
+const histCollection = collection(db, "sns_content_studio_history");
+
+window.loadFbHistory = async () => {
+  const q = query(histCollection, orderBy("createdAt", "desc"), limit(50));
+  const snap = await getDocs(q);
+  const res = [];
+  snap.forEach(d => res.push({ id: d.id, ...d.data() }));
+  return res;
+};
+
+window.addFbHistory = async (data) => {
+  await addDoc(histCollection, { ...data, createdAt: serverTimestamp() });
+};
+
+window.delFbHistory = async (id) => {
+  await deleteDoc(fsDoc(db, "sns_content_studio_history", id));
+};
+
+// モジュール読み込み完了後に初期描画をキック
+if (window.renderHistory) {
+  window.renderHistory();
+}
+/* ▲▲▲ ここまで追加 ▲▲▲ */
+
+
 /* ★★★【ここを改良】URLからサイト別の識別名を自動抽出 ★★★ */
 const getPageKey = () => {
   const path = location.pathname; // 例: "/portal/aiconcierge/"
@@ -789,7 +827,7 @@ const getPageKey = () => {
 const pageKey = getPageKey(); 
 
 // データを保存する場所（ドキュメント名をサイトごとに自動で切り替える）
-const docRef = doc(db, "xwidget", `data_${pageKey}`);
+const docRef = fsDoc(db, "xwidget", `data_${pageKey}`);
 
 /* ── ② カスタマイズ設定 ── */
 const XWG_KEYS = {
