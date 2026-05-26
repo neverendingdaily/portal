@@ -507,7 +507,7 @@ if(typeof marked!=='undefined'){marked.setOptions({breaks:true,gfm:true});}
 <div id="__xwg_anchor"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc as fsDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, getDocs, deleteDoc, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 /* ── ① Firebaseの設定 ── */
 const firebaseConfig = {
@@ -524,16 +524,136 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ★★★【ここを改良】URLからサイト別の識別名を自動抽出 ★★★ */
+/* ▼▼▼ 追加：トンマナ履歴のFirebase保存・復元処理 ▼▼▼ */
+// UIの追加（左サイドバーに履歴枠を作成）
+const sb = document.querySelector('.sb');
+if (sb) {
+  const histSection = document.createElement('div');
+  histSection.className = 'sb-s';
+  histSection.innerHTML = `
+    <div class="lbl">🕒 過去の分析履歴</div>
+    <div id="tmHistoryContainer" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;padding-right:4px;">
+      <div style="font-size: 11px; color: var(--muted); text-align: center;">読み込み中...</div>
+    </div>
+    <style>
+      .hist-item-tm { background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; padding: 10px; cursor: pointer; transition: all 0.2s; position: relative; }
+      .hist-item-tm:hover { border-color: var(--gold); box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+      .hist-item-tm-title { font-size: 12px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; padding-right: 24px; }
+      .hist-item-tm-date { font-size: 10px; color: var(--muted); }
+      .btn-del-tm { position: absolute; top: 8px; right: 8px; background: #fff5f3; color: var(--accent); border: 1px solid rgba(200,55,26,.3); border-radius: 4px; padding: 2px 6px; font-size: 9px; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
+      .hist-item-tm:hover .btn-del-tm { opacity: 1; }
+    </style>
+  `;
+  // 使い方セクションの前に挿入
+  const lastSection = sb.lastElementChild;
+  sb.insertBefore(histSection, lastSection);
+}
+
+const tmCollection = collection(db, "tonmana_history");
+window.tmHistoryCache = {};
+
+window.loadTmHistory = async () => {
+  const container = document.getElementById('tmHistoryContainer');
+  if(!container) return;
+  try {
+    const q = query(tmCollection, orderBy("createdAt", "desc"), limit(20));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      container.innerHTML = '<div style="font-size: 11px; color: var(--muted); text-align: center; padding: 10px;">履歴はありません</div>';
+      return;
+    }
+    let html = '';
+    window.tmHistoryCache = {};
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      window.tmHistoryCache[docSnap.id] = d;
+      const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '最近';
+      const title = d.title || '名称未設定';
+
+      // esc関数を通すと改行が<br>になるため除去
+      const safeTitle = window.esc ? window.esc(title).replace(/<br>/g, '') : title;
+
+      html += `
+        <div class="hist-item-tm" onclick="restoreTmHistory('${docSnap.id}')">
+          <button class="btn-del-tm" onclick="event.stopPropagation(); deleteTmHistory('${docSnap.id}')">削除</button>
+          <div class="hist-item-tm-title">${safeTitle}</div>
+          <div class="hist-item-tm-date">${date}</div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (e) {
+    console.error("履歴取得エラー:", e);
+    container.innerHTML = '<div style="font-size: 11px; color: var(--accent); text-align: center;">履歴の取得に失敗しました</div>';
+  }
+};
+
+window.saveTmHistory = async (title, rawText) => {
+  try {
+    await addDoc(tmCollection, {
+      title: title,
+      rawText: rawText,
+      createdAt: serverTimestamp()
+    });
+    window.loadTmHistory();
+  } catch(e) {
+    console.error("履歴保存エラー:", e);
+  }
+};
+
+let isRestoring = false;
+window.restoreTmHistory = (id) => {
+  const d = window.tmHistoryCache[id];
+  if(d && window.renderResults) {
+    isRestoring = true;
+    window.lastRaw = d.rawText;
+    window.renderResults(d.rawText);
+    setTimeout(() => { isRestoring = false; }, 500);
+  }
+};
+
+window.deleteTmHistory = async (id) => {
+  if(!confirm("この履歴を削除しますか？")) return;
+  await deleteDoc(fsDoc(db, "tonmana_history", id));
+  window.loadTmHistory();
+};
+
+// 既存のrenderResults関数をフックして、生成成功時に自動保存させる
+if(window.renderResults) {
+  const origRender = window.renderResults;
+  window.renderResults = function(text) {
+    origRender(text);
+    if(!isRestoring) {
+      let title = '不明な素材';
+      if(window.imode === 'text') {
+        const val = document.getElementById('ti')?.value || '';
+        title = val.substring(0, 20) + (val.length > 20 ? '...' : '');
+        if(!title) title = 'テキスト分析';
+      } else {
+        if(window.files && window.files.length > 0) {
+          title = window.files.map(f => f.name).join(', ');
+        }
+      }
+      window.saveTmHistory(title, text);
+    }
+  };
+}
+
+// 初期ロード
+setTimeout(() => { window.loadTmHistory(); }, 500);
+/* ▲▲▲ ここまで追加 ▲▲▲ */
+
+
+/* ★★★ URLからサイト別の識別名を自動抽出 ★★★ */
 const getPageKey = () => {
-  const path = location.pathname; // 例: "/portal/aiconcierge/"
+  const path = location.pathname;
   const segments = path.split('/').filter(Boolean);
   return segments[segments.length - 1] || 'default';
 };
 const pageKey = getPageKey(); 
 
-// データを保存する場所（ドキュメント名をサイトごとに自動で切り替える）
-const docRef = doc(db, "xwidget", `data_${pageKey}`);
+// データを保存する場所
+const docRef = fsDoc(db, "xwidget", `data_${pageKey}`);
 
 /* ── ② カスタマイズ設定 ── */
 const XWG_KEYS = {
@@ -855,5 +975,6 @@ onSnapshot(docRef, (snapshot) => {
   __xwgUpdateBadge();
 });
 </script>
+
 </body>
 </html>
