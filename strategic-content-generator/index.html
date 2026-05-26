@@ -387,6 +387,14 @@ select.inp{
 .af-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:var(--sf2);border:1px solid var(--border);border-radius:8px}
 .af-body{font-size:12px;color:var(--t1);line-height:1.65}
 .af-body b{color:var(--t0)}
+
+/* ─ 追加：履歴用CSS ─ */
+.hist-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; cursor: pointer;
+  transition: all 0.2s; box-shadow: var(--shadow-xs);
+}
+.hist-card:hover { border-color: var(--accent); background: var(--accent-light); }
 </style>
 </head>
 <body>
@@ -461,7 +469,13 @@ select.inp{
         </select>
       </div>
 
-    </div>
+      <div style="margin-top: 10px; border-top: 1px solid var(--border-md); padding-top: 16px;">
+        <label class="lbl">🕒 過去の生成履歴</label>
+        <div id="historyContainer" style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 11px; color: var(--t2); text-align: center;">読み込み中...</div>
+        </div>
+      </div>
+      </div>
 
     <div class="left-foot">
       <button class="btn-gen" id="genBtn" onclick="generate()">
@@ -513,7 +527,6 @@ select.inp{
 
     </div>
   </div>
-</div>
 </div>
 
 <script>
@@ -821,6 +834,24 @@ JSONのみ出力。マークダウン記法・コードブロック・前置き�
 }`;
 }
 
+/* ---- ▼ 追加：Firebase履歴復元の呼び出し関数 ▼ ---- */
+window.restoreApp = function(histData, expText) {
+  data = histData;
+  document.getElementById('expInput').value = expText || '';
+  updateCC();
+  
+  renderAllTabs(data);
+  renderCalendar(data);
+  hideLd();
+  
+  document.getElementById('ph').style.display='none';
+  document.querySelectorAll('.pane').forEach(p=>p.style.display='none');
+  const calBtn=document.querySelector('[data-tab="calendar"]');
+  if(calBtn) switchTab('calendar',calBtn);
+  else document.getElementById('pane-'+activeTab).style.display='block';
+};
+/* ----------------------------------------------- */
+
 /* ---- GENERATE ---- */
 async function generate(){
   const apiKey=document.getElementById('apiKey').value.trim();
@@ -858,6 +889,12 @@ async function generate(){
     renderAllTabs(data);
     renderCalendar(data);
 
+    // ▼ 追加：生成成功時にFirebaseへ履歴保存する呼び出し ▼
+    if (window.saveContentHistory) {
+      window.saveContentHistory(data, exp);
+    }
+    // ▲ ここまで ▲
+
     hideLd();
     document.querySelectorAll('.pane').forEach(p=>p.style.display='none');
     const calBtn=document.querySelector('[data-tab="calendar"]');
@@ -881,7 +918,7 @@ async function generate(){
 <div id="__xwg_anchor"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 /* ── ① Firebaseの設定 ── */
 const firebaseConfig = {
@@ -897,6 +934,67 @@ const firebaseConfig = {
 // Firebaseの初期化
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+/* ▼▼▼ 追加：生成履歴のFirebase保存・復元処理 ▼▼▼ */
+const histCollection = collection(db, "strategic_content_history");
+window.contentHistoryCache = {};
+
+window.loadContentHistory = async () => {
+  const container = document.getElementById('historyContainer');
+  try {
+    const q = query(histCollection, orderBy("createdAt", "desc"), limit(20));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      container.innerHTML = '<div style="font-size: 11px; color: var(--t2); text-align: center;">履歴はありません</div>';
+      return;
+    }
+    let html = '';
+    window.contentHistoryCache = {};
+    snap.forEach(doc => {
+      const d = doc.data();
+      window.contentHistoryCache[doc.id] = d;
+      const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '最近';
+      let title = d.expText || '名称未設定';
+      title = title.length > 20 ? title.substring(0, 20) + '...' : title;
+      html += `
+        <div class="hist-card" style="padding: 10px; cursor: pointer; border-radius: 8px; border: 1px solid var(--border-md); background: var(--surface); transition: all 0.2s;" 
+             onclick="restoreContentHistory('${doc.id}')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border-md)'">
+          <div style="font-size: 12px; font-weight: 700; color: var(--t0); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${_esc(title)}</div>
+          <div style="font-size: 10px; color: var(--t2); font-family: 'Space Mono', monospace;">${date}</div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (e) {
+    console.error("履歴取得エラー:", e);
+    container.innerHTML = '<div style="font-size: 11px; color: var(--red-tx); text-align: center;">履歴の取得に失敗しました</div>';
+  }
+};
+
+window.saveContentHistory = async (genData, expText) => {
+  try {
+    await addDoc(histCollection, {
+      genData: genData,
+      expText: expText,
+      createdAt: serverTimestamp()
+    });
+    window.loadContentHistory();
+  } catch(e) {
+    console.error("履歴保存エラー:", e);
+  }
+};
+
+window.restoreContentHistory = (id) => {
+  const d = window.contentHistoryCache[id];
+  if(d && window.restoreApp) {
+    window.restoreApp(d.genData, d.expText);
+  }
+};
+
+// ページ読み込み時に履歴を取得
+window.loadContentHistory();
+/* ▲▲▲ ここまで追加 ▲▲▲ */
+
 
 /* ★★★【ここを改良】URLからサイト別の識別名を自動抽出 ★★★ */
 const getPageKey = () => {
