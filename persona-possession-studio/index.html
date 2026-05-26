@@ -1956,5 +1956,146 @@ function loadHistForList(id){
 let toastT;
 function toast(msg){const e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),2300);}
 </script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc as fsDoc, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCJwQooL2MHQq2fg8aeXWGDD2s8VfzKZ04",
+  authDomain: "portal-app-25359.firebaseapp.com",
+  projectId: "portal-app-25359",
+  storageBucket: "portal-app-25359.firebasestorage.app",
+  messagingSenderId: "148295764653",
+  appId: "1:148295764653:web:fe588512833f88852a9424"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const histCollection = collection(db, "persona_studio_history");
+
+window.personaHistoryCache = {};
+
+// 履歴のロードと描画
+window.loadFbHistory = async () => {
+  const q = query(histCollection, orderBy("createdAt", "desc"), limit(30));
+  const snap = await getDocs(q);
+  const drwBody = document.getElementById('drwbody');
+  const hbadge = document.getElementById('hbadge');
+
+  if (snap.empty) {
+    if(drwBody) drwBody.innerHTML = '<div class="h-empty"><div class="h-empty-icon">📂</div><div class="h-empty-txt">履歴はありません</div></div>';
+    if(hbadge) hbadge.style.display = 'none';
+    return;
+  }
+
+  let html = '<div class="h-list">';
+  let count = 0;
+  window.personaHistoryCache = {};
+
+  snap.forEach(docSnap => {
+    count++;
+    const d = docSnap.data();
+    window.personaHistoryCache[docSnap.id] = d;
+    const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '最近';
+    const theme = d.theme || 'テーマなし';
+    const creatorName = d.creatorName || '不明なクリエイター';
+
+    html += `
+      <div class="h-item" onclick="restorePersonaHistory('${docSnap.id}')">
+        <button class="btn-hdel" onclick="event.stopPropagation(); deletePersonaHistory('${docSnap.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
+        <div class="h-item-top">
+          <span class="h-creator">${creatorName}</span>
+          <span class="h-fmt">${d.format || '不明'}</span>
+        </div>
+        <div class="h-theme">${theme}</div>
+        <div class="h-foot">
+          <span class="h-time">${date}</span>
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+
+  if(drwBody) drwBody.innerHTML = html;
+  if(hbadge) {
+    hbadge.style.display = 'flex';
+    hbadge.textContent = count;
+  }
+};
+
+// 新規履歴の保存
+window.savePersonaHistory = async (creatorName, format, theme, resultText) => {
+  try {
+    await addDoc(histCollection, {
+      creatorName: creatorName,
+      format: format,
+      theme: theme,
+      resultText: resultText,
+      createdAt: serverTimestamp()
+    });
+    window.loadFbHistory();
+  } catch(e) {
+    console.error("履歴保存エラー:", e);
+  }
+};
+
+// 履歴の復元
+window.restorePersonaHistory = (id) => {
+  const d = window.personaHistoryCache[id];
+  if(d) {
+    document.getElementById('restxt').textContent = d.resultText;
+    document.getElementById('se').style.display = 'none';
+    document.getElementById('sl').style.display = 'none';
+    document.getElementById('serr').style.display = 'none';
+    document.getElementById('sres').style.display = 'block';
+    document.getElementById('resftr').style.display = 'flex';
+    document.getElementById('resPanel').classList.add('has-r');
+
+    // テーマ入力欄を復元
+    const themeInput = document.getElementById('theme');
+    if(themeInput) themeInput.value = d.theme;
+
+    // Drawerを閉じる
+    if(window.closeDrawer) window.closeDrawer();
+    else document.getElementById('hdr').classList.remove('open');
+  }
+};
+
+// 個別削除
+window.deletePersonaHistory = async (id) => {
+  if(!confirm("この履歴を削除しますか？")) return;
+  await deleteDoc(fsDoc(db, "persona_studio_history", id));
+  window.loadFbHistory();
+};
+
+// 既存の「すべて削除ボタン」の機能を上書き
+window.clearHist = async () => {
+  if(!confirm("すべての履歴を削除しますか？")) return;
+  const q = query(histCollection, limit(50));
+  const snap = await getDocs(q);
+  snap.forEach(async (d) => {
+    await deleteDoc(fsDoc(db, "persona_studio_history", d.id));
+  });
+  setTimeout(() => window.loadFbHistory(), 1000);
+};
+
+// 初回ロード
+setTimeout(() => { window.loadFbHistory(); }, 500);
+
+// ▼ 元の generate() 関数のフック処理（生成成功時に保存） ▼
+const originalSetRS = window.setRS;
+if (originalSetRS) {
+  window.setRS = function(state, data={}) {
+    originalSetRS(state, data);
+    if (state === 'result' && data.text) {
+      const cName = data.creator?.name || '不明';
+      const cTheme = document.getElementById('theme')?.value || '';
+      window.savePersonaHistory(cName, selFmtId, cTheme, data.text);
+    }
+  };
+}
+</script>
 </body>
 </html>
