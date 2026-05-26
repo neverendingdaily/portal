@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>コトダネ — 体験から7つのコンテンツを生成</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'></text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -258,6 +258,17 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 .tips-list  { list-style: disc; padding-left: 16px; }
 .tips-list li { font-size: 12px; color: #7a4a2e; line-height: 1.65; }
 
+/* ── 追加：履歴セクション ── */
+.hist-wrap { margin-top: 24px; border-top: 1.5px dashed var(--border); padding-top: 16px; }
+.hist-title { font-size: 13px; font-weight: 700; color: var(--text-mid); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.hist-list { display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; padding-right: 4px; }
+.hist-item { background: var(--cream); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 12px 14px; cursor: pointer; transition: all 0.2s; position: relative; }
+.hist-item:hover { border-color: var(--sage); box-shadow: var(--shadow-sm); }
+.hist-text { font-size: 12.5px; font-weight: 600; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; padding-right: 32px; }
+.hist-date { font-size: 10.5px; color: var(--text-muted); font-family: 'Nunito', sans-serif; }
+.btn-del-hist { position: absolute; top: 10px; right: 10px; background: var(--red-soft); color: var(--red-text); border: 1px solid var(--red-border); border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
+.hist-item:hover .btn-del-hist { opacity: 1; }
+
 /* ── RIGHT panel ── */
 .panel-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -362,7 +373,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
   <div class="page-wrap header-inner">
 
     <div class="header-top">
-      <div class="logo-icon">🌱</div>
+      <div class="logo-icon"></div>
       <div>
         <h1 class="header-title">コトダネ</h1>
         <p class="header-sub">体験談を蒔いて、7種のコンテンツを育てる</p>
@@ -374,8 +385,8 @@ h1, h2, h3 { font-family: 'Lora', serif; }
       <p class="api-label">Gemini API Key</p>
       <div class="api-row">
         <input type="password" id="apiKeyInput" class="api-input" placeholder="AIza…" autocomplete="off">
-        <button class="btn-sm" id="toggleKeyBtn" onclick="toggleKeyVisibility()">👁 表示</button>
-        <button class="btn-sm btn-save" onclick="saveApiKey()">💾 保存</button>
+        <button class="btn-sm" id="toggleKeyBtn" onclick="toggleKeyVisibility()"> 表示</button>
+        <button class="btn-sm btn-save" onclick="saveApiKey()"> 保存</button>
       </div>
       <div class="api-saved" id="apiSaveMsg">✓ APIキーを保存しました</div>
     </div>
@@ -387,7 +398,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
   <div class="page-wrap">
 
     <div class="alert-error" id="errorAlert">
-      <span style="font-size:16px;flex-shrink:0;line-height:1.5;">⚠️</span>
+      <span style="font-size:16px;flex-shrink:0;line-height:1.5;"></span>
       <span id="errorMsg"></span>
     </div>
 
@@ -397,7 +408,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 
         <div>
           <div class="section-label">
-            <span>📝 体験談・素材テキスト</span>
+            <span> 体験談・素材テキスト</span>
             <button class="btn-clear" onclick="clearInput()">クリア</button>
           </div>
           <textarea
@@ -413,7 +424,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
         </div>
 
         <button class="btn-generate" id="generateBtn" onclick="generateContent()">
-          <span id="btnIcon">🌱</span>
+          <span id="btnIcon"></span>
           <span id="btnText">コトダネを育てる（コンテンツ生成）</span>
         </button>
 
@@ -434,7 +445,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
         </div>
 
         <div class="tips-box">
-          <p class="tips-title">🍃 より良い結果を得るコツ</p>
+          <p class="tips-title"> より良い結果を得るコツ</p>
           <ul class="tips-list">
             <li>具体的な数字・期間を含める</li>
             <li>before → after の変化を記述</li>
@@ -443,31 +454,40 @@ h1, h2, h3 { font-family: 'Lora', serif; }
           </ul>
         </div>
 
-      </div>
+        <div class="hist-wrap">
+          <div class="hist-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            生成履歴
+          </div>
+          <div class="hist-list" id="histContainer">
+            <div style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 10px;">読み込み中...</div>
+          </div>
+        </div>
+        </div>
 
       <div class="card" style="gap:0;">
 
         <div class="panel-header">
-          <h2 class="panel-title">🎯 生成コンテンツ</h2>
+          <h2 class="panel-title"> 生成コンテンツ</h2>
           <button class="btn-copy" id="copyBtn" onclick="copyContent()">
-            <span id="copyIcon">📋</span>
+            <span id="copyIcon"></span>
             <span id="copyText">コピー</span>
           </button>
         </div>
 
         <div class="tabs-row">
-          <button class="tab-btn active" data-tab="review"     onclick="switchTab('review',this)">⭐ レビュー記事</button>
-          <button class="tab-btn"        data-tab="affiliate"  onclick="switchTab('affiliate',this)">💰 アフィリエイト</button>
-          <button class="tab-btn"        data-tab="x_viral"    onclick="switchTab('x_viral',this)">🐦 X(共感・認知)</button>
-          <button class="tab-btn"        data-tab="x_story"    onclick="switchTab('x_story',this)">👤 X(属人化)</button>
-          <button class="tab-btn"        data-tab="x_teaser"   onclick="switchTab('x_teaser',this)">🔗 X(ブログ誘導)</button>
-          <button class="tab-btn"        data-tab="x_interact" onclick="switchTab('x_interact',this)">💬 X(交流・投票)</button>
-          <button class="tab-btn"        data-tab="wikipedia"  onclick="switchTab('wikipedia',this)">📖 Wikipedia風</button>
+          <button class="tab-btn active" data-tab="review"     onclick="switchTab('review',this)"> レビュー記事</button>
+          <button class="tab-btn"        data-tab="affiliate"  onclick="switchTab('affiliate',this)"> アフィリエイト</button>
+          <button class="tab-btn"        data-tab="x_viral"    onclick="switchTab('x_viral',this)"> X(共感・認知)</button>
+          <button class="tab-btn"        data-tab="x_story"    onclick="switchTab('x_story',this)"> X(属人化)</button>
+          <button class="tab-btn"        data-tab="x_teaser"   onclick="switchTab('x_teaser',this)"> X(ブログ誘導)</button>
+          <button class="tab-btn"        data-tab="x_interact" onclick="switchTab('x_interact',this)"> X(交流・投票)</button>
+          <button class="tab-btn"        data-tab="wikipedia"  onclick="switchTab('wikipedia',this)"> Wikipedia風</button>
         </div>
 
         <div class="output-wrap">
           <div class="placeholder" id="placeholderView">
-            <div class="placeholder-icon">🌱</div>
+            <div class="placeholder-icon"></div>
             <p class="placeholder-title">左に体験談を入力して<br>生成ボタンをクリック！</p>
             <p class="placeholder-sub">体験談からSNS・ブログ用の<br>7種のコンテンツが自動生成されます</p>
           </div>
@@ -487,10 +507,10 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 
 <script>
 // ════════ STATE ════════
-let generatedData = null;
-let currentTab    = 'review';
+window.generatedData = null;
+window.currentTab    = 'review';
 
-const TAB_META = {
+window.TAB_META = {
   review:     { desc: 'SEOを意識した構成で体験談をブログ記事化。読者の検索意図に応えるレビュー形式です。' },
   affiliate:  { desc: '購買意欲を高めるアフィリエイト記事用テキスト。CTAや商品の強み訴求を重視しています。' },
   x_viral:    { desc: '共感・拡散を狙ったバズりやすいX投稿。感情を揺さぶる言葉選びで認知拡大を目指します。' },
@@ -582,8 +602,8 @@ window.addEventListener('DOMContentLoaded', () => {
 function toggleKeyVisibility() {
   const inp = document.getElementById('apiKeyInput');
   const btn = document.getElementById('toggleKeyBtn');
-  if (inp.type === 'password') { inp.type = 'text';     btn.textContent = '🙈 隠す'; }
-  else                         { inp.type = 'password'; btn.textContent = '👁 表示'; }
+  if (inp.type === 'password') { inp.type = 'text';     btn.textContent = ' 隠す'; }
+  else                         { inp.type = 'password'; btn.textContent = ' 表示'; }
 }
 function saveApiKey() {
   const key = document.getElementById('apiKeyInput').value.trim();
@@ -599,19 +619,19 @@ function clearInput() {
 }
 
 // ════════ TABS ════════
-function switchTab(tab, btn) {
-  currentTab = tab;
+window.switchTab = function switchTab(tab, btn) {
+  window.currentTab = tab;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('tabDescText').textContent = TAB_META[tab]?.desc || '';
+  document.getElementById('tabDescText').textContent = window.TAB_META[tab]?.desc || '';
   document.getElementById('tabDesc').classList.add('show');
-  if (generatedData) showTabContent(tab);
+  if (window.generatedData) window.showTabContent(tab);
 }
-function showTabContent(tab) {
+window.showTabContent = function showTabContent(tab) {
   const cv = document.getElementById('contentView');
   const pv = document.getElementById('placeholderView');
-  if (generatedData?.[tab]) {
-    cv.textContent = generatedData[tab];
+  if (window.generatedData?.[tab]) {
+    cv.textContent = window.generatedData[tab];
     cv.classList.add('show');
     pv.style.display = 'none';
   } else {
@@ -622,15 +642,15 @@ function showTabContent(tab) {
 
 // ════════ COPY ════════
 function copyContent() {
-  if (!generatedData?.[currentTab]) return;
-  navigator.clipboard.writeText(generatedData[currentTab]).then(() => {
+  if (!window.generatedData?.[window.currentTab]) return;
+  navigator.clipboard.writeText(window.generatedData[window.currentTab]).then(() => {
     const btn = document.getElementById('copyBtn');
     document.getElementById('copyIcon').textContent = '✓';
     document.getElementById('copyText').textContent = 'コピーしました';
     btn.classList.add('copied');
     setTimeout(() => {
       btn.classList.remove('copied');
-      document.getElementById('copyIcon').textContent = '📋';
+      document.getElementById('copyIcon').textContent = '';
       document.getElementById('copyText').textContent = 'コピー';
     }, 2200);
   });
@@ -703,10 +723,16 @@ async function generateContent() {
     const missing  = required.filter(k => !parsed[k]);
     if (missing.length) throw new Error(`一部のコンテンツが生成されませんでした（${missing.join(', ')}）。再試行してください。`);
 
-    generatedData = parsed;
-    showTabContent(currentTab);
-    document.getElementById('tabDescText').textContent = TAB_META[currentTab]?.desc || '';
+    window.generatedData = parsed;
+    window.showTabContent(window.currentTab);
+    document.getElementById('tabDescText').textContent = window.TAB_META[window.currentTab]?.desc || '';
     document.getElementById('tabDesc').classList.add('show');
+
+    // ▼ 追加：生成成功時にFirebaseへ履歴保存する呼び出し ▼
+    if (window.saveKotodaneHistory) {
+      window.saveKotodaneHistory(story, parsed);
+    }
+    // ▲ ここまで ▲
 
   } catch (e) {
     showError(e.message || '不明なエラーが発生しました。');
@@ -720,7 +746,7 @@ async function generateContent() {
 <div id="__xwg_anchor"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, addDoc, getDocs, deleteDoc, query, orderBy, limit, serverTimestamp, doc as fsDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 /* ── ① Firebaseの設定 ── */
 const firebaseConfig = {
@@ -737,16 +763,96 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* ▼▼▼ 追加：コトダネのFirebase保存・復元処理 ▼▼▼ */
+const kotodaneCollection = collection(db, "kotodane_history");
+window.kotodaneHistoryCache = {};
+
+window.loadKotodaneHistory = async () => {
+  const container = document.getElementById('histContainer');
+  try {
+    const q = query(kotodaneCollection, orderBy("createdAt", "desc"), limit(20));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      container.innerHTML = '<div style="font-size: 11px; color: var(--text-muted); text-align: center; padding: 10px;">履歴はありません</div>';
+      return;
+    }
+    let html = '';
+    window.kotodaneHistoryCache = {};
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      window.kotodaneHistoryCache[docSnap.id] = d;
+      const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '最近';
+      let title = d.storyText || '名称未設定';
+      title = title.length > 25 ? title.substring(0, 25) + '...' : title;
+
+      html += `
+        <div class="hist-item" onclick="restoreKotodaneHistory('${docSnap.id}')">
+          <button class="btn-del-hist" onclick="event.stopPropagation(); deleteKotodaneHistory('${docSnap.id}')">削除</button>
+          <div class="hist-text">${window.escHtml(title)}</div>
+          <div class="hist-date">${date}</div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (e) {
+    console.error("履歴取得エラー:", e);
+    container.innerHTML = '<div style="font-size: 11px; color: var(--red-text); text-align: center;">履歴の取得に失敗しました</div>';
+  }
+};
+
+window.saveKotodaneHistory = async (storyText, generatedData) => {
+  try {
+    await addDoc(kotodaneCollection, {
+      storyText: storyText,
+      generatedData: generatedData,
+      createdAt: serverTimestamp()
+    });
+    window.loadKotodaneHistory();
+  } catch(e) {
+    console.error("履歴保存エラー:", e);
+  }
+};
+
+window.restoreKotodaneHistory = (id) => {
+  const d = window.kotodaneHistoryCache[id];
+  if(d) {
+    document.getElementById('storyInput').value = d.storyText;
+    document.getElementById('charCount').textContent = d.storyText.length + ' 文字';
+    window.generatedData = d.generatedData;
+    window.showTabContent(window.currentTab);
+    document.getElementById('tabDescText').textContent = window.TAB_META[window.currentTab]?.desc || '';
+    document.getElementById('tabDesc').classList.add('show');
+    
+    // スムーズスクロール
+    document.querySelector('.output-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
+
+window.deleteKotodaneHistory = async (id) => {
+  if(!confirm("この履歴を削除しますか？")) return;
+  await deleteDoc(fsDoc(db, "kotodane_history", id));
+  window.loadKotodaneHistory();
+};
+
+window.escHtml = function(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+};
+
+// ページ読み込み時に履歴を取得
+setTimeout(() => { window.loadKotodaneHistory(); }, 500);
+/* ▲▲▲ ここまで追加 ▲▲▲ */
+
+
 /* ★★★【ここを改良】URLからサイト別の識別名を自動抽出 ★★★ */
 const getPageKey = () => {
   const path = location.pathname; // 例: "/portal/aiconcierge/"
   const segments = path.split('/').filter(Boolean);
   return segments[segments.length - 1] || 'default';
 };
-const pageKey = getPageKey(); 
+const pageKey = getPageKey();
 
 // データを保存する場所（ドキュメント名をサイトごとに自動で切り替える）
-const docRef = doc(db, "xwidget", `data_${pageKey}`);
+const docRef = fsDoc(db, "xwidget", `data_${pageKey}`);
 
 /* ── ② カスタマイズ設定 ── */
 const XWG_KEYS = {
@@ -772,7 +878,6 @@ const _sv = (k,v) => {
   });
 };
 
-const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const _ea  = s => String(s||'').replace(/'/g,"\\'");
 const _fmt = ts => { const d = new Date(ts); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 
@@ -874,7 +979,6 @@ anchor.innerHTML = `
 <button id="__xwg_btn" onclick="__xwgToggle()" title="メモ・ワード・履歴を開く">
   📌<span class="xwg-badge" id="__xwg_hbadge"></span>
 </button>
-
 <div id="__xwg_panel">
   <div class="__xwg_head">
     <span class="__xwg_logo">🗂️</span>
@@ -887,7 +991,6 @@ anchor.innerHTML = `
     <button class="__xwg_tab"   onclick="__xwgTab('m',this)"><span class="ti">📝</span>メモ</button>
   </div>
   <div class="__xwg_body">
-
     <div class="__xwg_pane on" id="__xwg_ph">
       <div class="__xwg_card">
         <div class="__xwg_card_title">🕐 ページ訪問履歴</div>
@@ -897,7 +1000,6 @@ anchor.innerHTML = `
         <button class="__xwg_btn_s __xwg_btn_da" onclick="__xwgClearHist()">全削除</button>
       </div>
     </div>
-
     <div class="__xwg_pane" id="__xwg_pw">
       <div class="__xwg_card">
         <div class="__xwg_card_title">＋ ワードを登録</div>
@@ -918,7 +1020,6 @@ anchor.innerHTML = `
         <div id="__xwg_wtags"></div>
       </div>
     </div>
-
     <div class="__xwg_pane" id="__xwg_pm">
       <div class="__xwg_card">
         <div class="__xwg_card_title">📝 メモを追加</div>
@@ -931,20 +1032,17 @@ anchor.innerHTML = `
         <div id="__xwg_mlist"></div>
       </div>
     </div>
-
   </div>
 </div>
 `;
 
 /* ── ⑥ UIロジック ── */
 let __xwg_open = false;
-
 window.__xwgToggle = () => {
   __xwg_open = !__xwg_open;
   const panel = document.getElementById('__xwg_panel');
   if(__xwg_open){
-    panel.classList.add('open');
-    window.__xwgRenderAll();
+    panel.classList.add('open'); window.__xwgRenderAll();
   } else {
     panel.classList.remove('open');
   }
@@ -956,10 +1054,8 @@ window.__xwgTab = (id, btn) => {
   document.querySelectorAll('.__xwg_pane').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.__xwg_tab').forEach(t=>t.classList.remove('on'));
   document.getElementById({h:'__xwg_ph',w:'__xwg_pw',m:'__xwg_pm'}[id]).classList.add('on');
-  btn.classList.add('on');
-  window.__xwgRenderAll();
+  btn.classList.add('on'); window.__xwgRenderAll();
 };
-
 window.__xwgRenderAll = () => {
   if(!__xwg_open) return;
   __xwgRenderHist(); __xwgRenderWords(); __xwgRenderMemos();
@@ -971,8 +1067,8 @@ function __xwgRenderHist(){
   if(!list.length) return el.innerHTML = '<div class="__xwg_empty"><div class="ei">🕐</div>履歴がありません</div>';
   el.innerHTML = list.map((h,i) => `
     <div class="__xwg_hi">
-      <div class="__xwg_hi_title">${_esc(h.title || '(タイトルなし)')}</div>
-      <div class="__xwg_hi_url">${_esc(h.url)}</div>
+      <div class="__xwg_hi_title">${window.escHtml(h.title || '(タイトルなし)')}</div>
+      <div class="__xwg_hi_url">${window.escHtml(h.url)}</div>
       <div class="__xwg_hi_meta">
         <span class="__xwg_hi_date">${_fmt(h.ts)}</span>
         <div class="__xwg_hi_btns">
@@ -1009,8 +1105,8 @@ function __xwgRenderWords(){
     const cw = words.filter(w=>w.cat===cat);
     if(!cw.length) return;
     html += `<div class="__xwg_sub">${labels[cat]}</div><div class="__xwg_tags">` + cw.map(w=>`
-      <span class="__xwg_tag ${w.cat}" title="${_esc(w.word)}" onclick="__xwgCopy('${_ea(w.word)}',this)">
-        <span class="tl">${_esc(w.label)}</span>
+      <span class="__xwg_tag ${w.cat}" title="${window.escHtml(w.word)}" onclick="__xwgCopy('${_ea(w.word)}',this)">
+        <span class="tl">${window.escHtml(w.label)}</span>
         <span class="td" onclick="event.stopPropagation();__xwgDelWord(${w.id})">✕</span>
       </span>`).join('') + `</div><div class="__xwg_hr"></div>`;
   });
@@ -1034,10 +1130,10 @@ function __xwgRenderMemos(){
   if(!memos.length) return el.innerHTML = '<div class="__xwg_empty"><div class="ei">📝</div>メモがありません</div>';
   el.innerHTML = memos.map(m=>`
     <div class="__xwg_mi">
-      <div class="__xwg_mi_ttl"><span>${_esc(m.title)}</span>
+      <div class="__xwg_mi_ttl"><span>${window.escHtml(m.title)}</span>
         <button class="__xwg_hbtn __xwg_hbtn_dl" onclick="__xwgDelMemo(${m.id})">✕</button>
       </div>
-      <div class="__xwg_mi_body">${_esc(m.body)}</div>
+      <div class="__xwg_mi_body">${window.escHtml(m.body)}</div>
       <div class="__xwg_mi_date">${_fmt(m.ts)}</div>
     </div>`).join('');
 }
