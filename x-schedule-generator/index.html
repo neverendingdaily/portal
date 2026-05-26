@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>X集客ループ｜黄金スケジュールジェネレーター</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐦</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'></text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Noto+Sans+JP:wght@300;400;500;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -203,6 +203,15 @@ textarea::placeholder { color: var(--ink-faint); font-style: italic; }
 }
 .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--cta-deep), var(--shadow-lg); }
 .generate-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--cta-deep), var(--shadow-sm); }
+
+/* ─ 追加：履歴UI ─ */
+.hist-section { margin-top: 24px; padding-top: 20px; border-top: 2px dashed var(--rule-deep); }
+.hist-lbl { font-family: 'Courier Prime', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; display: block; }
+.hist-card { background: var(--surface); border: 1.5px solid var(--rule); border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: all 0.2s; margin-bottom: 8px; box-shadow: var(--shadow-sm); }
+.hist-card:hover { border-color: var(--cta); background: var(--coral-bg); transform: translateY(-1px); }
+.hist-title { font-size: 12.5px; font-weight: 700; color: var(--ink); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hist-date { font-family: 'Courier Prime', monospace; font-size: 10px; color: var(--ink-mute); }
+
 
 /* RIGHT PANEL */
 .right-panel {
@@ -417,7 +426,7 @@ textarea::placeholder { color: var(--ink-faint); font-style: italic; }
     集客ループ・スケジュールジェネレーター
     <small>X Algorithm Planner — 2025</small>
   </div>
-  <div class="header-pill">🔥 黄金ループ</div>
+  <div class="header-pill"> 黄金ループ</div>
 </header>
 
 <div class="layout">
@@ -429,7 +438,7 @@ textarea::placeholder { color: var(--ink-faint); font-style: italic; }
 
     <div class="post-card empathy">
       <div class="card-header">
-        <span class="card-emoji">🐦</span>
+        <span class="card-emoji"></span>
         <span class="card-label">共感・認知ポスト</span>
         <span class="card-counter" id="cc-empathy">0字</span>
       </div>
@@ -439,27 +448,27 @@ textarea::placeholder { color: var(--ink-faint); font-style: italic; }
 
     <div class="post-card story">
       <div class="card-header">
-        <span class="card-emoji">👤</span>
+        <span class="card-emoji"></span>
         <span class="card-label">ストーリーポスト</span>
         <span class="card-counter" id="cc-story">0字</span>
       </div>
       <div class="card-hint">属人化・ファン化 ｜ あなた自身の実体験・変化の物語</div>
-      <textarea id="tx-story" rows="4" placeholder="例：「元ブラック企業勤務→副業月収30万突破した話。全部失敗談から始まった本当のストーリー。固定でまとめてます👇」"></textarea>
+      <textarea id="tx-story" rows="4" placeholder="例：「元ブラック企業勤務→副業月収30万突破した話。全部失敗談から始まった本当のストーリー。固定でまとめてます」"></textarea>
     </div>
 
     <div class="post-card engage">
       <div class="card-header">
-        <span class="card-emoji">💬</span>
+        <span class="card-emoji"></span>
         <span class="card-label">交流・投票ポスト</span>
         <span class="card-counter" id="cc-engage">0字</span>
       </div>
       <div class="card-hint">エンゲージメント狙い ｜ 投票・リプライを促す問いかけ</div>
-      <textarea id="tx-engage" rows="4" placeholder="例：「副業で一番最初に稼いだ方法は？🔴ライティング🔵せどり🟡アフィリ　→コメントで教えて！」"></textarea>
+      <textarea id="tx-engage" rows="4" placeholder="例：「副業で一番最初に稼いだ方法は？ライティングせどりアフィリ →コメントで教えて！」"></textarea>
     </div>
 
     <div class="post-card lead">
       <div class="card-header">
-        <span class="card-emoji">🔗</span>
+        <span class="card-emoji"></span>
         <span class="card-label">誘導ポスト</span>
         <span class="card-counter" id="cc-lead">0字</span>
       </div>
@@ -468,17 +477,24 @@ textarea::placeholder { color: var(--ink-faint); font-style: italic; }
     </div>
 
     <button class="generate-btn" onclick="generate()">
-      <span style="font-size:18px;">🔥</span>
+      <span style="font-size:18px;"></span>
       黄金のスケジュールを生成
     </button>
-  </aside>
+
+    <div class="hist-section">
+      <span class="hist-lbl">🕒 過去のスケジュール履歴</span>
+      <div id="historyContainer">
+        <div style="font-size: 11px; color: var(--ink-mute); text-align: center; padding: 10px;">読み込み中...</div>
+      </div>
+    </div>
+    </aside>
 
   <main class="right-panel">
 
     <div class="placeholder" id="placeholder">
-      <div class="placeholder-icon">🗓️</div>
+      <div class="placeholder-icon"></div>
       <div class="placeholder-title">スケジュールを生成しましょう</div>
-      <div class="placeholder-body">左パネルに4種類のポストを入力して<br>「🔥 黄金のスケジュールを生成」を押してください</div>
+      <div class="placeholder-body">左パネルに4種類のポストを入力して<br>「 黄金のスケジュールを生成」を押してください</div>
       <div class="flow-preview">
         <div class="flow-preview-title">集客ループの構造</div>
         <div class="flow-row"><div class="flow-dot" style="background:var(--violet)"></div><span><strong>固定ポスト</strong> — プロフへの受け皿を作る</span></div>
@@ -493,7 +509,7 @@ textarea::placeholder { color: var(--ink-faint); font-style: italic; }
   </main>
 </div>
 
-<div class="toast" id="toast">✅ コピーしました！</div>
+<div class="toast" id="toast"> コピーしました！</div>
 
 <script>
 ['empathy','story','engage','lead'].forEach(id => {
@@ -515,8 +531,8 @@ function generate() {
   };
 
   const steps = [
-    { cls:'s0', num:'📌', title:'STEP 0 ― プロフィール固定ポスト',         time:'いつでも OK → 投稿後すぐにピン留め',   type:'ストーリーポスト',   content:vals.story,   instr:'このポストを投稿したら、すぐにプロフィールの一番上に「ピン留め（固定）」してください。バズ後の大量アクセスをここで受け止め、フォロワー転換を最大化する「受け皿」になります。', delay:0 },
-    { cls:'s1', num:'①',  title:'STEP 1 ― 朝のエンゲージメント獲得',       time:'火〜木  ·  08:00 または 12:00',         type:'交流・投票ポスト',   content:vals.engage,  instr:'フォロワーが反応しやすい時間帯に投下し、リプライや投票を稼いでアカウントの内部スコアを高めます。この"温め"がSTEP 2のリーチを2〜3倍に引き上げる鍵です。', delay:80 },
+    { cls:'s0', num:'', title:'STEP 0 ― プロフィール固定ポスト',         time:'いつでも OK → 投稿後すぐにピン留め',   type:'ストーリーポスト',   content:vals.story,   instr:'このポストを投稿したら、すぐにプロフィールの一番上に「ピン留め（固定）」してください。バズ後の大量アクセスをここで受け止め、フォロワー転換を最大化する「受け皿」になります。', delay:0 },
+    { cls:'s1', num:'①',  title:'STEP 1 ― 朝のエンゲージメント獲得',       time:'火〜木  ·  08:00 または 12:00',        type:'交流・投票ポスト',   content:vals.engage,  instr:'フォロワーが反応しやすい時間帯に投下し、リプライや投票を稼いでアカウントの内部スコアを高めます。この"温め"がSTEP 2のリーチを2〜3倍に引き上げる鍵です。', delay:80 },
     { cls:'s2', num:'②',  title:'STEP 2 ― 夜のバズ・認知獲得',             time:'同日  ·  19:00 〜 21:00',               type:'共感・認知ポスト',   content:vals.empathy, instr:'アカウントスコアが高まった状態で投下します。共感・シェアを集め、STEP 0の固定ポストへ大量のアクセスを流し込みます。投稿後30分はリプライへの返信を積極的に行ってください。', delay:160 },
     { cls:'s3', num:'③',  title:'STEP 3 ― 翌日夜の送客・コンバージョン',   time:'翌日  ·  20:00 〜 21:30',               type:'誘導ポスト',         content:vals.lead,    instr:'前日バズの余韻（インプレッションの波）が残っているタイミングで投下。新しい認知層に"今すぐクリックしたい理由"を渡し、ブログやアフィリエイトリンクへスムーズに誘導します。', delay:240 },
   ];
@@ -544,7 +560,7 @@ function generate() {
           <div class="step-body">
             <div class="step-header">
               <div class="step-title">${s.title}</div>
-              <div class="time-chip">⏰ ${s.time}</div>
+              <div class="time-chip"> ${s.time}</div>
             </div>
             <div class="step-type-tag">${s.type}</div>
             <div class="step-instruction">${s.instr}</div>
@@ -573,6 +589,12 @@ function generate() {
   out.innerHTML = html;
   out.style.display = 'block';
   out.scrollIntoView({ behavior:'smooth', block:'start' });
+
+  // ▼ 追加：生成成功時にFirebaseへ履歴保存する呼び出し ▼
+  if (window.saveScheduleHistory && (vals.empathy || vals.story || vals.engage || vals.lead)) {
+    window.saveScheduleHistory(vals);
+  }
+  // ▲ ここまで ▲
 }
 
 function esc(s) {
@@ -606,10 +628,10 @@ function dl(steps) {
   const d2 = new Date(d1);   d2.setDate(d1.getDate() + 1);
   const fmt = d => `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
   const rows = [
-    { s:'📌 X集客: プロフィール固定ポスト',      d:fmt(d1), st:'07:00 AM', et:'07:30 AM', desc:steps[0].content },
-    { s:'🌅 X集客: 朝のエンゲージメント投稿',   d:fmt(d1), st:'08:00 AM', et:'08:30 AM', desc:steps[1].content },
-    { s:'🌃 X集客: 夜のバズ投稿',               d:fmt(d1), st:'08:00 PM', et:'08:30 PM', desc:steps[2].content },
-    { s:'🌉 X集客: 翌日送客投稿',               d:fmt(d2), st:'08:00 PM', et:'08:30 PM', desc:steps[3].content },
+    { s:' X集客: プロフィール固定ポスト',      d:fmt(d1), st:'07:00 AM', et:'07:30 AM', desc:steps[0].content },
+    { s:' X集客: 朝のエンゲージメント投稿',   d:fmt(d1), st:'08:00 AM', et:'08:30 AM', desc:steps[1].content },
+    { s:' X集客: 夜のバズ投稿',               d:fmt(d1), st:'08:00 PM', et:'08:30 PM', desc:steps[2].content },
+    { s:' X集客: 翌日送客投稿',               d:fmt(d2), st:'08:00 PM', et:'08:30 PM', desc:steps[3].content },
   ];
   const header = 'Subject,Start Date,Start Time,End Date,End Time,All Day Event,Description,Location,Private\n';
   const body = rows.map(r => {
@@ -627,7 +649,7 @@ function dl(steps) {
 <div id="__xwg_anchor"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 /* ── ① Firebaseの設定 ── */
 const firebaseConfig = {
@@ -643,6 +665,84 @@ const firebaseConfig = {
 // Firebaseの初期化
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const _ea  = s => String(s||'').replace(/'/g,"\\'");
+const _fmt = ts => { const d = new Date(ts); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+
+/* ▼▼▼ 追加：スケジュールのFirebase保存・復元処理 ▼▼▼ */
+const scheduleCollection = collection(db, "x_schedule_history");
+window.scheduleHistoryCache = {};
+
+window.loadScheduleHistory = async () => {
+  const container = document.getElementById('historyContainer');
+  try {
+    const q = query(scheduleCollection, orderBy("createdAt", "desc"), limit(20));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      container.innerHTML = '<div style="font-size: 11px; color: var(--ink-mute); text-align: center; padding: 10px;">履歴はありません</div>';
+      return;
+    }
+    let html = '';
+    window.scheduleHistoryCache = {};
+    snap.forEach(doc => {
+      const d = doc.data();
+      window.scheduleHistoryCache[doc.id] = d.vals;
+      const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '最近';
+      
+      // タイトルとして一番文字数が多いもの、あるいはempathyの冒頭を使う
+      let title = d.vals.empathy || d.vals.story || d.vals.engage || d.vals.lead || '名称未設定スケジュール';
+      title = title.length > 20 ? title.substring(0, 20) + '...' : title;
+
+      html += `
+        <div class="hist-card" onclick="restoreScheduleHistory('${doc.id}')">
+          <div class="hist-title">${_esc(title)}</div>
+          <div class="hist-date">${date}</div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (e) {
+    console.error("履歴取得エラー:", e);
+    container.innerHTML = '<div style="font-size: 11px; color: #e03e1a; text-align: center;">履歴の取得に失敗しました</div>';
+  }
+};
+
+window.saveScheduleHistory = async (vals) => {
+  try {
+    await addDoc(scheduleCollection, {
+      vals: vals,
+      createdAt: serverTimestamp()
+    });
+    window.loadScheduleHistory();
+  } catch(e) {
+    console.error("履歴保存エラー:", e);
+  }
+};
+
+window.restoreScheduleHistory = (id) => {
+  const d = window.scheduleHistoryCache[id];
+  if(d) {
+    document.getElementById('tx-empathy').value = d.empathy || '';
+    document.getElementById('tx-story').value = d.story || '';
+    document.getElementById('tx-engage').value = d.engage || '';
+    document.getElementById('tx-lead').value = d.lead || '';
+    
+    // 文字数カウントの更新 (trigger input events)
+    ['empathy','story','engage','lead'].forEach(type => {
+      document.getElementById('tx-' + type).dispatchEvent(new Event('input'));
+    });
+
+    // 生成処理を実行して右側を更新
+    window.generate();
+  }
+};
+
+// ページ読み込み時に履歴を取得
+window.loadScheduleHistory();
+/* ▲▲▲ ここまで追加 ▲▲▲ */
+
 
 /* ★★★【ここを改良】URLからサイト別の識別名を自動抽出 ★★★ */
 const getPageKey = () => {
@@ -678,10 +778,6 @@ const _sv = (k,v) => {
     setDoc(docRef, __xwgState);
   });
 };
-
-const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const _ea  = s => String(s||'').replace(/'/g,"\\'");
-const _fmt = ts => { const d = new Date(ts); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 
 /* ── ④ CSS を注入 ── */
 const _css = `
