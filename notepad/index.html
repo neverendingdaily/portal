@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Online Notepad</title>
     <link rel="icon" href="data:image/jpeg;base64,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 （中略）
-
     <style>
-        /* ライトモード専用のCSS定義 */
+        /* CSS変数の定義（ダークモード対応のため） */
         :root {
             --bg-color: #ffffff;
             --text-color: #333333;
@@ -17,6 +16,15 @@
             --btn-hover: #d0d0d0;
         }
 
+        body.dark-mode {
+            --bg-color: #1e1e1e;
+            --text-color: #f0f0f0;
+            --sidebar-bg: #252526;
+            --border-color: #444444;
+            --btn-bg: #333333;
+            --btn-hover: #444444;
+        }
+
         body {
             margin: 0;
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -24,9 +32,10 @@
             height: 100vh;
             background-color: var(--bg-color);
             color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* サイドバー */
+        /* サイドバー（将来のFirebase履歴用） */
         .sidebar {
             width: 250px;
             background-color: var(--sidebar-bg);
@@ -150,7 +159,8 @@
             <button id="btn-download">⬇️ .txt ダウンロード</button>
             <button id="btn-clear">🗑️ クリア</button>
             <button id="btn-share">🔗 共有 (未実装)</button>
-            </div>
+            <button id="btn-darkmode">🌙 ダークモード切替</button>
+        </div>
 
         <input type="text" id="note-title" class="title-input" placeholder="タイトルを入力...">
         <textarea id="note-content" class="text-area" placeholder="ここにテキストを入力...（自動保存されます）"></textarea>
@@ -161,11 +171,14 @@
     </div>
 
     <script>
+        // DOM要素の取得
         const titleInput = document.getElementById('note-title');
         const contentArea = document.getElementById('note-content');
         const charCount = document.getElementById('char-count');
         const lineCount = document.getElementById('line-count');
         
+        // --- 1. 自動保存と読み込み (LocalStorage) ---
+        // ページ読み込み時に保存されたデータを復元
         window.addEventListener('load', () => {
             if (localStorage.getItem('draft_title')) {
                 titleInput.value = localStorage.getItem('draft_title');
@@ -174,8 +187,14 @@
                 contentArea.value = localStorage.getItem('draft_content');
             }
             updateCounters();
+            
+            // ダークモードの復元
+            if (localStorage.getItem('dark_mode') === 'true') {
+                document.body.classList.add('dark-mode');
+            }
         });
 
+        // 入力されるたびに自動保存＆カウンター更新
         const autoSaveAndCount = () => {
             localStorage.setItem('draft_title', titleInput.value);
             localStorage.setItem('draft_content', contentArea.value);
@@ -185,6 +204,7 @@
         titleInput.addEventListener('input', autoSaveAndCount);
         contentArea.addEventListener('input', autoSaveAndCount);
 
+        // --- 2. カウンター機能 ---
         function updateCounters() {
             const text = contentArea.value;
             charCount.textContent = text.length;
@@ -196,6 +216,7 @@
             }
         }
 
+        // --- 3. コピー機能 ---
         document.getElementById('btn-copy').addEventListener('click', () => {
             contentArea.select();
             navigator.clipboard.writeText(contentArea.value)
@@ -203,6 +224,7 @@
                 .catch(err => alert('コピーに失敗しました: ' + err));
         });
 
+        // --- 4. ダウンロード機能 (.txt) ---
         document.getElementById('btn-download').addEventListener('click', () => {
             const text = contentArea.value;
             const title = titleInput.value || 'untitled';
@@ -216,6 +238,7 @@
             URL.revokeObjectURL(url);
         });
 
+        // --- 5. クリア機能 ---
         document.getElementById('btn-clear').addEventListener('click', () => {
             if (confirm('内容をすべて消去しますか？（この操作は元に戻せません）')) {
                 titleInput.value = '';
@@ -225,6 +248,15 @@
                 updateCounters();
             }
         });
+
+        // --- 6. ダークモード切替 ---
+        document.getElementById('btn-darkmode').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            // 状態をLocalStorageに保存
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('dark_mode', isDarkMode);
+        });
+
     </script>
 </body>
 </html>
