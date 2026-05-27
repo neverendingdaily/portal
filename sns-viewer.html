@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNSアイデアビューア</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Serif+Display&display=swap');
+
+  :root {
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --border: #E5E2DC;
+    --text: #1A1A1A;
+    --text-muted: #6B6860;
+    --accent: #2D2D2D;
+
+    --c1-bg: #FFFBEB; --c1-bd: #F59E0B; --c1-lbl: #92400E;
+    --c2-bg: #F0FDF4; --c2-bd: #22C55E; --c2-lbl: #14532D;
+    --c3-bg: #EFF6FF; --c3-bd: #3B82F6; --c3-lbl: #1E3A8A;
+    --c4-bg: #FFF1F2; --c4-bd: #F43F5E; --c4-lbl: #881337;
+    --c5-bg: #FDF4FF; --c5-bd: #A855F7; --c5-lbl: #581C87;
+    --c6-bg: #F0FDFA; --c6-bd: #14B8A6; --c6-lbl: #134E4A;
+    --c7-bg: #FFF7ED; --c7-bd: #F97316; --c7-lbl: #7C2D12;
+    --c8-bg: #F8FAFC; --c8-bd: #94A3B8; --c8-lbl: #1E293B;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ========== DROP ZONE ========== */
+  #dropzone {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: var(--bg);
+    z-index: 100;
+    transition: opacity 0.4s;
+  }
+  #dropzone.hidden { opacity: 0; pointer-events: none; }
+
+  .drop-inner {
+    border: 2.5px dashed #C8C4BC;
+    border-radius: 20px;
+    padding: 60px 80px;
+    text-align: center;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    max-width: 560px;
+    width: 90%;
+  }
+  .drop-inner:hover, .drop-inner.drag-over {
+    border-color: var(--accent);
+    background: #FAFAF8;
+    transform: scale(1.01);
+  }
+  .drop-icon { font-size: 52px; margin-bottom: 16px; }
+  .drop-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .drop-sub { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+  .drop-btn {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    padding: 10px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: opacity 0.2s;
+  }
+  .drop-btn:hover { opacity: 0.8; }
+  #fileInput { display: none; }
+
+  /* ========== LAYOUT ========== */
+  #app { display: none; height: 100vh; overflow: hidden; flex-direction: column; }
+  #app.visible { display: flex; }
+
+  /* TOP BAR */
+  .topbar {
+    background: var(--accent);
+    color: white;
+    padding: 0 24px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    letter-spacing: 0.02em;
+  }
+  .topbar-meta { font-size: 12px; opacity: 0.65; }
+  .topbar-reset {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    transition: background 0.2s;
+  }
+  .topbar-reset:hover { background: rgba(255,255,255,0.25); }
+
+  /* GENRE TABS */
+  .genre-tabs {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    overflow-x: auto;
+    flex-shrink: 0;
+    padding: 0 16px;
+    scrollbar-width: none;
+  }
+  .genre-tabs::-webkit-scrollbar { display: none; }
+  .genre-tab {
+    white-space: nowrap;
+    padding: 13px 18px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-muted);
+    border-bottom: 2.5px solid transparent;
+    transition: all 0.2s;
+    font-weight: 500;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .genre-tab:hover { color: var(--text); }
+  .genre-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .genre-count {
+    background: #E5E2DC;
+    color: #6B6860;
+    border-radius: 20px;
+    padding: 1px 7px;
+    font-size: 11px;
+  }
+  .genre-tab.active .genre-count { background: var(--accent); color: white; }
+
+  /* MAIN CONTENT */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: none;
+  }
+  .main.active { display: block; }
+
+  /* SUMMARY BAR */
+  .summary-bar {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .summary-bar strong { color: var(--text); font-weight: 700; }
+
+  /* THEME CARD */
+  .theme-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .theme-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+
+  .theme-header {
+    background: var(--accent);
+    color: white;
+    padding: 16px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .theme-num {
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .theme-title-text { font-size: 14px; font-weight: 700; flex: 1; line-height: 1.5; }
+  .theme-toggle { font-size: 18px; flex-shrink: 0; margin-top: 2px; transition: transform 0.3s; }
+  .theme-card.open .theme-toggle { transform: rotate(180deg); }
+
+  .theme-body { display: none; }
+  .theme-card.open .theme-body { display: block; }
+
+  /* SECTION TABS inside theme */
+  .section-tabs {
+    display: flex;
+    overflow-x: auto;
+    padding: 12px 16px 0;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    scrollbar-width: none;
+  }
+  .section-tabs::-webkit-scrollbar { display: none; }
+  .sec-tab {
+    padding: 7px 14px;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+    font-weight: 500;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    border-bottom: none;
+    position: relative;
+    bottom: -1px;
+  }
+  .sec-tab:hover { opacity: 0.85; }
+
+  /* Section content panels */
+  .section-panels { padding: 0; }
+  .section-panel { display: none; padding: 20px 24px; }
+  .section-panel.active { display: block; }
+
+  /* Section styling by type */
+  .sec-source    { background: var(--c1-bg); }
+  .sec-persona   { background: var(--c2-bg); }
+  .sec-strategy  { background: var(--c3-bg); }
+  .sec-twitter   { background: var(--c4-bg); }
+  .sec-instagram { background: var(--c5-bg); }
+  .sec-threads   { background: var(--c6-bg); }
+  .sec-blog      { background: var(--c7-bg); }
+  .sec-tools     { background: var(--c8-bg); }
+  .sec-title     { background: #F8F8F7; }
+
+  .tab-source    { background: var(--c1-bg); border-color: var(--c1-bd); color: var(--c1-lbl); }
+  .tab-persona   { background: var(--c2-bg); border-color: var(--c2-bd); color: var(--c2-lbl); }
+  .tab-strategy  { background: var(--c3-bg); border-color: var(--c3-bd); color: var(--c3-lbl); }
+  .tab-twitter   { background: var(--c4-bg); border-color: var(--c4-bd); color: var(--c4-lbl); }
+  .tab-instagram { background: var(--c5-bg); border-color: var(--c5-bd); color: var(--c5-lbl); }
+  .tab-threads   { background: var(--c6-bg); border-color: var(--c6-bd); color: var(--c6-lbl); }
+  .tab-blog      { background: var(--c7-bg); border-color: var(--c7-bd); color: var(--c7-lbl); }
+  .tab-tools     { background: var(--c8-bg); border-color: var(--c8-bd); color: var(--c8-lbl); }
+  .tab-title     { background: #F0F0EE; border-color: #C8C4BC; color: #444; }
+
+  .sec-tab.active { font-weight: 700; }
+
+  /* COPY BUTTON */
+  .copy-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    margin-bottom: 12px;
+    transition: opacity 0.2s;
+  }
+  .copy-btn:hover { opacity: 0.8; }
+  .copy-btn.copied { background: #16a34a; }
+
+  /* CONTENT STYLING */
+  .section-panel h4 { font-size: 13px; font-weight: 700; margin: 14px 0 6px; color: var(--accent); }
+  .section-panel p { margin-bottom: 10px; font-size: 13px; }
+  .section-panel ul { padding-left: 18px; margin-bottom: 10px; }
+  .section-panel ul li { margin-bottom: 4px; font-size: 13px; }
+  .section-panel ul li::marker { color: #888; }
+  .section-panel strong { font-weight: 700; }
+  .section-panel em { font-style: italic; color: #555; }
+  .section-panel code {
+    background: rgba(0,0,0,0.06);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 12px;
+    font-family: monospace;
+  }
+
+  /* X posts styling */
+  .x-pattern {
+    background: rgba(0,0,0,0.04);
+    border-left: 3px solid var(--c4-bd);
+    border-radius: 0 6px 6px 0;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+  .pattern-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--c4-lbl);
+    margin-bottom: 6px;
+  }
+
+  /* Instagram / Threads posts */
+  .post-block {
+    background: rgba(0,0,0,0.04);
+    border-left: 3px solid;
+    border-radius: 0 6px 6px 0;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+  .post-block.ig { border-color: var(--c5-bd); }
+  .post-block.th { border-color: var(--c6-bd); }
+
+  /* Hashtags */
+  .hashtag-area {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+  }
+  .hashtag {
+    background: rgba(0,0,0,0.06);
+    color: #333;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+  }
+
+  /* Tools / prompts */
+  .prompt-block {
+    background: #1A1A1A;
+    color: #E8E8E8;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    margin-top: 8px;
+    overflow-x: auto;
+  }
+
+  /* SEARCH */
+  .search-wrap {
+    padding: 16px 24px 0;
+  }
+  .search-input {
+    width: 100%;
+    max-width: 400px;
+    padding: 9px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    background: white;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+
+  .no-results {
+    text-align: center;
+    padding: 60px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<!-- DROP ZONE -->
+<div id="dropzone">
+  <div class="drop-inner" id="dropInner">
+    <div class="drop-icon">📂</div>
+    <div class="drop-title">SNSアイデアビューア</div>
+    <div class="drop-sub">
+      マークダウンファイル（.md）をここにドロップ<br>
+      または下のボタンからファイルを選択<br>
+      <span style="color:#B0ABA0;margin-top:4px;display:block">複数ファイル同時に読み込みOK</span>
+    </div>
+    <label class="drop-btn" for="fileInput">📁 ファイルを選択する</label>
+  </div>
+  <input type="file" id="fileInput" accept=".md" multiple>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">📋 SNSアイデアビューア</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="topbar-meta" id="topbarMeta"></span>
+      <button class="topbar-reset" onclick="resetApp()">＋ ファイル再読み込み</button>
+    </div>
+  </div>
+
+  <div class="genre-tabs" id="genreTabs"></div>
+
+  <div id="mainPanels"></div>
+</div>
+
+<script>
+// ==========================================
+// PARSER
+// ==========================================
+
+const SECTION_CONFIG = [
+  { key: 'title',     label: '📌 テーマ',      emoji: '📌', tab: 'tab-title',     panel: 'sec-title'    },
+  { key: 'source',    label: '📰 出典',         emoji: '📰', tab: 'tab-source',    panel: 'sec-source'   },
+  { key: 'persona',   label: '👤 ペルソナ',     emoji: '👤', tab: 'tab-persona',   panel: 'sec-persona'  },
+  { key: 'strategy',  label: '💰 戦略',         emoji: '💰', tab: 'tab-strategy',  panel: 'sec-strategy' },
+  { key: 'twitter',   label: '🐦 X投稿',        emoji: '🐦', tab: 'tab-twitter',   panel: 'sec-twitter'  },
+  { key: 'instagram', label: '📸 Instagram',    emoji: '📸', tab: 'tab-instagram', panel: 'sec-instagram'},
+  { key: 'threads',   label: '🧵 Threads',      emoji: '🧵', tab: 'tab-threads',   panel: 'sec-threads'  },
+  { key: 'blog',      label: '📝 ブログ',       emoji: '📝', tab: 'tab-blog',      panel: 'sec-blog'     },
+  { key: 'tools',     label: '🔧 ツール',       emoji: '🔧', tab: 'tab-tools',     panel: 'sec-tools'    },
+];
+
+const SECTION_KEY_MAP = {
+  '1': 'title', '2': 'source', '3': 'persona', '4': 'strategy',
+  '5': 'twitter', '6': 'instagram', '7': 'threads', '8': 'blog', '9': 'tools'
+};
+
+function parseMarkdown(text, filename) {
+  const lines = text.split('\n');
+  const result = { genre: '', filename, themes: [] };
+  let currentTheme = null;
+  let currentSectionKey = null;
+  let currentContent = [];
+
+  function flushSection() {
+    if (currentTheme && currentSectionKey) {
+      currentTheme.sections[currentSectionKey] = currentContent.join('\n').trim();
+    }
+    currentContent = [];
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Genre heading ## 
+    if (/^##\s/.test(line) && !/^###/.test(line)) {
+      result.genre = line.replace(/^##\s*/, '').trim();
+      continue;
+    }
+
+    // Theme heading ###
+    if (/^###\s/.test(line)) {
+      flushSection();
+      currentSectionKey = null;
+      currentTheme = {
+        heading: line.replace(/^###\s*/, '').trim(),
+        sections: {}
+      };
+      result.themes.push(currentTheme);
+      continue;
+    }
+
+    // Section heading ####
+    if (/^####\s/.test(line)) {
+      flushSection();
+      const secMatch = line.match(/^####\s*(\d+)\./);
+      if (secMatch) {
+        currentSectionKey = SECTION_KEY_MAP[secMatch[1]] || null;
+      } else {
+        currentSectionKey = null;
+      }
+      continue;
+    }
+
+    // Content lines
+    if (currentSectionKey) {
+      currentContent.push(line);
+    }
+  }
+  flushSection();
+  return result;
+}
+
+// ==========================================
+// MARKDOWN → HTML RENDERER
+// ==========================================
+
+function renderMarkdownToHtml(md) {
+  if (!md) return '<em style="color:#999">（内容なし）</em>';
+  
+  const lines = md.split('\n');
+  let html = '';
+  let inUl = false;
+  let ulDepth = 0;
+
+  function closeList(depth) {
+    let h = '';
+    for (let d = ulDepth; d >= depth; d--) h += '</ul>';
+    ulDepth = depth - 1;
+    if (ulDepth < 0) ulDepth = 0;
+    return h;
+  }
+
+  function inline(t) {
+    return t
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, '<code>$1</code>');
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Detect bullet indent level
+    const bulletMatch = line.match(/^(\s*)[-*]\s(.+)/);
+    if (bulletMatch) {
+      const indent = Math.floor(bulletMatch[1].length / 4) + 1;
+      const text = inline(bulletMatch[2]);
+      
+      if (!inUl) { html += '<ul>'; inUl = true; ulDepth = 1; }
+      
+      if (indent > ulDepth) {
+        for (let d = ulDepth; d < indent; d++) html += '<ul>';
+        ulDepth = indent;
+      } else if (indent < ulDepth) {
+        for (let d = ulDepth; d > indent; d--) html += '</ul>';
+        ulDepth = indent;
+      }
+      html += `<li>${text}</li>`;
+      continue;
+    }
+
+    // Close list if we hit non-list
+    if (inUl && line.trim() !== '') {
+      for (let d = ulDepth; d > 0; d--) html += '</ul>';
+      inUl = false; ulDepth = 0;
+    }
+
+    if (line.trim() === '') {
+      if (inUl) { for (let d = ulDepth; d > 0; d--) html += '</ul>'; inUl = false; ulDepth = 0; }
+      continue;
+    }
+
+    html += `<p>${inline(line.trim())}</p>`;
+  }
+
+  if (inUl) { for (let d = ulDepth; d > 0; d--) html += '</ul>'; }
+  return html;
+}
+
+// Render X posts section with patterns
+function renderXPost(md) {
+  const patterns = [];
+  let current = null;
+  let hashtagLine = '';
+  
+  const lines = md.split('\n');
+  for (const line of lines) {
+    const patternMatch = line.match(/^[-*]\s*\*\*パターン([A-Z])[：:]/);
+    if (patternMatch) {
+      if (current) patterns.push(current);
+      current = { label: `パターン${patternMatch[1]}`, text: '' };
+      continue;
+    }
+    if (line.includes('#') && line.trim().startsWith('#')) {
+      hashtagLine = line;
+      continue;
+    }
+    if (current) {
+      current.text += line + '\n';
+    }
+  }
+  if (current) patterns.push(current);
+  
+  let html = '';
+  for (const p of patterns) {
+    const text = p.text.replace(/^\s+/, '').replace(/\s+$/, '').replace(/\*\*(.+?)\*\*/g, '$1');
+    html += `
+      <div class="pattern-label">${p.label}</div>
+      <div class="x-pattern">${escapeHtml(text)}</div>
+      <button class="copy-btn" onclick="copyText(this, ${JSON.stringify(text)})">📋 コピー</button>
+    `;
+  }
+  
+  if (patterns.length === 0) {
+    const clean = md.replace(/\*\*(.+?)\*\*/g, '$1').trim();
+    html += `<div class="x-pattern">${escapeHtml(clean)}</div>
+    <button class="copy-btn" onclick="copyText(this, ${JSON.stringify(clean)})">📋 コピー</button>`;
+  }
+  
+  // Hashtags
+  const tags = md.match(/#[\w\u3040-\u9FFF]+/g) || [];
+  if (tags.length) {
+    html += '<div class="hashtag-area">' + tags.map(t => `<span class="hashtag">${t}</span>`).join('') + '</div>';
+  }
+  
+  return html;
+}
+
+// Render Instagram / Threads
+function renderPostSection(md, cls) {
+  const clean = md.replace(/\*\*(.+?)\*\*/g, '$1').trim();
+  const tags = md.match(/#[\w\u3040-\u9FFF]+/g) || [];
+  
+  let html = `
+    <button class="copy-btn" onclick="copyText(this, ${JSON.stringify(clean)})">📋 全文コピー</button>
+    <div class="post-block ${cls}">${escapeHtml(clean)}</div>
+  `;
+  if (tags.length) {
+    html += '<div class="hashtag-area">' + tags.map(t => `<span class="hashtag">${t}</span>`).join('') + '</div>';
+  }
+  return html;
+}
+
+// Render Tools (with prompt blocks)
+function renderTools(md) {
+  const parts = md.split(/```/);
+  let html = '';
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 0) {
+      html += renderMarkdownToHtml(parts[i]);
+    } else {
+      const code = parts[i].trim();
+      html += `
+        <button class="copy-btn" onclick="copyText(this, ${JSON.stringify(code)})">📋 プロンプトコピー</button>
+        <div class="prompt-block">${escapeHtml(code)}</div>
+      `;
+    }
+  }
+  return html;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ==========================================
+// RENDER APP
+// ==========================================
+
+let allData = [];
+let activeGenre = 0;
+let activeTheme = null;
+
+function renderApp() {
+  const tabs = document.getElementById('genreTabs');
+  const panels = document.getElementById('mainPanels');
+  const meta = document.getElementById('topbarMeta');
+  
+  const totalThemes = allData.reduce((s, d) => s + d.themes.length, 0);
+  meta.textContent = `${allData.length}ジャンル・${totalThemes}テーマ`;
+  
+  tabs.innerHTML = '';
+  panels.innerHTML = '';
+  
+  allData.forEach((data, gi) => {
+    // Tab
+    const tab = document.createElement('div');
+    tab.className = 'genre-tab' + (gi === 0 ? ' active' : '');
+    tab.innerHTML = `${data.genre} <span class="genre-count">${data.themes.length}</span>`;
+    tab.onclick = () => switchGenre(gi);
+    tabs.appendChild(tab);
+    
+    // Panel
+    const panel = document.createElement('div');
+    panel.className = 'main' + (gi === 0 ? ' active' : '');
+    panel.id = `genre-panel-${gi}`;
+    
+    let panelHtml = `
+      <div class="search-wrap">
+        <input class="search-input" type="text" placeholder="🔍 このジャンル内を検索..." oninput="filterThemes(${gi}, this.value)">
+      </div>
+      <div style="padding:16px 24px 0">
+        <div class="summary-bar">
+          <span>📂 <strong>${escapeHtml(data.filename)}</strong></span>
+          <span>テーマ数: <strong>${data.themes.length}件</strong></span>
+        </div>
+      </div>
+      <div id="themes-${gi}" style="padding:0 24px 24px">
+    `;
+    
+    data.themes.forEach((theme, ti) => {
+      panelHtml += buildThemeCard(theme, ti, gi);
+    });
+    
+    panelHtml += '</div>';
+    panel.innerHTML = panelHtml;
+    panels.appendChild(panel);
+  });
+}
+
+function buildThemeCard(theme, ti, gi) {
+  const themeId = `theme-${gi}-${ti}`;
+  
+  let sectionsHtml = '<div class="section-tabs">';
+  let panelsHtml = '<div class="section-panels">';
+  
+  SECTION_CONFIG.forEach((sec, si) => {
+    const content = theme.sections[sec.key] || '';
+    if (!content) return;
+    
+    const isFirst = si === 0 || !SECTION_CONFIG.slice(0, si).some(s => theme.sections[s.key]);
+    sectionsHtml += `
+      <div class="sec-tab ${sec.tab}${isFirst ? ' active' : ''}" 
+           onclick="switchSection('${themeId}', '${sec.key}', this)">
+        ${sec.label}
+      </div>
+    `;
+    
+    let renderedContent = '';
+    if (sec.key === 'twitter') renderedContent = renderXPost(content);
+    else if (sec.key === 'instagram') renderedContent = renderPostSection(content, 'ig');
+    else if (sec.key === 'threads') renderedContent = renderPostSection(content, 'th');
+    else if (sec.key === 'tools') renderedContent = renderTools(content);
+    else renderedContent = renderMarkdownToHtml(content);
+    
+    panelsHtml += `
+      <div class="section-panel ${sec.panel}${isFirst ? ' active' : ''}" id="${themeId}-${sec.key}">
+        ${renderedContent}
+      </div>
+    `;
+  });
+  
+  sectionsHtml += '</div>';
+  panelsHtml += '</div>';
+  
+  return `
+    <div class="theme-card" id="${themeId}" data-title="${escapeHtml(theme.heading)}">
+      <div class="theme-header" onclick="toggleTheme('${themeId}')">
+        <span class="theme-num">${ti + 1}</span>
+        <span class="theme-title-text">${escapeHtml(theme.heading)}</span>
+        <span class="theme-toggle">▼</span>
+      </div>
+      <div class="theme-body">
+        ${sectionsHtml}
+        ${panelsHtml}
+      </div>
+    </div>
+  `;
+}
+
+function switchGenre(gi) {
+  document.querySelectorAll('.genre-tab').forEach((t, i) => {
+    t.classList.toggle('active', i === gi);
+  });
+  document.querySelectorAll('.main').forEach((p, i) => {
+    p.classList.toggle('active', i === gi);
+  });
+}
+
+function toggleTheme(id) {
+  const card = document.getElementById(id);
+  card.classList.toggle('open');
+}
+
+function switchSection(themeId, sectionKey, clickedTab) {
+  const card = document.getElementById(themeId);
+  card.querySelectorAll('.sec-tab').forEach(t => t.classList.remove('active'));
+  card.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+  clickedTab.classList.add('active');
+  const panel = document.getElementById(`${themeId}-${sectionKey}`);
+  if (panel) panel.classList.add('active');
+}
+
+function filterThemes(gi, query) {
+  const q = query.toLowerCase();
+  const container = document.getElementById(`themes-${gi}`);
+  container.querySelectorAll('.theme-card').forEach(card => {
+    const title = card.dataset.title.toLowerCase();
+    const match = !q || title.includes(q);
+    card.style.display = match ? '' : 'none';
+  });
+}
+
+async function copyText(btn, text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✅ コピーしました！';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
+  } catch(e) {
+    alert('コピーに失敗しました。');
+  }
+}
+
+function resetApp() {
+  allData = [];
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('dropzone').classList.remove('hidden');
+  document.getElementById('fileInput').value = '';
+}
+
+// ==========================================
+// FILE LOADING
+// ==========================================
+
+async function loadFiles(files) {
+  allData = [];
+  for (const file of files) {
+    const text = await file.text();
+    const data = parseMarkdown(text, file.name);
+    if (data.themes.length > 0) allData.push(data);
+  }
+  
+  if (allData.length === 0) {
+    alert('有効なデータが見つかりませんでした。マークダウンファイルを確認してください。');
+    return;
+  }
+  
+  renderApp();
+  document.getElementById('dropzone').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+}
+
+// File input
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  if (e.target.files.length) loadFiles(e.target.files);
+});
+
+// Drag & drop
+const dropInner = document.getElementById('dropInner');
+const dropzone = document.getElementById('dropzone');
+
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropInner.classList.add('drag-over'); });
+dropzone.addEventListener('dragleave', () => dropInner.classList.remove('drag-over'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropInner.classList.remove('drag-over');
+  const files = [...e.dataTransfer.files].filter(f => f.name.endsWith('.md'));
+  if (files.length) loadFiles(files);
+  else alert('.mdファイルをドロップしてください。');
+});
+</script>
+</body>
+</html>
