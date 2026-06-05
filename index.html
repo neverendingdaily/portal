@@ -288,7 +288,8 @@
             loginSection.classList.add('hidden');
             mainContent.classList.remove('hidden');
             userNameSpan.textContent = "管理者 さん"; // 好きな名前に変えてOKです
-            renderCards(); 
+            sessionStorage.setItem('portal_auth_token', 'GRANTED');
+            renderCards();
         } else {
             // パスワード間違い
             alert("パスワードが違います。");
@@ -306,6 +307,7 @@
         // ログアウト（画面を戻すだけ）
         loginSection.classList.remove('hidden');
         mainContent.classList.add('hidden');
+        sessionStorage.removeItem('portal_auth_token');
         document.getElementById('password-input').value = ''; // パスワードを空に戻す
     });
 
