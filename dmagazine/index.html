@@ -1,5 +1,5 @@
 <html lang="ja" class="no-touch" style=""><head>
-  <script>if(!sessionStorage.getItem('portal_auth_token')){location.replace('../')}</script>
+  <script>(function(){try{var a=JSON.parse(localStorage.getItem('portal_auth'));if(a&&a.token==='GRANTED'&&a.expiresAt>Date.now())return;}catch(e){}localStorage.removeItem('portal_auth');location.replace('../')})()</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>dマガジン 直リンクポータル</title>

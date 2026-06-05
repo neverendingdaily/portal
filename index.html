@@ -277,6 +277,21 @@
     // ブラウザの保存データ（あれば）を読み込む
     L = JSON.parse(localStorage.getItem('my_portal_data')) || originalData;
 
+    // 有効期限内の認証情報があればログイン画面をスキップ
+    (function() {
+        try {
+            var saved = JSON.parse(localStorage.getItem('portal_auth'));
+            if (saved && saved.token === 'GRANTED' && saved.expiresAt > Date.now()) {
+                loginSection.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                userNameSpan.textContent = "管理者 さん";
+                renderCards();
+                return;
+            }
+        } catch(e) {}
+        localStorage.removeItem('portal_auth');
+    })();
+
     // ==========================================
     // ② ログイン・ログアウトの処理
     // ==========================================
@@ -288,7 +303,7 @@
             loginSection.classList.add('hidden');
             mainContent.classList.remove('hidden');
             userNameSpan.textContent = "管理者 さん"; // 好きな名前に変えてOKです
-            sessionStorage.setItem('portal_auth_token', 'GRANTED');
+            localStorage.setItem('portal_auth', JSON.stringify({ token: 'GRANTED', expiresAt: Date.now() + 3 * 60 * 60 * 1000 }));
             renderCards();
         } else {
             // パスワード間違い
@@ -307,8 +322,8 @@
         // ログアウト（画面を戻すだけ）
         loginSection.classList.remove('hidden');
         mainContent.classList.add('hidden');
-        sessionStorage.removeItem('portal_auth_token');
-        document.getElementById('password-input').value = ''; // パスワードを空に戻す
+        localStorage.removeItem('portal_auth');
+        document.getElementById('password-input').value = '';
     });
 
     // ==========================================
