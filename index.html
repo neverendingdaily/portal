@@ -54,60 +54,19 @@
             overflow: hidden;
         }
 
-        /* オーロラ用のカラーブロブ */
-        .aurora-blob {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(90px);
-            opacity: 0.55;
-            pointer-events: none;
-        }
-        .blob-1 {
-            width: 600px; height: 600px;
-            background: radial-gradient(circle, #3b4fd8 0%, transparent 70%);
-            top: -15%; left: -10%;
-            animation: drift-1 18s ease-in-out infinite alternate;
-        }
-        .blob-2 {
-            width: 500px; height: 500px;
-            background: radial-gradient(circle, #7c3aed 0%, transparent 70%);
-            bottom: -10%; right: -5%;
-            animation: drift-2 22s ease-in-out infinite alternate;
-        }
-        .blob-3 {
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, #0e9f8e 0%, transparent 70%);
-            top: 30%; right: 20%;
-            animation: drift-3 16s ease-in-out infinite alternate;
-        }
-        .blob-4 {
-            width: 350px; height: 350px;
-            background: radial-gradient(circle, #be185d 0%, transparent 70%);
-            bottom: 20%; left: 15%;
-            animation: drift-4 20s ease-in-out infinite alternate;
-        }
+        .aurora-blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.55; pointer-events: none; }
+        .blob-1 { width: 600px; height: 600px; background: radial-gradient(circle, #3b4fd8 0%, transparent 70%); top: -15%; left: -10%; animation: drift-1 18s ease-in-out infinite alternate; }
+        .blob-2 { width: 500px; height: 500px; background: radial-gradient(circle, #7c3aed 0%, transparent 70%); bottom: -10%; right: -5%; animation: drift-2 22s ease-in-out infinite alternate; }
+        .blob-3 { width: 400px; height: 400px; background: radial-gradient(circle, #0e9f8e 0%, transparent 70%); top: 30%; right: 20%; animation: drift-3 16s ease-in-out infinite alternate; }
+        .blob-4 { width: 350px; height: 350px; background: radial-gradient(circle, #be185d 0%, transparent 70%); bottom: 20%; left: 15%; animation: drift-4 20s ease-in-out infinite alternate; }
 
-        @keyframes drift-1 {
-            0%   { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(80px, 60px) scale(1.15); }
-        }
-        @keyframes drift-2 {
-            0%   { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(-70px, -50px) scale(1.1); }
-        }
-        @keyframes drift-3 {
-            0%   { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(-60px, 80px) scale(0.9); }
-        }
-        @keyframes drift-4 {
-            0%   { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(50px, -60px) scale(1.2); }
-        }
+        @keyframes drift-1 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(80px, 60px) scale(1.15); } }
+        @keyframes drift-2 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(-70px, -50px) scale(1.1); } }
+        @keyframes drift-3 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(-60px, 80px) scale(0.9); } }
+        @keyframes drift-4 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(50px, -60px) scale(1.2); } }
 
-        /* 星のような微細パーティクル（CSS only） */
         .stars {
-            position: absolute;
-            inset: 0;
+            position: absolute; inset: 0;
             background-image:
                 radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.6) 0%, transparent 100%),
                 radial-gradient(1px 1px at 25% 55%, rgba(255,255,255,0.4) 0%, transparent 100%),
@@ -122,141 +81,63 @@
             animation: twinkle 6s ease-in-out infinite alternate;
         }
 
-        @keyframes twinkle {
-            0%   { opacity: 0.6; }
-            100% { opacity: 1; }
-        }
+        @keyframes twinkle { 0% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        /* ログインカード */
         .login-card {
-            position: relative;
-            z-index: 10;
-            background: rgba(255, 255, 255, 0.07);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            padding: 3.5rem 3rem;
-            border-radius: 28px;
-            text-align: center;
-            max-width: 420px;
-            width: 90%;
-            border: 1px solid rgba(255,255,255,0.15);
-            box-shadow:
-                0 0 0 1px rgba(255,255,255,0.05) inset,
-                0 32px 64px -12px rgba(0,0,0,0.6);
+            position: relative; z-index: 10; background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            padding: 3.5rem 3rem; border-radius: 28px; text-align: center; max-width: 420px; width: 90%;
+            border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 0 0 1px rgba(255,255,255,0.05) inset, 0 32px 64px -12px rgba(0,0,0,0.6);
             animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        @keyframes fadeUp {
-            0%   { opacity: 0; transform: translateY(24px) scale(0.98); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @keyframes fadeUp { 0% { opacity: 0; transform: translateY(24px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 
-        .login-logo {
-            font-size: 3.5rem;
-            margin-bottom: 1.2rem;
-            line-height: 1;
-            display: block;
-            animation: float 4s ease-in-out infinite;
-            filter: drop-shadow(0 0 20px rgba(99,102,241,0.6));
-        }
+        .login-logo { font-size: 3.5rem; margin-bottom: 1.2rem; line-height: 1; display: block; animation: float 4s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(99,102,241,0.6)); }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(-3deg); }
-            50%       { transform: translateY(-12px) rotate(3deg); }
-        }
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-12px) rotate(3deg); } }
 
-        .login-card h2 {
-            margin: 0 0 0.6rem 0;
-            color: #ffffff;
-            font-size: 1.7rem;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            text-shadow: 0 2px 20px rgba(99,102,241,0.4);
-        }
+        .login-card h2 { margin: 0 0 0.6rem 0; color: #ffffff; font-size: 1.7rem; font-weight: 800; letter-spacing: -0.03em; text-shadow: 0 2px 20px rgba(99,102,241,0.4); }
+        .login-card h2 span { background: linear-gradient(135deg, #a5b4fc 0%, #67e8f9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
-        /* タイトルにグラデーションテキスト */
-        .login-card h2 span {
-            background: linear-gradient(135deg, #a5b4fc 0%, #67e8f9 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+        .login-desc { color: rgba(255,255,255,0.6); font-size: 0.92rem; margin-bottom: 1.5rem; line-height: 1.7; }
 
-        .login-desc {
-            color: rgba(255,255,255,0.6);
-            font-size: 0.92rem;
-            margin-bottom: 2.5rem;
-            line-height: 1.7;
-        }
-
-        /* Googleログインボタン */
-        .btn-login-modern {
-            background: rgba(255,255,255,0.92);
-            color: #1e293b;
-            border: 1px solid rgba(255,255,255,0.3);
-            padding: 14px 24px;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 14px;
+        /* パスワード入力欄のスタイル */
+        .password-input {
             width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
-            position: relative;
-            overflow: hidden;
+            box-sizing: border-box;
+            padding: 14px 16px;
+            margin-bottom: 1.5rem;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.2);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            text-align: center;
+            transition: all 0.3s ease;
         }
+        .password-input:focus {
+            border-color: #67e8f9;
+            background: rgba(0,0,0,0.4);
+            box-shadow: 0 0 15px rgba(103, 232, 249, 0.3);
+        }
+        .password-input::placeholder { color: rgba(255,255,255,0.4); }
 
-        /* シマーアニメーション */
-        .btn-login-modern::after {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 60%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transition: none;
+        .btn-login-modern {
+            background: rgba(255,255,255,0.92); color: #1e293b; border: 1px solid rgba(255,255,255,0.3); padding: 14px 24px; font-size: 1rem; font-weight: 600; border-radius: 14px; width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 24px rgba(0,0,0,0.3); position: relative; overflow: hidden;
         }
-        .btn-login-modern:hover::after {
-            left: 150%;
-            transition: left 0.6s ease;
-        }
-        .btn-login-modern:hover {
-            background: #ffffff;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-        }
-        .btn-login-modern:active {
-            transform: translateY(0) scale(0.98);
-        }
+        .btn-login-modern::after { content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); }
+        .btn-login-modern:hover::after { left: 150%; transition: left 0.6s ease; }
+        .btn-login-modern:hover { background: #ffffff; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+        .btn-login-modern:active { transform: translateY(0) scale(0.98); }
 
-        .google-icon { width: 22px; height: 22px; flex-shrink: 0; }
+        .login-trust { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 1.8rem; font-size: 0.78rem; color: rgba(255,255,255,0.35); }
+        .trust-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.2); }
 
-        /* 信頼バッジ */
-        .login-trust {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            margin-top: 1.8rem;
-            font-size: 0.78rem;
-            color: rgba(255,255,255,0.35);
-        }
-        .trust-dot {
-            width: 5px; height: 5px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.2);
-        }
-
-        /* ポータル側のユーザー情報 */
         .user-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: bold; }
         .btn-logout { background: #f1f5f9; color: #334155; padding: 5px 10px; font-size: 0.8rem; border:none; border-radius:6px; cursor:pointer;}
         .btn-logout:hover { background: #e2e8f0; }
-        
-        .loading-text { text-align: center; color: #0369a1; font-weight: bold; padding: 2rem; grid-column: 1 / -1; }
 
         @media (max-width: 600px) {
             .header { flex-direction: column; text-align: center; }
@@ -276,17 +157,18 @@
     <div class="login-card">
         <span class="login-logo">🚀</span>
         <h2><span>SNS Marketing</span> Portal</h2>
-        <p class="login-desc">
-            あなたの発信戦略を、<br>ひとつの画面から。
-        </p>
+        <p class="login-desc">あなたの発信戦略を、<br>ひとつの画面から。</p>
+        
+        <input type="password" id="password-input" class="password-input" placeholder="パスワードを入力">
+        
         <button id="login-btn" class="btn-login-modern">
-            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="google-icon">
-            Google アカウントでログイン
+            ログインして開始
         </button>
+        
         <div class="login-trust">
-            <span>🔒 安全なGoogle認証</span>
+            <span>🔒 パスワード保護領域</span>
             <div class="trust-dot"></div>
-            <span>招待制クリエイター専用</span>
+            <span>Private Portal</span>
         </div>
     </div>
 </div>
@@ -338,12 +220,11 @@
             <label>説明文</label>
             <input type="text" id="f-desc" placeholder="ツールの概要や用途を入力">
         </div>
-        <button class="btn-add" onclick="addSite()">+ クラウドに追加</button>
+        <button class="btn-add" onclick="addSite()">+ リストに追加</button>
     </div>
 
     <div class="grid" id="g">
-        <div class="loading-text">クラウドからデータを読み込んでいます...</div>
-    </div>
+        </div>
 </div>
 
 <script id="site-data" type="application/json">
@@ -375,30 +256,13 @@
 ]
 </script>
 
-<script type="module">
-    // ① Firebaseのシステムを読み込む
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
-    // 🌟 Firestore（クラウドデータベース）の機能を読み込む
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+<script>
+    // ==========================================
+    // ① パスワードの設定（ここを好きな文字に変えてください）
+    // ==========================================
+    const SECRET_PASSWORD = "apple";
 
-    // ② あなたの鍵
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJwQooL2MHQq2fg8aeXWGDD2s8VfzKZ04",
-      authDomain: "portal-app-25359.firebaseapp.com",
-      projectId: "portal-app-25359",
-      storageBucket: "portal-app-25359.firebasestorage.app",
-      messagingSenderId: "148295764653",
-      appId: "1:148295764653:web:fe588512833f88852a9424",
-      measurementId: "G-MLM10WJPGN"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-    const db = getFirestore(app); // データベースの起動
-
-    // ③ 画面パーツとデータの準備
+    // 画面パーツの準備
     const loginSection = document.getElementById('login-section');
     const mainContent = document.getElementById('main-content');
     const userNameSpan = document.getElementById('user-name');
@@ -408,52 +272,40 @@
     
     let L = []; // ツールのリスト
     let isEditMode = false;
-    let currentUser = null; 
 
-    // ④ ログイン状態の監視とクラウドデータの取得
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        loginSection.classList.add('hidden');
-        mainContent.classList.remove('hidden');
-        userNameSpan.textContent = user.displayName + " さん";
+    // ブラウザの保存データ（あれば）を読み込む
+    L = JSON.parse(localStorage.getItem('my_portal_data')) || originalData;
 
-        // 🌟 クラウドから「あなた専用のツール一覧」を取得
-        try {
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (userDoc.exists()) {
-                // すでにクラウドに保存されている場合
-                L = userDoc.data().tools;
-            } else {
-                // 初めてのログインの場合（初期データをクラウドに書き込む）
-                L = JSON.parse(localStorage.getItem('my_portal_data')) || originalData;
-                await setDoc(doc(db, "users", user.uid), { tools: L });
-            }
+    // ==========================================
+    // ② ログイン・ログアウトの処理
+    // ==========================================
+    document.getElementById('login-btn').addEventListener('click', () => {
+        const inputPassword = document.getElementById('password-input').value;
+        
+        if (inputPassword === SECRET_PASSWORD) {
+            // パスワード正解
+            loginSection.classList.add('hidden');
+            mainContent.classList.remove('hidden');
+            userNameSpan.textContent = "管理者 さん"; // 好きな名前に変えてOKです
             renderCards(); 
-        } catch (error) {
-            console.error("クラウドからのデータ取得に失敗しました:", error);
-            L = JSON.parse(localStorage.getItem('my_portal_data')) || originalData;
-            renderCards();
+        } else {
+            // パスワード間違い
+            alert("パスワードが違います。");
         }
-
-      } else {
-        // 未ログイン時
-        currentUser = null;
-        loginSection.classList.remove('hidden');
-        mainContent.classList.add('hidden');
-      }
     });
 
-    // ⑤ ログイン・ログアウトボタンの動作
-    document.getElementById('login-btn').addEventListener('click', () => {
-      signInWithPopup(auth, provider).catch((error) => {
-        console.error("ログインエラー:", error);
-        alert("ログインに失敗しました。");
-      });
+    // Enterキーでもログインできるようにする
+    document.getElementById('password-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            document.getElementById('login-btn').click();
+        }
     });
 
     document.getElementById('logout-btn').addEventListener('click', () => {
-      signOut(auth).catch((error) => console.error("ログアウトエラー:", error));
+        // ログアウト（画面を戻すだけ）
+        loginSection.classList.remove('hidden');
+        mainContent.classList.add('hidden');
+        document.getElementById('password-input').value = ''; // パスワードを空に戻す
     });
 
     // ==========================================
@@ -497,19 +349,10 @@
         });
     }
 
-    // 🌟 変更や追加があったときに、クラウドに同期する関数
-    async function saveData() {
+    // ブラウザ(localStorage)にデータを保存する関数
+    function saveData() {
         localStorage.setItem('my_portal_data', JSON.stringify(L));
         renderCards();
-
-        if (currentUser) {
-            try {
-                await setDoc(doc(db, "users", currentUser.uid), { tools: L });
-                console.log("クラウドに同期しました");
-            } catch (error) {
-                console.error("クラウドへの同期に失敗しました:", error);
-            }
-        }
     }
 
     function toggleEditMode() {
@@ -573,7 +416,7 @@
         document.getElementById('f-title').value = '';
         document.getElementById('f-url').value = '';
         document.getElementById('f-desc').value = '';
-        alert("追加・同期しました！");
+        alert("追加しました！");
     }
 
     function exportHTML() {
@@ -593,17 +436,8 @@
         
         renderCards();
         if(wasEditMode) toggleEditMode();
-        alert("バックアップ用HTMLをダウンロードしました。");
+        alert("現在の状態を保存したHTMLをダウンロードしました。次回からこのファイルを開いてください。");
     }
-
-    // ★ HTMLのボタン（onclick="〇〇"）から呼び出せるように登録
-    window.toggleEditMode = toggleEditMode;
-    window.moveUp = moveUp;
-    window.moveDown = moveDown;
-    window.deleteSite = deleteSite;
-    window.addSite = addSite;
-    window.exportHTML = exportHTML;
-
 </script>
 </body>
 </html>
