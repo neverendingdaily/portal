@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <title>ディープ・インサイト解析士</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ヘッダー -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-icon">🔍</span>
+          <div>
+            <h1 class="logo-title">ディープ・インサイト解析士</h1>
+            <p class="logo-sub">キーワードを深く、多角的に分析します</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+
+      <!-- APIキー設定 -->
+      <section class="settings-section" id="settingsSection">
+        <div class="settings-header" id="settingsHeader">
+          <div class="settings-label">
+            <span>⚙️</span>
+            <span>Gemini APIキー設定</span>
+          </div>
+          <span class="settings-badge" id="settingsBadge">⚠️ 未設定</span>
+        </div>
+        <div class="settings-body" id="settingsBody">
+          <p class="settings-desc">
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>
+            で取得したAPIキーを入力してください。キーはこのブラウザのlocalStorageにのみ保存されます。
+          </p>
+          <div class="settings-input-wrap">
+            <input
+              type="password"
+              id="apiKeyInput"
+              class="settings-input"
+              placeholder="AIzaSy..."
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button class="settings-save-btn" id="apiKeySaveBtn">保存</button>
+            <button class="settings-clear-btn" id="apiKeyClearBtn" title="APIキーを削除">🗑️</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- トレンドワード -->
+      <section class="trends-section">
+        <div class="trends-label">
+          <span class="trends-icon">📡</span>
+          <span>いまのトレンド</span>
+          <button class="trends-refresh" id="trendsRefresh" title="更新">↻</button>
+        </div>
+        <div class="trends-tags" id="trendsTags">
+          <span class="trends-loading">読み込み中...</span>
+        </div>
+      </section>
+
+      <!-- 検索履歴 -->
+      <section class="history-section" id="historySection">
+        <div class="history-label">
+          <span>🕒</span>
+          <span>検索履歴</span>
+        </div>
+        <ul class="history-list" id="historyList">
+          <li class="history-empty">履歴がありません</li>
+        </ul>
+      </section>
+
+      <!-- サジェスト検索 -->
+      <section class="suggest-section">
+        <div class="suggest-label">
+          <span>🔎</span>
+          <span>サジェスト検索</span>
+        </div>
+        <div class="suggest-controls">
+          <div class="suggest-input-wrap">
+            <input
+              type="text"
+              id="suggestInput"
+              class="suggest-input"
+              placeholder="サジェストを取得したいキーワードを入力..."
+              autocomplete="off"
+            />
+            <button class="suggest-btn" id="suggestBtn">取得</button>
+          </div>
+          <div class="suggest-platforms" id="suggestPlatforms">
+            <button class="platform-btn active" data-platform="google">🌐 Google</button>
+            <button class="platform-btn" data-platform="youtube">▶ YouTube</button>
+            <button class="platform-btn" data-platform="duckduckgo">🦆 DuckDuckGo</button>
+            <button class="platform-btn" data-platform="bing">🔷 Bing</button>
+          </div>
+        </div>
+        <div class="suggest-tags" id="suggestTags">
+          <span class="suggest-empty">キーワードを入力して「取得」ボタンを押してください</span>
+        </div>
+      </section>
+
+      <!-- 入力フォーム -->
+      <section class="input-section">
+        <div class="input-wrap">
+          <input
+            type="text"
+            id="keywordInput"
+            class="keyword-input"
+            placeholder="解析したいキーワードを入力..."
+            autocomplete="off"
+          />
+          <button class="analyze-btn" id="analyzeBtn">
+            <span class="btn-icon">⚡</span>
+            <span class="btn-text">解析する</span>
+          </button>
+        </div>
+        <p class="input-hint">例: 生成AI / 円安 / ウェルビーイング / 量子コンピュータ</p>
+      </section>
+
+      <!-- ローディング -->
+      <div class="loading" id="loading" hidden>
+        <div class="spinner"></div>
+        <p class="loading-text">深層分析中<span class="dots">...</span></p>
+      </div>
+
+      <!-- エラー -->
+      <div class="error-box" id="errorBox" hidden>
+        <span>⚠️</span>
+        <span id="errorMsg"></span>
+      </div>
+
+      <!-- 解析結果 -->
+      <section class="result-section" id="resultSection" hidden>
+        <div class="result-header">
+          <h2 class="result-keyword" id="resultKeyword"></h2>
+          <button class="copy-btn" id="copyBtn" title="コピー">📋 コピー</button>
+        </div>
+        <div class="result-body markdown-body" id="resultBody"></div>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      Powered by Gemini 2.5 Flash &nbsp;·&nbsp; ディープ・インサイト解析士
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
