@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fresult\u002F[sessionId]","\u002Fresult\u002F[sessionId]\u002Fcopy","\u002Fresult\u002F[sessionId]\u002Fcreative","\u002Fresult\u002F[sessionId]\u002Fstory"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
