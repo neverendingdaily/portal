@@ -1,9 +1,0 @@
-■ 決定した仕様
-  使用AIモデル : Veo 3.1
-  アスペクト比 : 9:16
-  構図の工夫   : 主要被写体は「中央やや上」に配置。画面の上下15%および右端15%はUIが被るため、主要な被写体・テキストはその内側に収める。画面下部3分の1はテロップ挿入用のシンプルなネガティブスペース（ぼかし背景や単色）を確保。
-
-■ 生成用プロンプト
-[9:16] cinematic vertical video, サイバーパンクな街並みを走るバイク (cyberpunk neon-lit dystopian cityscape), vertical cinematic framing 9:16, dramatic rim lighting, main subject placed slightly above vertical center, keeping the right 15% margin free of key elements, lower third of frame reserved as clean negative space for subtitle overlay, top and bottom 15% kept free of critical details, photorealistic, high detail, cinematic color grade, 16mm film grain
-
-生成日時: 2026-06-28 19:22:18
