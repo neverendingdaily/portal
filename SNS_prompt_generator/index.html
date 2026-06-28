@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNS Prompt Generator — Nano Banana 2 / Veo 3.1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-wrapper">
+
+    <!-- ヘッダー -->
+    <header class="app-header">
+      <h1 class="app-title">SNS Prompt Generator</h1>
+      <p class="app-subtitle">Nano Banana 2 / Veo 3.1 対応 — AIプロンプト自動生成ツール</p>
+    </header>
+
+    <!-- Step 1: メディア形式 -->
+    <section class="step-card" id="step-1">
+      <div class="step-header">
+        <span class="step-number" aria-hidden="true">1</span>
+        <h2 class="step-title">メディア形式の選択</h2>
+      </div>
+      <div class="radio-group" role="group" aria-label="メディア形式">
+        <label class="radio-label">
+          <input type="radio" name="media-type" id="media-image" value="image">
+          <span class="radio-custom" aria-hidden="true"></span>
+          <span class="radio-text">画像（Nano Banana 2用）</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="media-type" id="media-video" value="video">
+          <span class="radio-custom" aria-hidden="true"></span>
+          <span class="radio-text">動画（Veo 3.1用）</span>
+        </label>
+      </div>
+      <p class="validation-msg" id="error-media" role="alert" aria-live="polite"></p>
+    </section>
+
+    <!-- Step 2: プラットフォーム -->
+    <section class="step-card" id="step-2">
+      <div class="step-header">
+        <span class="step-number" aria-hidden="true">2</span>
+        <h2 class="step-title">配信プラットフォームの選択</h2>
+      </div>
+      <div class="select-wrapper">
+        <select id="platform-select" aria-label="配信プラットフォーム">
+          <option value="" disabled selected>プラットフォームを選択...</option>
+          <option value="youtube_shorts">YouTubeショート</option>
+          <option value="instagram_reels">Instagramリール</option>
+          <option value="tiktok">TikTok</option>
+          <option value="instagram_feed">Instagramフィード</option>
+          <option value="x_twitter">X（旧Twitter）</option>
+          <option value="pinterest">Pinterest</option>
+          <option value="linkedin">LinkedIn</option>
+          <option value="other">その他</option>
+        </select>
+        <span class="select-arrow" aria-hidden="true">▾</span>
+      </div>
+      <p class="validation-msg" id="error-platform" role="alert" aria-live="polite"></p>
+    </section>
+
+    <!-- Step 3: アイデア入力 -->
+    <section class="step-card" id="step-3">
+      <div class="step-header">
+        <span class="step-number" aria-hidden="true">3</span>
+        <h2 class="step-title">アイデア・テーマの入力</h2>
+      </div>
+      <textarea
+        id="idea-input"
+        rows="3"
+        aria-label="テーマ・アイデア"
+        placeholder="作成したい素材のイメージや、テーマを入力してください。&#10;例：サイバーパンクな街並み、カフェで作業する風景"
+      ></textarea>
+      <p class="validation-msg" id="error-idea" role="alert" aria-live="polite"></p>
+    </section>
+
+    <!-- 生成ボタン -->
+    <button class="generate-btn" id="generate-btn" type="button">
+      プロンプトを生成する
+    </button>
+
+    <!-- 出力セクション（初期非表示） -->
+    <section class="output-section" id="output-section" hidden aria-live="polite">
+
+      <!-- ■ 決定した仕様 -->
+      <div class="output-card spec-card">
+        <h3 class="output-card-title">■ 決定した仕様</h3>
+        <dl class="spec-grid">
+          <div class="spec-row">
+            <dt class="spec-label">AIモデル</dt>
+            <dd class="spec-value" id="spec-ai-model"></dd>
+          </div>
+          <div class="spec-row">
+            <dt class="spec-label">アスペクト比</dt>
+            <dd class="spec-value accent-ratio" id="spec-aspect-ratio"></dd>
+          </div>
+          <div class="spec-row spec-row--full">
+            <dt class="spec-label">構図の工夫</dt>
+            <dd class="spec-value spec-composition" id="spec-composition"></dd>
+          </div>
+        </dl>
+        <div class="ratio-indicator-container" aria-hidden="true">
+          <div class="ratio-box" id="ratio-box"></div>
+          <span class="ratio-label-display" id="ratio-label-display"></span>
+        </div>
+      </div>
+
+      <!-- ■ 生成用プロンプト -->
+      <div class="output-card prompt-card">
+        <div class="prompt-card-header">
+          <h3 class="output-card-title">■ 生成用プロンプト</h3>
+          <button class="copy-btn" id="copy-btn" type="button" aria-label="プロンプトをクリップボードにコピー">
+            コピー
+          </button>
+        </div>
+        <p class="prompt-text" id="prompt-text"></p>
+      </div>
+
+    </section>
+
+    <footer class="app-footer">
+      <p>Nano Banana 2 / Veo 3.1 用 SNSマーケティングプロンプト生成ツール</p>
+    </footer>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
